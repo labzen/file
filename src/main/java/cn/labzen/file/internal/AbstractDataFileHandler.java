@@ -1,7 +1,7 @@
-package cn.labzen.web.file.internal;
+package cn.labzen.file.internal;
 
-import cn.labzen.web.file.definition.bean.Column;
-import cn.labzen.web.file.definition.bean.Schema;
+import cn.labzen.file.definition.bean.Column;
+import cn.labzen.file.definition.bean.Schema;
 import lombok.Setter;
 
 import javax.annotation.Nonnull;

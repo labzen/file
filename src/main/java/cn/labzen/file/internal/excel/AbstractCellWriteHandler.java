@@ -1,7 +1,7 @@
-package cn.labzen.web.file.internal.excel;
+package cn.labzen.file.internal.excel;
 
-import cn.labzen.web.file.definition.bean.Column;
-import cn.labzen.web.file.definition.bean.Schema;
+import cn.labzen.file.definition.bean.Column;
+import cn.labzen.file.definition.bean.Schema;
 import com.alibaba.excel.write.handler.CellWriteHandler;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.Cell;

@@ -1,0 +1,184 @@
+package cn.labzen.file.format.md;
+
+import cn.labzen.file.definition.bean.DataDefinition;
+import cn.labzen.file.definition.bean.column.TableColumn;
+import cn.labzen.file.definition.enums.Alignment;
+import cn.labzen.file.definition.enums.FileFormat;
+import cn.labzen.file.exception.DataWriteException;
+import cn.labzen.file.format.AbstractDataFileWriter;
+import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
+
+import javax.annotation.Nonnull;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+/**
+ * Markdown 文件写入器
+ * <p>
+ * 实现 Markdown 表格格式文件的生成。
+ * 结构：
+ * <pre>
+ * # 系统属性
+ *
+ * | 属性名称 | 索引 | 属性值 | 创建时间 | 大小 |
+ * |:---------|-----:|----------|----------|-----:|
+ * | __系统配置 | 1 | debug=true | 2026-05-12 | 1024.5 |
+ * | __数据库连接 | 2 | jdbc:mysql://... | 2026-05-11 | 2048.75 |
+ * </pre>
+ * 第一行为 title 作为 Markdown 大标题（# 标题），
+ * 第二行为空行，
+ * 后续为 Markdown 表格（标题行 + 分隔行 + 数据行）。
+ * <p>
+ * 对齐支持（基于列的 style.align 配置）：
+ * <ul>
+ *   <li>LEFT - 左对齐：|:---|</li>
+ *   <li>RIGHT - 右对齐：|---:|
+ *   <li>其他（CENTER 等）- 居中对齐：|:---:|
+ * </ul>
+ *
+ * @param <T> 数据对象类型
+ * @author labzen
+ */
+@Slf4j
+public final class MarkdownFileWriter<T> extends AbstractDataFileWriter<T> {
+
+  /**
+   * 表格分隔符（前后都有空格）
+   */
+  private static final String TABLE_SEPARATOR = "| ";
+
+  /**
+   * 表格结束边框
+   */
+  private static final String TABLE_END = " |";
+
+  @Override
+  public @NonNull FileFormat format() {
+    return FileFormat.MARKDOWN;
+  }
+
+  @Override
+  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream) {
+    if (data.isEmpty()) {
+      throw new DataWriteException("数据集合不能为空");
+    }
+
+    List<Map<String, Object>> rows = extractRows(definition, data);
+    Map<String, TableColumn> columns = definition.getColumns();
+    String title = definition.getTitle();
+
+    try (OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)) {
+      // 第一行：Markdown 大标题
+      writer.write("# ");
+      writer.write(title);
+      writer.write("\n\n");
+
+      // 第二部分：表格标题行
+      String headerLine = buildHeaderLine(columns);
+      writer.write(headerLine);
+      writer.write("\n");
+
+      // 第三部分：表格分隔行（---|---|格式）
+      String separatorLine = buildSeparatorLine(columns);
+      writer.write(separatorLine);
+      writer.write("\n");
+
+      // 第四部分：数据行
+      for (Map<String, Object> row : rows) {
+        String dataLine = buildDataLine(row, columns);
+        writer.write(dataLine);
+        writer.write("\n");
+      }
+
+      writer.flush();
+    } catch (IOException e) {
+      throw new DataWriteException(e, "Markdown 文件写入失败");
+    }
+  }
+
+  /**
+   * 构建表格标题行
+   * <p>
+   * 按 columns 的顺序，使用 header 的最后一个值作为列标题（取最低级别的表头）
+   *
+   * @param columns 列定义映射
+   * @return 表格标题行字符串
+   */
+  private String buildHeaderLine(Map<String, TableColumn> columns) {
+    String headers = columns.values().stream()
+      .map(col -> {
+        List<String> header = col.getHeader();
+        // Markdown 表格不支持多级表头，只取最低级别的表头（最后一个元素）
+        return header != null && !header.isEmpty() ? header.getLast() : "";
+      })
+      .collect(Collectors.joining(" | "));
+
+    return TABLE_SEPARATOR + headers + TABLE_END;
+  }
+
+  /**
+   * 构建表格分隔行
+   * <p>
+   * 根据每个 column 的对齐方式生成不同的分隔符：
+   * <ul>
+   *   <li>LEFT - 左对齐：|:---|</li>
+   *   <li>RIGHT - 右对齐：|---:|</li>
+   *   <li>其他 - 居中对齐：|:---:|</li>
+   * </ul>
+   *
+   * @param columns 列定义映射
+   * @return 表格分隔行字符串（如 |:---|:---:|
+   */
+  private String buildSeparatorLine(Map<String, TableColumn> columns) {
+    String separators = columns.values().stream()
+      .map(this::getAlignmentSeparator)
+      .collect(Collectors.joining(" | "));
+
+    return TABLE_SEPARATOR + separators + TABLE_END;
+  }
+
+  /**
+   * 根据对齐方式获取 Markdown 分隔符
+   *
+   * @param column 列定义
+   * @return 分隔符（:---、---:、:---:）
+   */
+  private String getAlignmentSeparator(TableColumn column) {
+    if (column == null || column.getStyle() == null || column.getStyle().getAlign() == null) {
+      return ":---:"; // 默认居中对齐
+    }
+
+    Alignment align = column.getStyle().getAlign();
+    return switch (align) {
+      case LEFT -> ":---";
+      case RIGHT -> "---:";
+      default -> ":---:"; // CENTER、HORIZONTAL 及其他默认居中对齐
+    };
+  }
+
+  /**
+   * 构建数据行
+   * <p>
+   * 按 columns 的顺序，提取 row 中对应字段的值
+   *
+   * @param row     数据行映射
+   * @param columns 列定义映射
+   * @return 数据行字符串
+   */
+  private String buildDataLine(Map<String, Object> row, Map<String, TableColumn> columns) {
+    String values = columns.keySet().stream()
+      .map(key -> {
+        Object value = row.get(key);
+        return value != null ? String.valueOf(value) : "";
+      })
+      .collect(Collectors.joining(" | "));
+
+    return TABLE_SEPARATOR + values + TABLE_END;
+  }
+}

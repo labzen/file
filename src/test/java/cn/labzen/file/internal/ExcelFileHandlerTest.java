@@ -1,7 +1,7 @@
-package cn.labzen.web.file.internal;
+package cn.labzen.file.internal;
 
-import cn.labzen.web.file.internal.excel.ExcelFileHandler;
-import cn.labzen.web.file.test.DataBean;
+import cn.labzen.file.internal.excel.ExcelFileHandler;
+import cn.labzen.file.bean.DataBean;
 import com.google.common.collect.Lists;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

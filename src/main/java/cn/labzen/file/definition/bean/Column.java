@@ -1,7 +1,8 @@
-package cn.labzen.web.file.definition.bean;
+package cn.labzen.file.definition.bean;
 
 import lombok.Data;
 
+@Deprecated
 @Data
 public class Column {
 

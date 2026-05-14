@@ -1,24 +1,21 @@
-package cn.labzen.web.file.internal;
+package cn.labzen.file.internal;
 
 import cn.labzen.tool.structure.Pair;
 import cn.labzen.tool.util.Strings;
-import cn.labzen.web.file.annotation.DataColumn;
-import cn.labzen.web.file.annotation.DataStyle;
-import cn.labzen.web.file.annotation.DataStyles;
-import cn.labzen.web.file.annotation.WritableDataBean;
-import cn.labzen.web.file.definition.bean.Column;
-import cn.labzen.web.file.definition.bean.Schema;
-import cn.labzen.web.file.definition.bean.Style;
-import cn.labzen.web.file.definition.enums.Alignment;
-import cn.labzen.web.file.internal.convert.*;
+import cn.labzen.file.annotation.DataColumn;
+import cn.labzen.file.annotation.DataStyle;
+import cn.labzen.file.annotation.DataStyles;
+import cn.labzen.file.annotation.WritableDataBean;
+import cn.labzen.file.definition.bean.Column;
+import cn.labzen.file.definition.bean.Schema;
+import cn.labzen.file.definition.bean.Style;
+import cn.labzen.file.definition.enums.Alignment;
+import cn.labzen.file.internal.convert.*;
 import com.google.common.collect.Maps;
 
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static cn.labzen.web.file.definition.bean.Column.DEFAULT_COLUMN_BLANKABLE_HINT;
-import static cn.labzen.web.file.definition.bean.Column.DEFAULT_COLUMN_NULLABLE_HINT;
 
 public class WritableDataBeanParser {
 

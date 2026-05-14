@@ -1,8 +1,8 @@
-package cn.labzen.web.file.meta;
+package cn.labzen.file.meta;
 
 import cn.labzen.meta.component.DeclaredComponent;
 
-public class WebFileMeta implements DeclaredComponent {
+public class FileMeta implements DeclaredComponent {
 
   @Override
   public String mark() {
@@ -11,7 +11,7 @@ public class WebFileMeta implements DeclaredComponent {
 
   @Override
   public String packageBased() {
-    return "cn.labzen.web.file";
+    return "cn.labzen.file";
   }
 
   @Override

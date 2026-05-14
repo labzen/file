@@ -1,14 +1,14 @@
-package cn.labzen.web.file.annotation;
+package cn.labzen.file.annotation;
 
-import cn.labzen.web.file.definition.enums.NoneRefer;
+import cn.labzen.file.definition.enums.NoneRefer;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import static cn.labzen.web.file.definition.bean.Column.DEFAULT_COLUMN_BLANKABLE_HINT;
-import static cn.labzen.web.file.definition.bean.Column.DEFAULT_COLUMN_NULLABLE_HINT;
+import static cn.labzen.file.definition.bean.Column.DEFAULT_COLUMN_BLANKABLE_HINT;
+import static cn.labzen.file.definition.bean.Column.DEFAULT_COLUMN_NULLABLE_HINT;
 
 /**
  * 为需要导出到文件的属性定义列信息

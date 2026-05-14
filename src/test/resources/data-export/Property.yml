@@ -1,0 +1,57 @@
+# $schema: ../schema/def-data-schema.json
+filename: property
+title: 系统属性
+header-style:
+  align: JUSTIFY
+  background: "#77d71c"
+  font:
+    family: "Arial"
+    size: 11
+    color: "#838137"
+    bold: true
+    italic: true
+  wrapped: false
+column-style:
+  align: CENTER
+columns:
+  name:
+    header:
+      - "标识"
+      - "属性名称"
+    width: 15
+    when-null: "未命名"
+    prefix: "__"
+    style:
+      align: LEFT
+      font:
+        family: "simkai"
+        color: "#3552d4"
+  indexical:
+    header:
+      - "标识"
+      - "索引"
+    width: 8
+    when-null: "0"
+    style:
+      align: RIGHT
+  value:
+    header:
+      - "属性值"
+    width: 20
+    when-null: "无值"
+    converter:
+      named: invoke("abc", "123"); invoke("def", "456")
+  createTime:
+    header:
+      - "创建时间"
+    width: 15
+    pattern:
+      date: "yyyy-MM-dd HH:mm:ss"
+  size:
+    header:
+      - "大小"
+    width: 10
+    when-null: "0"
+    pattern:
+      decimal: "#.##"
+    converter:

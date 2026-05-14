@@ -1,4 +1,5 @@
-package cn.labzen.web.file.definition.enums;
+package cn.labzen.file.definition.enums;
 
+@Deprecated
 public enum NoneRefer {
 }

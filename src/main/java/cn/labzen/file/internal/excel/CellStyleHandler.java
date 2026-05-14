@@ -1,10 +1,10 @@
-package cn.labzen.web.file.internal.excel;
+package cn.labzen.file.internal.excel;
 
-import cn.labzen.web.file.definition.bean.Column;
-import cn.labzen.web.file.definition.bean.Schema;
-import cn.labzen.web.file.definition.bean.Style;
-import cn.labzen.web.file.definition.enums.Alignment;
-import cn.labzen.web.file.definition.enums.BorderWidth;
+import cn.labzen.file.definition.bean.Column;
+import cn.labzen.file.definition.bean.Schema;
+import cn.labzen.file.definition.bean.Style;
+import cn.labzen.file.definition.enums.Alignment;
+import cn.labzen.file.definition.enums.BorderWidth;
 import com.alibaba.excel.metadata.Head;
 import com.alibaba.excel.metadata.data.WriteCellData;
 import com.alibaba.excel.write.metadata.holder.WriteSheetHolder;

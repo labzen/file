@@ -1,9 +1,9 @@
-package cn.labzen.web.file.test;
+package cn.labzen.file.bean;
 
-import cn.labzen.web.file.annotation.DataColumn;
-import cn.labzen.web.file.annotation.DataStyle;
-import cn.labzen.web.file.annotation.DataStyles;
-import cn.labzen.web.file.annotation.WritableDataBean;
+import cn.labzen.file.annotation.DataColumn;
+import cn.labzen.file.annotation.DataStyle;
+import cn.labzen.file.annotation.DataStyles;
+import cn.labzen.file.annotation.WritableDataBean;
 import lombok.Data;
 
 import java.time.LocalDateTime;

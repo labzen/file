@@ -1,8 +1,8 @@
-package cn.labzen.web.file.internal.excel;
+package cn.labzen.file.internal.excel;
 
-import cn.labzen.web.file.definition.bean.Schema;
-import cn.labzen.web.file.internal.AbstractDataFileHandler;
-import cn.labzen.web.file.internal.WritableDataBeanParser;
+import cn.labzen.file.definition.bean.Schema;
+import cn.labzen.file.internal.AbstractDataFileHandler;
+import cn.labzen.file.internal.WritableDataBeanParser;
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.write.builder.ExcelWriterBuilder;
 

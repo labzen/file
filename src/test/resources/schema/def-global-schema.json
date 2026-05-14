@@ -1,0 +1,133 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://labzen.cn/file/export-schema.json",
+  "title": "Global Data Export Style Schema",
+  "description": "数据导出全局样式元数据定义 Schema，仅定义全局的数据样式，不涉及到任何具体的字段信息",
+  "type": "object",
+  "required": [
+    "header",
+    "column"
+  ],
+  "properties": {
+    "header": {
+      "$ref": "#/definitions/Style",
+      "description": "全局表头样式定义"
+    },
+    "column": {
+      "$ref": "#/definitions/Column",
+      "description": "全局数据单元格样式定义"
+    }
+  },
+  "definitions": {
+    "Style": {
+      "type": "object",
+      "properties": {
+        "align": {
+          "type": "string",
+          "enum": [
+            "HORIZONTAL",
+            "CENTER",
+            "LEFT",
+            "RIGHT",
+            "TOP",
+            "BOTTOM",
+            "FILL",
+            "JUSTIFY",
+            "DISTRIBUTED"
+          ],
+          "description": "对齐方式：HORIZONTAL - 默认水平对齐, CENTER - 居中对齐，可视为水平和垂直的居中, LEFT - 水平左对齐, RIGHT - 水平右对齐, TOP - 垂直上对齐, BOTTOM - 垂直下对齐, FILL - 水平填充对齐, JUSTIFY - 水平和垂直两端对齐, DISTRIBUTED - 水平和垂直分散对齐,"
+        },
+        "background": {
+          "type": "string",
+          "pattern": "^#[0-9A-Fa-f]{6}$",
+          "description": "背景色，十六进制 RGB 格式，如 #FFFFFF"
+        },
+        "font": {
+          "type": "object",
+          "description": "字体样式",
+          "properties": {
+            "family": {
+              "type": "string",
+              "description": "字体名称，如 Arial、Microsoft YaHei"
+            },
+            "size": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 72,
+              "description": "字体大小，默认13"
+            },
+            "color": {
+              "type": "string",
+              "pattern": "^#[0-9A-Fa-f]{6}$",
+              "description": "字体颜色，十六进制 RGB 格式"
+            },
+            "bold": {
+              "type": "boolean",
+              "description": "是否加粗"
+            },
+            "italic": {
+              "type": "boolean",
+              "description": "是否斜体"
+            }
+          }
+        },
+        "border": {
+          "type": "object",
+          "description": "边框样式",
+          "properties": {
+            "color": {
+              "type": "string",
+              "pattern": "^#[0-9A-Fa-f]{6}$",
+              "description": "边框颜色"
+            },
+            "width": {
+              "type": "string",
+              "enum": [
+                "NONE",
+                "THIN",
+                "MEDIUM",
+                "THICK",
+                "DOUBLE"
+              ],
+              "description": "边框宽度：NONE - 无边框，THIN - 细边框，MEDIUM - 中等边框，THICK - 粗边框，DOUBLE - 双边框"
+            }
+          }
+        },
+        "wrapped": {
+          "type": "boolean",
+          "description": "是否自动换行"
+        }
+      }
+    },
+    "Column": {
+      "type": "object",
+      "properties": {
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "全局默认列宽"
+        },
+        "when-null": {
+          "type": "string",
+          "description": "当数据为 null 时使用的默认值"
+        },
+        "when-blank": {
+          "type": "string",
+          "description": "当数据为空字符串时使用的默认值，仅适用于String类型"
+        },
+        "prefix": {
+          "type": "string",
+          "description": "最终值的文本前缀"
+        },
+        "suffix": {
+          "type": "string",
+          "description": "最终值的文本后缀"
+        },
+        "style": {
+          "$ref": "#/definitions/Style",
+          "description": "此列的覆盖样式"
+        }
+      }
+    }
+  }
+}

@@ -1,14 +1,14 @@
-package cn.labzen.web.file.annotation;
+package cn.labzen.file.annotation;
 
-import cn.labzen.web.file.definition.enums.Alignment;
-import cn.labzen.web.file.definition.enums.BorderWidth;
+import cn.labzen.file.definition.enums.Alignment;
+import cn.labzen.file.definition.enums.BorderWidth;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import static cn.labzen.web.file.definition.bean.Style.*;
+import static cn.labzen.file.definition.bean.Style.*;
 
 /**
  * 以行为单位单独定义内容单元格的样式

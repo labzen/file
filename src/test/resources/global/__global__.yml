@@ -1,0 +1,27 @@
+# $schema: ../schema/def-global-schema.json
+header:
+  align: CENTER
+  background: "#000000"
+  font:
+    family: "Arial"
+    size: 13
+    color: "#ffffff"
+    bold: true
+    italic: false
+  border:
+    color: "#d0204a"
+    width: MEDIUM
+  wrapped: false
+
+column:
+  width: 100
+  when-null: "-"
+  when-blank: "-"
+  prefix: ""
+  suffix: ""
+  style:
+    align: LEFT
+    background: "#ffffff"
+    font:
+      size: 12
+    wrapped: true

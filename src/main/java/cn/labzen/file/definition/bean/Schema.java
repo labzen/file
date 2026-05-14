@@ -1,10 +1,11 @@
-package cn.labzen.web.file.definition.bean;
+package cn.labzen.file.definition.bean;
 
 import lombok.Data;
 
 import java.util.List;
 
 @Data
+@Deprecated
 public class Schema {
 
   private String fileName;

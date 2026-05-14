@@ -1,22 +1,24 @@
-package cn.labzen.web.file.meta;
+package cn.labzen.file.meta;
 
 import cn.labzen.meta.configuration.annotation.Configured;
 import cn.labzen.meta.configuration.annotation.Item;
 
-@Configured(namespace = "web.file")
-public interface WebFileConfiguration {
+@Configured(namespace = "file")
+public interface FileConfiguration {
 
   /**
-   * 最大上传文件大小，默认10MB
+   * 数据导出规则定义文件的位置，默认值（classpath*:data-export/&ast;&ast;/&ast;.yml）在 resources/data-export/ 下的所有yml文件
    */
-  @Item(path = "max-file-size", required = false, defaultValue = "10485760")
-  // 10MB in bytes
-  long maxFileSize();
+  @Item(path = "data-definition-location", required = false, defaultValue = "classpath*:data-export/**/*.yml")
+  String dataDefinitionLocation();
 
   /**
-   * 临时文件过期时间（毫秒），仅对内存存储有效
+   * 全局定义文件名称，默认值（classpath:data-export/__global__.yml）
    */
-  @Item(path = "temp-file-expiration", required = false, defaultValue = "300000")
-  // 5分钟
-  long tempFileExpiration();
+  @Item(path = "global-definition-name", required = false, defaultValue = "classpath:data-export/__global__.yml")
+  String globalDefinitionFilename();
+
+
+  @Item(path = "font-family", required = false, defaultValue = "auto")
+  String defaultFontFamily();
 }

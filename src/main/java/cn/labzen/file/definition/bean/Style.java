@@ -1,11 +1,11 @@
-package cn.labzen.web.file.definition.bean;
+package cn.labzen.file.definition.bean;
 
 import cn.labzen.tool.structure.Pair;
-import cn.labzen.web.file.definition.enums.Alignment;
-import cn.labzen.web.file.definition.enums.BorderWidth;
+import cn.labzen.file.definition.enums.Alignment;
+import cn.labzen.file.definition.enums.BorderWidth;
 import lombok.Data;
 
-
+@Deprecated
 @Data
 public class Style implements Cloneable {
 

@@ -1,8 +1,8 @@
-package cn.labzen.web.file.internal.pdf;
+package cn.labzen.file.internal.pdf;
 
-import cn.labzen.web.file.definition.bean.Schema;
-import cn.labzen.web.file.internal.AbstractDataFileHandler;
-import cn.labzen.web.file.internal.WritableDataBeanParser;
+import cn.labzen.file.definition.bean.Schema;
+import cn.labzen.file.internal.AbstractDataFileHandler;
+import cn.labzen.file.internal.WritableDataBeanParser;
 import com.itextpdf.io.font.PdfEncodings;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;

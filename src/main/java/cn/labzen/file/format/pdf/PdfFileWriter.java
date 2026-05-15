@@ -9,6 +9,7 @@ import cn.labzen.file.definition.enums.Alignment;
 import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.exception.DataWriteException;
 import cn.labzen.file.format.AbstractDataFileWriter;
+import cn.labzen.file.meta.FileConfiguration;
 import com.itextpdf.kernel.colors.Color;
 import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.kernel.font.PdfFont;
@@ -63,11 +64,12 @@ public final class PdfFileWriter<T> extends AbstractDataFileWriter<T> {
   }
 
   @Override
-  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream) {
-    if (data.isEmpty()) {
-      throw new DataWriteException("数据集合不能为空");
-    }
+  public void initialize(@NonNull FileConfiguration configuration) {
 
+  }
+
+  @Override
+  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream) {
     // 构建转换器链
     ChainableConverterExecutor.build(definition);
 

@@ -4,8 +4,10 @@ import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.exception.DataWriteException;
 import cn.labzen.file.format.AbstractDataFileWriter;
+import cn.labzen.file.meta.FileConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
+import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
 import javax.annotation.Nonnull;
@@ -32,7 +34,7 @@ public final class YamlFileWriter<T> extends AbstractDataFileWriter<T> {
   /**
    * SnakeYaml Yaml 实例，用于 YAML 序列化
    */
-  private static final Yaml YAML = new Yaml();
+  private Yaml yaml;
 
   @Override
   public @NonNull FileFormat format() {
@@ -40,15 +42,18 @@ public final class YamlFileWriter<T> extends AbstractDataFileWriter<T> {
   }
 
   @Override
-  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream) {
-    if (data.isEmpty()) {
-      throw new DataWriteException("数据集合不能为空");
-    }
+  public void initialize(@NonNull FileConfiguration configuration) {
+    DumperOptions options = new DumperOptions();
+    options.setPrettyFlow(configuration.yamlPrettyFormat());
+    yaml = new Yaml(options);
+  }
 
+  @Override
+  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream) {
     List<Map<String, Object>> rows = extractRows(definition, data);
 
     try (OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)) {
-      YAML.dump(rows, writer);
+      yaml.dump(rows, writer);
       writer.flush();
     } catch (IOException e) {
       throw new DataWriteException(e, "YAML 文件写入失败");

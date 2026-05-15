@@ -3,6 +3,8 @@ package cn.labzen.file.format;
 import cn.labzen.file.definition.DefinitionRegistry;
 import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.enums.FileFormat;
+import cn.labzen.file.meta.FileConfiguration;
+import cn.labzen.meta.Labzens;
 
 import javax.annotation.Nonnull;
 import java.io.File;
@@ -33,8 +35,10 @@ public final class DataFileGenerator<T> {
   private static final Map<FileFormat, DataFileWriter<?>> WRITER_INSTANCES = new EnumMap<>(FileFormat.class);
 
   static {
+    FileConfiguration configuration = Labzens.configurationWith(FileConfiguration.class);
     // 通过 SPI 机制加载所有 DataFileWriter 实现
     ServiceLoader.load(DataFileWriter.class).forEach(writer -> {
+      writer.initialize(configuration);
       WRITER_INSTANCES.put(writer.format(), writer);
     });
   }

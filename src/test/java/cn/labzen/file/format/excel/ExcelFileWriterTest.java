@@ -6,6 +6,7 @@ import cn.labzen.file.definition.DefinitionRegistry;
 import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.format.DataFileGenerator;
+import cn.labzen.file.format.MockData;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,7 +19,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -88,7 +88,7 @@ class ExcelFileWriterTest {
   @DisplayName("测试基本 Excel 文件生成")
   void testBasicExcelGeneration() throws IOException {
     // 准备测试数据
-    List<Property> data = createMockData();
+    List<Property> data = MockData.createMockData();
 
     // 从 Registry 获取配置
     DataDefinition definition = DefinitionRegistry.get("Property")
@@ -112,7 +112,7 @@ class ExcelFileWriterTest {
   @DisplayName("测试通过 DataFileGenerator 生成文件")
   void testDataFileGenerator() throws IOException {
     // 准备测试数据
-    List<Property> data = createMockData();
+    List<Property> data = MockData.createMockData();
 
     // 使用 DataFileGenerator 生成 Excel 文件
     DataFileGenerator.by(Property.class)
@@ -149,31 +149,4 @@ class ExcelFileWriterTest {
     }
   }
 
-  /**
-   * 创建模拟数据
-   */
-  private List<Property> createMockData() {
-    Property p1 = new Property();
-    p1.setName("系统配置");
-    p1.setValue("debug=true");
-    p1.setIndexical(1);
-    p1.setCreateTime(new Date());
-    p1.setSize(1024.5);
-
-    Property p2 = new Property();
-    p2.setName("数据库连接");
-    p2.setValue("jdbc:mysql://localhost:3306/test");
-    p2.setIndexical(2);
-    p2.setCreateTime(new Date(System.currentTimeMillis() - 86400000));
-    p2.setSize(2048.75);
-
-    Property p3 = new Property();
-    p3.setName("日志级别");
-    p3.setValue("INFO");
-    p3.setIndexical(3);
-    p3.setCreateTime(new Date(System.currentTimeMillis() - 172800000));
-    p3.setSize(512.0);
-
-    return Arrays.asList(p1, p2, p3);
-  }
 }

@@ -6,6 +6,8 @@ import cn.labzen.file.definition.DefinitionRegistry;
 import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.format.DataFileGenerator;
+import cn.labzen.file.format.MockData;
+import cn.labzen.meta.LabzenMetaInitializer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -47,6 +49,7 @@ class YamlFileWriterTest {
 
   @BeforeEach
   void setUp() {
+    new LabzenMetaInitializer().initialize(null);
     // 清理之前的注册数据
     DefinitionRegistry.clear();
 
@@ -88,7 +91,7 @@ class YamlFileWriterTest {
   @DisplayName("测试基本 YAML 文件生成")
   void testBasicYamlGeneration() throws IOException {
     // 准备测试数据
-    List<Property> data = createMockData();
+    List<Property> data = MockData.createMockData();
 
     // 从 Registry 获取配置
     DataDefinition definition = DefinitionRegistry.get("Property")
@@ -113,7 +116,7 @@ class YamlFileWriterTest {
   @DisplayName("测试 YAML 对象属性键为字段名")
   void testYamlFieldNames() throws IOException {
     // 准备测试数据
-    List<Property> data = createMockData();
+    List<Property> data = MockData.createMockData();
 
     // 获取配置
     DataDefinition definition = DefinitionRegistry.get("Property")
@@ -128,7 +131,7 @@ class YamlFileWriterTest {
     // 验证属性键使用字段名而非表头
     // columns 的 key 是 name, index, value, createTime, size
     assertTrue(yamlContent.contains("name:"), "YAML 属性键应为 'name' 而非 '属性名称'");
-    assertTrue(yamlContent.contains("index:"), "YAML 属性键应为 'index' 而非 '索引'");
+    assertTrue(yamlContent.contains("indexical"), "YAML 属性键应为 'indexical' 而非 '索引'");
     assertTrue(yamlContent.contains("value:"), "YAML 属性键应为 'value' 而非 '属性值'");
     assertTrue(yamlContent.contains("createTime:"), "YAML 属性键应为 'createTime' 而非 '创建时间'");
     assertTrue(yamlContent.contains("size:"), "YAML 属性键应为 'size' 而非 '大小'");
@@ -162,9 +165,42 @@ class YamlFileWriterTest {
     String yamlContent = Files.readString(Paths.get(OUTPUT_FILE));
 
     // 验证空值处理 - null 值应被跳过（使用 SkipNullRepresenter）
-    assertFalse(yamlContent.contains("name: null"), "null 值应被跳过");
-    assertFalse(yamlContent.contains("createTime: null"), "null 值应被跳过");
-    assertFalse(yamlContent.contains("size: null"), "null 值应被跳过");
+    // 注意：当 when-null 配置存在时，null 值会被替换为配置值，不再是 null
+    assertFalse(yamlContent.contains("name: null"), "name 不应输出为 null（应使用 when-null 或被跳过）");
+    assertFalse(yamlContent.contains("createTime: null"), "createTime 不应输出为 null");
+    assertFalse(yamlContent.contains("size: null"), "size 不应输出为 null");
+  }
+
+  @Test
+  @DisplayName("测试空值处理 - 使用 when-null 配置的值")
+  void testWhenNullValueHandling() throws IOException {
+    // 准备包含 null 值的数据
+    Property propertyWithNull = new Property();
+    propertyWithNull.setName(null);
+    propertyWithNull.setValue("test-value");
+    propertyWithNull.setIndexical(100);
+    propertyWithNull.setCreateTime(null);
+    propertyWithNull.setSize(null);
+
+    List<Property> data = Arrays.asList(propertyWithNull);
+
+    // 获取配置
+    DataDefinition definition = DefinitionRegistry.get("Property")
+      .orElseThrow(() -> new RuntimeException("未找到 Property 配置"));
+
+    // 生成 YAML 文件
+    yamlWriter.write(definition, data, OUTPUT_FILE);
+
+    // 读取文件内容
+    String yamlContent = Files.readString(Paths.get(OUTPUT_FILE));
+
+    // 验证空值处理 - null 值应使用 when-null 配置的值
+    // 注意：name 有 when-null: "未命名" 和 prefix: "__"，所以输出 "__未命名"
+    // createTime 无 when-null 配置，应被跳过（不输出）
+    // size 有 when-null: "0" 和 suffix: "KG"，所以输出 "0KG"
+    assertTrue(yamlContent.contains("__未命名"), "name 为 null 时应使用 when-null 的值 '__未命名'");
+    assertFalse(yamlContent.contains("2025"), "createTime 为 null 时应被跳过");
+    assertTrue(yamlContent.contains("0KG"), "size 为 null 时应使用 when-null 的值 '0KG'");
   }
 
   @Test
@@ -190,7 +226,7 @@ class YamlFileWriterTest {
     String yamlContent = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
     // 验证数值输出
-    assertTrue(yamlContent.contains("index: 42"), "整数应正确输出");
+    assertTrue(yamlContent.contains("indexical: 42"), "整数应正确输出");
     assertTrue(yamlContent.contains("size: 1024.567"), "浮点数应正确输出");
   }
 
@@ -198,7 +234,7 @@ class YamlFileWriterTest {
   @DisplayName("测试通过 DataFileGenerator 生成文件")
   void testDataFileGenerator() throws IOException {
     // 准备测试数据
-    List<Property> data = createMockData();
+    List<Property> data = MockData.createMockData();
 
     // 使用 DataFileGenerator 生成 YAML 文件
     DataFileGenerator.by(Property.class)
@@ -236,31 +272,4 @@ class YamlFileWriterTest {
     }
   }
 
-  /**
-   * 创建模拟数据
-   */
-  private List<Property> createMockData() {
-    Property p1 = new Property();
-    p1.setName("系统配置");
-    p1.setValue("debug=true");
-    p1.setIndexical(1);
-    p1.setCreateTime(new Date());
-    p1.setSize(1024.5);
-
-    Property p2 = new Property();
-    p2.setName("数据库连接");
-    p2.setValue("jdbc:mysql://localhost:3306/test");
-    p2.setIndexical(2);
-    p2.setCreateTime(new Date(System.currentTimeMillis() - 86400000));
-    p2.setSize(2048.75);
-
-    Property p3 = new Property();
-    p3.setName("日志级别");
-    p3.setValue("INFO");
-    p3.setIndexical(3);
-    p3.setCreateTime(new Date(System.currentTimeMillis() - 172800000));
-    p3.setSize(512.0);
-
-    return Arrays.asList(p1, p2, p3);
-  }
 }

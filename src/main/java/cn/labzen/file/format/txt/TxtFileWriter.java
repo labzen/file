@@ -5,6 +5,9 @@ import cn.labzen.file.definition.bean.column.TableColumn;
 import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.exception.DataWriteException;
 import cn.labzen.file.format.AbstractDataFileWriter;
+import cn.labzen.file.meta.FileConfiguration;
+import cn.labzen.tool.util.Collections;
+import cn.labzen.tool.util.Strings;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 
@@ -20,12 +23,13 @@ import java.util.stream.Collectors;
 /**
  * 纯文本文件写入器
  * <p>
- * 实现简单的文本表格格式文件生成，使用制表符（Tab）分隔列。
+ * 实现简单的文本表格格式文件生成，默认使用4个空格分隔列。
  * 结构：
  * <pre>
- * 属性名称\t属性值\t索引\t创建时间\t大小
- * 系统配置\tdebug=true\t1\t2026-05-12\t1024.5
- * 数据库连接\tjdbc:mysql://...\t2\t2026-05-11\t2048.75
+ * 表头A    表头B    表头C    表头D    表头E
+ * 数据1A    数据1B    数据1C    数据1D    数据1E
+ * 数据2A    数据2B    数据2C    数据2D    数据2E
+ * 数据3A    数据3B    数据3C    数据3D    数据3E
  * </pre>
  * 第一行为标题行（header 内容），后续行为数据行。
  *
@@ -36,9 +40,10 @@ import java.util.stream.Collectors;
 public final class TxtFileWriter<T> extends AbstractDataFileWriter<T> {
 
   /**
-   * 制表符，用于分隔列
+   * 用于分隔列
    */
-  private static final String TAB_SEPARATOR = "\t";
+  public static final String DEFAULT_SEPARATOR = "    ";
+  private String separator = DEFAULT_SEPARATOR;
 
   @Override
   public @NonNull FileFormat format() {
@@ -46,11 +51,12 @@ public final class TxtFileWriter<T> extends AbstractDataFileWriter<T> {
   }
 
   @Override
-  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream) {
-    if (data.isEmpty()) {
-      throw new DataWriteException("数据集合不能为空");
-    }
+  public void initialize(@NonNull FileConfiguration configuration) {
+    this.separator = Strings.valueWhenEmpty(configuration.txtSeparator(), DEFAULT_SEPARATOR);
+  }
 
+  @Override
+  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream) {
     List<Map<String, Object>> rows = extractRows(definition, data);
     Map<String, TableColumn> columns = definition.getColumns();
 
@@ -86,9 +92,9 @@ public final class TxtFileWriter<T> extends AbstractDataFileWriter<T> {
       .map(col -> {
         List<String> header = col.getHeader();
         // TXT 不支持多级表头，只取最低级别的表头（最后一个元素）
-        return header != null && !header.isEmpty() ? header.getLast() : "";
+        return Collections.isNullOrEmpty(header) ? "unknown-header" : header.getLast();
       })
-      .collect(Collectors.joining(TAB_SEPARATOR));
+      .collect(Collectors.joining(separator));
   }
 
   /**
@@ -104,8 +110,8 @@ public final class TxtFileWriter<T> extends AbstractDataFileWriter<T> {
     return columns.keySet().stream()
       .map(key -> {
         Object value = row.get(key);
-        return value != null ? String.valueOf(value) : "";
+        return Strings.value(value, "");
       })
-      .collect(Collectors.joining(TAB_SEPARATOR));
+      .collect(Collectors.joining(separator));
   }
 }

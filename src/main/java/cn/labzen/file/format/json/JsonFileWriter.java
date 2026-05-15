@@ -4,6 +4,7 @@ import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.exception.DataWriteException;
 import cn.labzen.file.format.AbstractDataFileWriter;
+import cn.labzen.file.meta.FileConfiguration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import lombok.extern.slf4j.Slf4j;
@@ -31,9 +32,7 @@ public final class JsonFileWriter<T> extends AbstractDataFileWriter<T> {
   /**
    * Jackson ObjectMapper 实例，用于 JSON 序列化
    */
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
-    .enable(SerializationFeature.INDENT_OUTPUT)
-    .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+  private ObjectMapper objectMapper;
 
   @Override
   public @NonNull FileFormat format() {
@@ -41,15 +40,18 @@ public final class JsonFileWriter<T> extends AbstractDataFileWriter<T> {
   }
 
   @Override
-  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream) {
-    if (data.isEmpty()) {
-      throw new DataWriteException("数据集合不能为空");
-    }
+  public void initialize(@NonNull FileConfiguration configuration) {
+    objectMapper = new ObjectMapper()
+      .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
+      .configure(SerializationFeature.INDENT_OUTPUT, configuration.jsonPrettyFormat());
+  }
 
+  @Override
+  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream) {
     List<Map<String, Object>> rows = extractRows(definition, data);
 
     try {
-      OBJECT_MAPPER.writeValue(outputStream, rows);
+      objectMapper.writeValue(outputStream, rows);
       outputStream.flush();
     } catch (IOException e) {
       throw new DataWriteException(e, "JSON 文件写入失败");

@@ -6,6 +6,7 @@ import cn.labzen.file.definition.enums.Alignment;
 import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.exception.DataWriteException;
 import cn.labzen.file.format.AbstractDataFileWriter;
+import cn.labzen.file.meta.FileConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 
@@ -64,11 +65,12 @@ public final class MarkdownFileWriter<T> extends AbstractDataFileWriter<T> {
   }
 
   @Override
-  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream) {
-    if (data.isEmpty()) {
-      throw new DataWriteException("数据集合不能为空");
-    }
+  public void initialize(@NonNull FileConfiguration configuration) {
 
+  }
+
+  @Override
+  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream) {
     List<Map<String, Object>> rows = extractRows(definition, data);
     Map<String, TableColumn> columns = definition.getColumns();
     String title = definition.getTitle();

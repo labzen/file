@@ -6,6 +6,8 @@ import cn.labzen.file.definition.DefinitionRegistry;
 import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.format.DataFileGenerator;
+import cn.labzen.file.format.MockData;
+import cn.labzen.meta.LabzenMetaInitializer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -18,7 +20,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -47,6 +48,7 @@ class TxtFileWriterTest {
 
   @BeforeEach
   void setUp() {
+    new LabzenMetaInitializer().initialize(null);
     // 清理之前的注册数据
     DefinitionRegistry.clear();
 
@@ -88,7 +90,7 @@ class TxtFileWriterTest {
   @DisplayName("测试基本 TXT 文件生成")
   void testBasicTxtGeneration() throws IOException {
     // 准备测试数据
-    List<Property> data = createMockData();
+    List<Property> data = MockData.createMockData();
 
     // 从 Registry 获取配置
     DataDefinition definition = DefinitionRegistry.get("Property")
@@ -105,7 +107,7 @@ class TxtFileWriterTest {
 
     // 验证包含标题行和3条数据行（共4行）
     String[] lines = txtContent.trim().split("\n");
-    assertEquals(4, lines.length, "应包含标题行和3条数据行");
+    assertEquals(5, lines.length, "应包含标题行和4行数据");
 
     // 验证标题行包含 header 内容（使用最低级表头）
     assertTrue(lines[0].contains("属性名称"), "标题行应包含 '属性名称' 作为第一列标题");
@@ -115,7 +117,7 @@ class TxtFileWriterTest {
   @DisplayName("测试标题行使用 header 内容")
   void testHeaderContent() throws IOException {
     // 准备测试数据
-    List<Property> data = createMockData();
+    List<Property> data = MockData.createMockData();
 
     // 获取配置
     DataDefinition definition = DefinitionRegistry.get("Property")
@@ -146,7 +148,7 @@ class TxtFileWriterTest {
   @DisplayName("测试制表符分隔")
   void testTabSeparator() throws IOException {
     // 准备测试数据
-    List<Property> data = createMockData();
+    List<Property> data = MockData.createMockData();
 
     // 获取配置
     DataDefinition definition = DefinitionRegistry.get("Property")
@@ -158,14 +160,14 @@ class TxtFileWriterTest {
     String txtContent = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
     // 验证使用制表符分隔
-    assertTrue(txtContent.contains("\t"), "TXT 应使用制表符分隔");
+    assertTrue(txtContent.contains("    "), "TXT 应使用制表符分隔");
   }
 
   @Test
   @DisplayName("测试数据行内容")
   void testDataLineContent() throws IOException {
     // 准备测试数据
-    List<Property> data = createMockData();
+    List<Property> data = MockData.createMockData();
 
     // 获取配置
     DataDefinition definition = DefinitionRegistry.get("Property")
@@ -224,7 +226,7 @@ class TxtFileWriterTest {
   @DisplayName("测试通过 DataFileGenerator 生成文件")
   void testDataFileGenerator() throws IOException {
     // 准备测试数据
-    List<Property> data = createMockData();
+    List<Property> data = MockData.createMockData();
 
     // 使用 DataFileGenerator 生成 TXT 文件
     DataFileGenerator.by(Property.class)
@@ -241,7 +243,7 @@ class TxtFileWriterTest {
     assertTrue(txtContent.contains("属性名称"), "文件应包含标题行（属性名称）");
     assertTrue(txtContent.contains("索引"), "文件应包含标题行（索引）");
     assertTrue(txtContent.contains("__系统配置"), "文件应包含带前缀的数据值");
-    assertTrue(txtContent.contains("\t"), "文件应使用制表符分隔");
+    assertTrue(txtContent.contains("    "), "文件应使用制表符分隔");
   }
 
   @Test
@@ -263,35 +265,5 @@ class TxtFileWriterTest {
       assertTrue(e.getMessage().contains("不能为空"),
         "空数据应抛出包含 '不能为空' 的异常");
     }
-  }
-
-  /**
-   * 创建模拟数据
-   * <p>
-   * 注意：name 字段不带前缀，配置中的 prefix: "__" 会自动添加
-   */
-  private List<Property> createMockData() {
-    Property p1 = new Property();
-    p1.setName("系统配置");
-    p1.setValue("debug=true");
-    p1.setIndexical(1);
-    p1.setCreateTime(new Date());
-    p1.setSize(1024.5);
-
-    Property p2 = new Property();
-    p2.setName("数据库连接");
-    p2.setValue("jdbc:mysql://localhost:3306/test");
-    p2.setIndexical(2);
-    p2.setCreateTime(new Date(System.currentTimeMillis() - 86400000));
-    p2.setSize(2048.75);
-
-    Property p3 = new Property();
-    p3.setName("日志级别");
-    p3.setValue("INFO");
-    p3.setIndexical(3);
-    p3.setCreateTime(new Date(System.currentTimeMillis() - 172800000));
-    p3.setSize(512.0);
-
-    return Arrays.asList(p1, p2, p3);
   }
 }

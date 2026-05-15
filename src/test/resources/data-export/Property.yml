@@ -32,6 +32,7 @@ columns:
       - "索引"
     width: 8
     when-null: "0"
+    prefix: "No. "
     style:
       align: RIGHT
   value:
@@ -39,8 +40,12 @@ columns:
       - "属性值"
     width: 20
     when-null: "无值"
+  phone:
+    header:
+      - "手机号码"
     converter:
-      named: invoke("abc", "123"); invoke("def", "456")
+      # 这里正则表达式不需要加斜线转义
+      named: desensitize("(\d{3})\d{4}(\d{4})", "$1****$2");
   createTime:
     header:
       - "创建时间"
@@ -52,6 +57,6 @@ columns:
       - "大小"
     width: 10
     when-null: "0"
+    suffix: "KG"
     pattern:
-      decimal: "#.##"
-    converter:
+      decimal: "#.#"

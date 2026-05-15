@@ -32,14 +32,14 @@ public class Converter {
    * <p>
    * 格式为 枚举类全限定名#方法名，如 com.example.StatusEnum#getLabel
    */
-  private String enumConverter;
+  private String enumerable;
 
   /**
    * 预置转换器名称
    * <p>
    * 如 uppercase、lowercase、trim 等，具体名称参考具体接口实现
    */
-  private String namedConverter;
+  private String named;
 
   /**
    * 值映射表

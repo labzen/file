@@ -8,16 +8,14 @@ import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Slf4j
 public class ChainableConverterExecutor {
 
   // 方法匹配
-  private static final Pattern METHOD_PATTERN = Pattern.compile("\\s*([a-zA-Z_$][\\w$]*)\\s*\\((.*?)\\)\\s*(?:;|$)");
-  // 参数匹配
-  private static final Pattern ARG_PATTERN = Pattern.compile("\\s*(?:\"([^\"]*)\"|([^,\\s][^,]*))\\s*(?:,|$)");
+//  private static final Pattern METHOD_PATTERN = Pattern.compile("\\s*([a-zA-Z_$][\\w$]*)\\s*\\((.*?)\\)\\s*(?:;|$)");
+//  // 参数匹配
+//  private static final Pattern ARG_PATTERN = Pattern.compile("\\s*(?:\"([^\"]*)\"|([^,\\s][^,]*))\\s*(?:,|$)");
   private static final Map<String, ConverterInstance> CONVERTER_INSTANCES = Maps.newHashMap();
   private static final Map<String, ChainableConverterExecutor> CHAIN_CACHE = Maps.newHashMap();
 
@@ -83,13 +81,13 @@ public class ChainableConverterExecutor {
       if (column.getConverter().getMapping() != null) {
         createConfigured(Converter.MAPPING_NAME, column.getConverter().getMapping());
       }
-      if (column.getConverter().getEnumConverter() != null) {
-        createConfigured(Converter.ENUM_NAME, column.getConverter().getEnumConverter());
+      if (column.getConverter().getEnumerable() != null) {
+        createConfigured(Converter.ENUM_NAME, column.getConverter().getEnumerable());
       }
-      String namedConverter = column.getConverter().getNamedConverter();
+      String namedConverter = column.getConverter().getNamed();
       if (namedConverter != null) {
-        List<MethodInvokeInfo> methodInvokeInfos = parseMethod(namedConverter);
-        methodInvokeInfos.forEach(mi -> createConfigured(mi.methodName, mi.args));
+        List<NamedConverterParser.MethodInvokeInfo> methodInvokeInfos = NamedConverterParser.parseMethod(namedConverter);
+        methodInvokeInfos.forEach(mi -> createConfigured(mi.methodName(), mi.args()));
       }
     }
     if (column.getPrefix() != null) {
@@ -109,46 +107,6 @@ public class ChainableConverterExecutor {
       }
     }
     return latestValue;
-  }
-
-  private List<MethodInvokeInfo> parseMethod(String methodsText) {
-    Matcher matcher = METHOD_PATTERN.matcher(methodsText);
-    if (!matcher.matches()) {
-      logger.warn("数据文件导出转换器配置 [{}] 有错误，无法保证正确执行转换", methodsText);
-    }
-
-    List<MethodInvokeInfo> result = Lists.newArrayList();
-    while (matcher.find()) {
-      // 方法名
-      String methodName = matcher.group(1);
-      // 参数原始字符串
-      String argsText = matcher.group(2);
-
-      List<String> argsList = parseArgs(argsText);
-
-      result.add(new MethodInvokeInfo(methodName, argsList));
-    }
-
-    return result;
-  }
-
-  private List<String> parseArgs(String argsText) {
-    if (argsText == null || argsText.isBlank()) {
-      return Collections.emptyList();
-    }
-
-    List<String> result = new ArrayList<>();
-    Matcher argMatcher = ARG_PATTERN.matcher(argsText);
-
-    while (argMatcher.find()) {
-      String strValue = argMatcher.group(1);
-      result.add(Objects.requireNonNullElseGet(strValue, () -> argMatcher.group(2).trim()));
-    }
-
-    return result;
-  }
-
-  private record MethodInvokeInfo(String methodName, List<String> args) {
   }
 
   public static void build(DataDefinition definition) {

@@ -2,14 +2,13 @@ package cn.labzen.file.format.html;
 
 import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.bean.column.TableColumn;
-import cn.labzen.file.definition.bean.style.Border;
 import cn.labzen.file.definition.bean.style.Font;
 import cn.labzen.file.definition.bean.style.Style;
 import cn.labzen.file.definition.enums.Alignment;
-import cn.labzen.file.definition.enums.BorderWidth;
 import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.exception.DataWriteException;
 import cn.labzen.file.format.AbstractDataFileWriter;
+import cn.labzen.file.meta.FileConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 
@@ -20,7 +19,6 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * HTML 文件写入器
@@ -56,11 +54,12 @@ public final class HtmlFileWriter<T> extends AbstractDataFileWriter<T> {
   }
 
   @Override
-  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream) {
-    if (data.isEmpty()) {
-      throw new DataWriteException("数据集合不能为空");
-    }
+  public void initialize(@NonNull FileConfiguration configuration) {
 
+  }
+
+  @Override
+  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream) {
     List<Map<String, Object>> rows = extractRows(definition, data);
     Map<String, TableColumn> columns = definition.getColumns();
     String title = definition.getTitle();

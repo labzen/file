@@ -1,6 +1,8 @@
 package cn.labzen.file.converter;
 
+import cn.labzen.algorithm.crypto.Digests;
 import cn.labzen.file.exception.DataConvertException;
+import cn.labzen.tool.util.Strings;
 
 import java.util.List;
 import java.util.Map;
@@ -30,7 +32,7 @@ public abstract class CacheableConverter<O> implements Converter<O> {
   }
 
   private String key(Object input, List<Object> argument) {
-    return input != null ? input.toString() + argument.hashCode() : "null";
+    return Strings.value(input, "") + "#" + Digests.blake3(argument);
   }
 
   /**

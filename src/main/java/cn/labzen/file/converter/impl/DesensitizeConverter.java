@@ -43,8 +43,7 @@ public class DesensitizeConverter extends CacheableConverter<String> {
 
     String regexString = Strings.value(arguments.getFirst(), "");
     String replacement = Strings.value(arguments.getLast(), "");
-    String key = regexString + "|@|" + replacement;
-    Pattern pattern = PATTERN_CACHE.computeIfAbsent(key, k -> Pattern.compile(regexString));
+    Pattern pattern = PATTERN_CACHE.computeIfAbsent(regexString, Pattern::compile);
     return pattern.matcher(input.toString()).replaceAll(replacement);
   }
 }

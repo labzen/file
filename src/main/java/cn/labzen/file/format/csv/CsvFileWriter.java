@@ -5,6 +5,8 @@ import cn.labzen.file.definition.bean.column.TableColumn;
 import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.exception.DataWriteException;
 import cn.labzen.file.format.AbstractDataFileWriter;
+import cn.labzen.file.meta.FileConfiguration;
+import cn.labzen.tool.util.Strings;
 import org.jspecify.annotations.NonNull;
 
 import javax.annotation.Nonnull;
@@ -27,12 +29,13 @@ public final class CsvFileWriter<T> extends AbstractDataFileWriter<T> {
   /**
    * 默认分隔符
    */
-  private static final char DEFAULT_DELIMITER = ',';
-
+  public static final String DEFAULT_DELIMITER = ",";
   /**
    * 默认引用字符
    */
-  private static final char DEFAULT_QUOTE = '"';
+  public static final String DEFAULT_QUOTE = "\"";
+  private String delimiter;
+  private String quote;
 
   @Override
   public @NonNull FileFormat format() {
@@ -40,11 +43,13 @@ public final class CsvFileWriter<T> extends AbstractDataFileWriter<T> {
   }
 
   @Override
-  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream) {
-    if (data.isEmpty()) {
-      throw new DataWriteException("数据集合不能为空");
-    }
+  public void initialize(@NonNull FileConfiguration configuration) {
+    this.delimiter = Strings.valueWhenEmpty(configuration.csvDelimiter(), DEFAULT_DELIMITER);
+    this.quote = Strings.valueWhenEmpty(configuration.csvQuote(), DEFAULT_QUOTE);
+  }
 
+  @Override
+  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream) {
     LinkedHashMap<String, TableColumn> columns = new LinkedHashMap<>(definition.getColumns());
     List<List<String>> headers = extractHeaders(definition);
     List<Map<String, Object>> rows = extractRows(definition, data);
@@ -75,7 +80,7 @@ public final class CsvFileWriter<T> extends AbstractDataFileWriter<T> {
       String headerText = (header != null && !header.isEmpty()) ? header.getLast() : entry.getKey();
 
       if (colIndex > 0) {
-        writer.write(DEFAULT_DELIMITER);
+        writer.write(delimiter);
       }
       writer.write(escapeField(headerText));
       colIndex++;
@@ -94,7 +99,7 @@ public final class CsvFileWriter<T> extends AbstractDataFileWriter<T> {
         Object value = row.get(fieldName);
 
         if (colIndex > 0) {
-          writer.write(DEFAULT_DELIMITER);
+          writer.write(delimiter);
         }
         writer.write(escapeField(value));
         colIndex++;
@@ -118,14 +123,9 @@ public final class CsvFileWriter<T> extends AbstractDataFileWriter<T> {
     }
 
     String text = value.toString();
-    boolean needsQuoting = text.contains(String.valueOf(DEFAULT_DELIMITER))
-      || text.contains(String.valueOf(DEFAULT_QUOTE))
-      || text.contains("\n")
-      || text.contains("\r");
-
-
+    boolean needsQuoting = Strings.containsAny(text, delimiter, quote, "\n", "\r");
     if (needsQuoting) {
-      return DEFAULT_QUOTE + text.replace(String.valueOf(DEFAULT_QUOTE), String.valueOf(DEFAULT_QUOTE) + DEFAULT_QUOTE) + DEFAULT_QUOTE;
+      return quote + text.replace(quote, quote + quote) + quote;
     }
     return text;
   }

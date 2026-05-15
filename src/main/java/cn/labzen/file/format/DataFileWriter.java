@@ -2,6 +2,7 @@ package cn.labzen.file.format;
 
 import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.enums.FileFormat;
+import cn.labzen.file.meta.FileConfiguration;
 
 import javax.annotation.Nonnull;
 import java.io.File;
@@ -28,6 +29,13 @@ public interface DataFileWriter<T> {
   FileFormat format();
 
   /**
+   * 初始化写入器
+   *
+   * @param configuration 文件配置
+   */
+  void initialize(@Nonnull FileConfiguration configuration);
+
+  /**
    * 写入数据到指定文件路径
    *
    * @param definition 数据定义配置
@@ -41,7 +49,7 @@ public interface DataFileWriter<T> {
    * <p>
    * 此方法主要用于支持 Web 下载等场景，不关闭输出流
    *
-   * @param definition  数据定义配置
+   * @param definition   数据定义配置
    * @param data         数据集合
    * @param outputStream 输出流
    */

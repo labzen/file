@@ -46,7 +46,8 @@
   </scm>
 
   <properties>
-    <labzen.tool.version>1.4.0-SNAPSHOT</labzen.tool.version>
+    <labzen.tool.version>1.4.0</labzen.tool.version>
+    <labzen.algorithm.version>1.2.0</labzen.algorithm.version>
 
     <easy-excel.version>4.0.3</easy-excel.version>
     <itextpdf.version>9.4.0</itextpdf.version>
@@ -58,6 +59,11 @@
         <groupId>cn.labzen</groupId>
         <artifactId>tool</artifactId>
         <version>${labzen.tool.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>cn.labzen</groupId>
+        <artifactId>algorithm</artifactId>
+        <version>${labzen.algorithm.version}</version>
       </dependency>
 
       <!-- Excel -->
@@ -105,6 +111,10 @@
     <dependency>
       <groupId>cn.labzen</groupId>
       <artifactId>tool</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>cn.labzen</groupId>
+      <artifactId>algorithm</artifactId>
     </dependency>
 
     <dependency>

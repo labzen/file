@@ -40,11 +40,7 @@ public abstract class AbstractDataFileWriter<T> implements DataFileWriter<T> {
    * @param data       数据集合
    * @return 行数据列表
    */
-  protected List<Map<String, Object>> extractRows(@Nonnull DataDefinition definition, @Nonnull List<T> data) {
-    if (data.isEmpty()) {
-      throw new DataWriteException("数据集合不能为空");
-    }
-    return data.stream().map(item -> extractRow(definition, item)).collect(Collectors.toList());
+  protected List<Map<String, Object>> extractRows(@Nonnull DataDefinition definition, @Nonnull List<T> data) {    return data.stream().map(item -> extractRow(definition, item)).collect(Collectors.toList());
   }
 
   /**

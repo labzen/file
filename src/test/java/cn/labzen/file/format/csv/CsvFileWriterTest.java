@@ -7,6 +7,8 @@ import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.format.DataFileGenerator;
 import cn.labzen.file.format.DataFileWriter;
+import cn.labzen.file.format.MockData;
+import cn.labzen.meta.LabzenMetaInitializer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -49,6 +51,7 @@ class CsvFileWriterTest {
 
   @BeforeEach
   void setUp() {
+    new LabzenMetaInitializer().initialize(null);
     // 清理之前的注册数据
     DefinitionRegistry.clear();
 
@@ -90,7 +93,7 @@ class CsvFileWriterTest {
   @DisplayName("测试基本 CSV 文件生成")
   void testBasicCsvGeneration() throws IOException {
     // 准备测试数据
-    List<Property> data = createMockData();
+    List<Property> data = MockData.createMockData();
 
     // 从 Registry 获取配置
     DataDefinition definition = DefinitionRegistry.get("Property")
@@ -104,7 +107,7 @@ class CsvFileWriterTest {
 
     // 解析 CSV 内容进行验证
     String[] lines = csvContent.split("\n");
-    assertEquals(4, lines.length, "应包含1行表头和3行数据");
+    assertEquals(5, lines.length, "应包含1行表头和4行数据");
 
     // 验证表头行 - 取多级表头的最后一级
     String headerRow = lines[0];
@@ -125,7 +128,7 @@ class CsvFileWriterTest {
   @DisplayName("测试日期格式化")
   void testDateFormatting() throws IOException {
     // 准备测试数据
-    List<Property> data = createMockData();
+    List<Property> data = MockData.createMockData();
 
     // 获取配置
     DataDefinition definition = DefinitionRegistry.get("Property")
@@ -141,7 +144,7 @@ class CsvFileWriterTest {
     String firstDataRow = lines.get(1);
     // createTime 字段应使用 yyyy-MM-dd HH:mm:ss 格式
     assertTrue(firstDataRow.matches(".*\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}.*"),
-      "日期应按配置的格式输出");
+      "日期应按配置的格式 yyyy-MM-dd HH:mm:ss 输出");
   }
 
   @Test
@@ -168,10 +171,9 @@ class CsvFileWriterTest {
     List<String> lines = Files.readAllLines(Paths.get(OUTPUT_FILE));
     String dataRow = lines.get(1);
 
-    // 验证空值处理 - name 为 null 时应使用 when-null 的值 "未命名"
-    assertTrue(dataRow.contains("未命名"), "null 值应替换为 when-null 配置的值");
-    // size 为 null 时应使用 when-null 的值 "0"
-    assertTrue(dataRow.contains("0"), "null 值应替换为 when-null 配置的值");
+    // 验证空值处理 - null 值应使用 when-null 配置的值
+    assertTrue(dataRow.contains("__未命名"), "name 为 null 时应使用 when-null 的值 '__未命名'");
+    assertTrue(dataRow.contains("0KG"), "size 为 null 时应使用 when-null 的值 '0KG'");
   }
 
   @Test
@@ -201,14 +203,14 @@ class CsvFileWriterTest {
     // 验证转义 - 包含逗号的字段应该被引号包裹
     assertTrue(dataRow.contains("\"value,with,commas\""), "包含逗号的字段应被引号包裹");
     // 验证引号转义
-    assertTrue(dataRow.contains("\"配置\"\"名称\""), "包含引号的字段应进行转义");
+    assertTrue(dataRow.contains("\"__配置\"\"名称\""), "包含引号的字段应进行转义（带 prefix）");
   }
 
   @Test
   @DisplayName("测试文件编码 - UTF-8 BOM")
   void testUtf8Bom() throws IOException {
     // 准备测试数据
-    List<Property> data = createMockData();
+    List<Property> data = MockData.createMockData();
 
     // 获取配置
     DataDefinition definition = DefinitionRegistry.get("Property")
@@ -233,8 +235,7 @@ class CsvFileWriterTest {
   @DisplayName("测试通过 DataFileGenerator 生成文件")
   void testDataFileGenerator() throws IOException {
     // 准备测试数据
-    List<Property> data = createMockData();
-
+    List<Property> data = MockData.createMockData();
 
     // 使用 DataFileGenerator 生成 CSV 文件
     DataFileGenerator.by(Property.class)
@@ -250,34 +251,7 @@ class CsvFileWriterTest {
     // 读取文件内容并验证
     List<String> lines = Files.readAllLines(outputFile.toPath());
     assertTrue(lines.get(0).contains("属性名称"), "表头应包含属性名称");
-    assertEquals(4, lines.size(), "应包含1行表头和3行数据");
+    assertEquals(5, lines.size(), "应包含1行表头和4行数据");
   }
 
-  /**
-   * 创建模拟数据
-   */
-  private List<Property> createMockData() {
-    Property p1 = new Property();
-    p1.setName("系统配置");
-    p1.setValue("debug=true");
-    p1.setIndexical(1);
-    p1.setCreateTime(new Date());
-    p1.setSize(1024.5);
-
-    Property p2 = new Property();
-    p2.setName("数据库连接");
-    p2.setValue("jdbc:mysql://localhost:3306/test");
-    p2.setIndexical(2);
-    p2.setCreateTime(new Date(System.currentTimeMillis() - 86400000));
-    p2.setSize(2048.75);
-
-    Property p3 = new Property();
-    p3.setName("日志级别");
-    p3.setValue("INFO");
-    p3.setIndexical(3);
-    p3.setCreateTime(new Date(System.currentTimeMillis() - 172800000));
-    p3.setSize(512.0);
-
-    return Arrays.asList(p1, p2, p3);
-  }
 }

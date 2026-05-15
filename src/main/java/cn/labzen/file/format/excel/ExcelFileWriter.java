@@ -5,8 +5,12 @@ import cn.labzen.file.definition.bean.column.TableColumn;
 import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.exception.DataWriteException;
 import cn.labzen.file.format.AbstractDataFileWriter;
+import cn.labzen.file.meta.FileConfiguration;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.jspecify.annotations.NonNull;
 
@@ -32,11 +36,12 @@ public final class ExcelFileWriter<T> extends AbstractDataFileWriter<T> {
   }
 
   @Override
-  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream) {
-    if (data.isEmpty()) {
-      throw new DataWriteException("数据集合不能为空");
-    }
+  public void initialize(@NonNull FileConfiguration configuration) {
 
+  }
+
+  @Override
+  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream) {
     List<Map<String, Object>> rows = extractRows(definition, data);
     Map<String, TableColumn> columns = definition.getColumns();
 
@@ -148,6 +153,7 @@ public final class ExcelFileWriter<T> extends AbstractDataFileWriter<T> {
   /**
    * 计算每个列的表头级别
    * <p>
+   *
    * @return 每个列的表头级别列表，级别从1开始
    */
   private List<Integer> calculateHeaderLevel(Map<String, TableColumn> columns) {

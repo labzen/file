@@ -1,6 +1,5 @@
 package cn.labzen.file.format.pdf;
 
-import cn.labzen.file.definition.bean.style.Font;
 import cn.labzen.file.definition.bean.style.Style;
 import cn.labzen.file.meta.FileConfiguration;
 import cn.labzen.meta.Labzens;
@@ -494,5 +493,6 @@ public final class FontResolver {
    * @param regularFont 常规字体
    * @param boldFont    粗体字体
    */
-  public record FontInfo(PdfFont regularFont, PdfFont boldFont) {}
+  public record FontInfo(PdfFont regularFont, PdfFont boldFont) {
+  }
 }

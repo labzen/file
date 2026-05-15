@@ -6,6 +6,7 @@ import cn.labzen.file.definition.DefinitionRegistry;
 import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.format.DataFileGenerator;
+import cn.labzen.file.format.MockData;
 import cn.labzen.meta.LabzenMetaInitializer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,7 +17,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -86,7 +86,7 @@ class PdfFileWriterTest {
   @DisplayName("测试基本 PDF 文件生成")
   void testBasicPdfGeneration() throws IOException {
     // 准备测试数据
-    List<Property> data = createMockData();
+    List<Property> data = MockData.createMockData();
 
     // 从 Registry 获取配置
     DataDefinition definition = DefinitionRegistry.get("Property")
@@ -112,7 +112,7 @@ class PdfFileWriterTest {
     new LabzenMetaInitializer().initialize(null);
 
     // 准备测试数据
-    List<Property> data = createMockData();
+    List<Property> data = MockData.createMockData();
 
     // 使用 DataFileGenerator 生成 PDF 文件
     DataFileGenerator.by(Property.class)
@@ -158,7 +158,7 @@ class PdfFileWriterTest {
   @DisplayName("测试 PDF 文件格式正确性")
   void testPdfFileFormat() throws IOException {
     // 准备测试数据
-    List<Property> data = createMockData();
+    List<Property> data = MockData.createMockData();
 
     // 获取配置
     DataDefinition definition = DefinitionRegistry.get("Property")
@@ -177,34 +177,6 @@ class PdfFileWriterTest {
     // 2. 检查文件尾部包含 EOF 标记
     int eofIndex = findEOF(pdfBytes);
     assertTrue(eofIndex > 0, "PDF 应包含 %%EOF 标记");
-  }
-
-  /**
-   * 创建模拟数据
-   */
-  private List<Property> createMockData() {
-    Property p1 = new Property();
-    p1.setName("系统配置");
-    p1.setValue("debug=true");
-    p1.setIndexical(1);
-    p1.setCreateTime(new Date());
-    p1.setSize(1024.5);
-
-    Property p2 = new Property();
-    p2.setName("数据库连接");
-    p2.setValue("jdbc:mysql://localhost:3306/test");
-    p2.setIndexical(2);
-    p2.setCreateTime(new Date(System.currentTimeMillis() - 86400000));
-    p2.setSize(2048.75);
-
-    Property p3 = new Property();
-    p3.setName("日志级别");
-    p3.setValue("INFO");
-    p3.setIndexical(3);
-    p3.setCreateTime(new Date(System.currentTimeMillis() - 172800000));
-    p3.setSize(512.0);
-
-    return Arrays.asList(p1, p2, p3);
   }
 
   /**

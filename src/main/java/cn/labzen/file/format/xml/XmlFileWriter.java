@@ -4,6 +4,7 @@ import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.exception.DataWriteException;
 import cn.labzen.file.format.AbstractDataFileWriter;
+import cn.labzen.file.meta.FileConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 
@@ -24,7 +25,7 @@ import java.util.Map;
  * <p>
  * XML 结构示例：
  * <pre>
- * &lt;property title="系统属性"&gt;
+ * &lt;domain-name title="标题"&gt;
  *   &lt;record&gt;
  *     &lt;name&gt;...&lt;/name&gt;
  *     &lt;value&gt;...&lt;/value&gt;
@@ -38,24 +39,28 @@ import java.util.Map;
 @Slf4j
 public final class XmlFileWriter<T> extends AbstractDataFileWriter<T> {
 
+  private static final String DECLARATION = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+
   @Override
   public @NonNull FileFormat format() {
     return FileFormat.XML;
   }
 
   @Override
-  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream) {
-    if (data.isEmpty()) {
-      throw new DataWriteException("数据集合不能为空");
-    }
+  public void initialize(@NonNull FileConfiguration configuration) {
+    // do nothing
+  }
 
+  @Override
+  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream) {
     List<Map<String, Object>> rows = extractRows(definition, data);
 
     String filename = definition.getFilename();
     String title = definition.getTitle();
 
     try (OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)) {
-      writer.write(buildXml(filename, title, rows));
+      String content = buildXml(filename, title, rows);
+      writer.write(content);
       writer.flush();
     } catch (IOException e) {
       throw new DataWriteException(e, "XML 文件写入失败");
@@ -74,8 +79,8 @@ public final class XmlFileWriter<T> extends AbstractDataFileWriter<T> {
     StringBuilder sb = new StringBuilder();
 
     // 构建根节点，包含 title 属性
-    sb.append("<").append(filename).append(" title=\"").append(title).append("\">");
-    sb.append("\n");
+    sb.append(DECLARATION);
+    sb.append("<").append(filename).append(" title=\"").append(title).append("\">\n");
 
     // 构建 record 节点
     for (Map<String, Object> row : rows) {
@@ -88,15 +93,13 @@ public final class XmlFileWriter<T> extends AbstractDataFileWriter<T> {
         if (value != null) {
           sb.append(escapeXml(String.valueOf(value)));
         }
-        sb.append("</").append(key).append(">");
-        sb.append("\n");
+        sb.append("</").append(key).append(">\n");
       }
       sb.append("  </record>\n");
     }
 
     // 关闭根节点
-    sb.append("</").append(filename).append(">");
-    sb.append("\n");
+    sb.append("</").append(filename).append(">\n");
 
     return sb.toString();
   }

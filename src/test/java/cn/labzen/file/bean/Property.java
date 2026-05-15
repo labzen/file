@@ -20,6 +20,10 @@ public class Property {
    */
   private Integer indexical;
   /**
+   * 电话
+   */
+  private String phone;
+  /**
    * 属性创建时间
    */
   private Date createTime;

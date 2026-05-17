@@ -52,7 +52,7 @@ public final class HeaderMergeHandler {
     List<String> firstLevelHeaders = new ArrayList<>();
     int colIdx = 0;
     for (TableColumn column : columns.values()) {
-      List<String> header = column.getHeader();
+      List<String> header = /*column.getHeader()*/List.of();
       if (header != null && !header.isEmpty()) {
         firstLevelHeaders.add(header.get(0));
       } else {

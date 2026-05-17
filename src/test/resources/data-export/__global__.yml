@@ -20,7 +20,7 @@ column:
   prefix: ""
   suffix: ""
   style:
-    align: LEFT
+    align: RIGHT
     background: "#ffffff"
     font:
       size: 12

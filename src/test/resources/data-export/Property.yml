@@ -2,12 +2,11 @@
 filename: property
 title: 系统属性
 header-style:
-  align: JUSTIFY
-  background: "#77d71c"
+  background: "#e4e6e8"
   font:
     family: "Arial"
     size: 11
-    color: "#838137"
+    color: "#d0204a"
     bold: true
     italic: true
   wrapped: false
@@ -15,9 +14,7 @@ column-style:
   align: CENTER
 columns:
   name:
-    header:
-      - "标识"
-      - "属性名称"
+    header: "标识:-:属性名称"
     width: 15
     when-null: "未命名"
     prefix: "__"
@@ -27,34 +24,30 @@ columns:
         family: "simkai"
         color: "#3552d4"
   indexical:
-    header:
-      - "标识"
-      - "索引"
+    header: "标识:-:索引"
     width: 8
     when-null: "0"
     prefix: "No. "
     style:
       align: RIGHT
   value:
-    header:
-      - "属性值"
+    header: "属性值"
     width: 20
     when-null: "无值"
+    style:
+      align: CENTER
   phone:
-    header:
-      - "手机号码"
+    header: "手机号码"
     converter:
       # 这里正则表达式不需要加斜线转义
       named: desensitize("(\d{3})\d{4}(\d{4})", "$1****$2");
   createTime:
-    header:
-      - "创建时间"
+    header: "创建时间"
     width: 15
     pattern:
       date: "yyyy-MM-dd HH:mm:ss"
   size:
-    header:
-      - "大小"
+    header: "大小"
     width: 10
     when-null: "0"
     suffix: "KG"

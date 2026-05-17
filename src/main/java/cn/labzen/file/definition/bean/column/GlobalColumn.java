@@ -21,7 +21,7 @@ public class GlobalColumn {
   /**
    * 列宽
    */
-  private Integer width;
+  private Integer width = 10;
 
   /**
    * 当数据为 null 时使用的默认值

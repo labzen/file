@@ -7,8 +7,9 @@ import cn.labzen.file.definition.bean.column.TableColumn;
 import cn.labzen.file.definition.bean.style.Border;
 import cn.labzen.file.definition.bean.style.Font;
 import cn.labzen.file.definition.bean.style.Style;
+import cn.labzen.file.definition.bean.table.HeaderBuilder;
+import cn.labzen.file.definition.bean.table.HeaderStructure;
 import cn.labzen.file.exception.DefinitionLoaderException;
-import cn.labzen.tool.util.Collections;
 import cn.labzen.tool.util.Strings;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
@@ -24,9 +25,12 @@ import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import static cn.labzen.file.definition.bean.column.TableColumn.HEADER_LEVEL_SEPARATOR;
 
 /**
  * 数据导出定义配置加载器
@@ -56,6 +60,8 @@ public class DefinitionLoader {
   private final PathMatchingResourcePatternResolver resourcePatternResolver =
     new PathMatchingResourcePatternResolver(ApplicationContext.class.getClassLoader());
 
+  private String globalDefinitionUrl;
+
   /**
    * 创建配置加载器
    *
@@ -82,7 +88,7 @@ public class DefinitionLoader {
     PropertyUtils propertyUtils = new PropertyUtils() {
       @Override
       public Property getProperty(Class<?> type, String name) {
-        String convertedName = convertKebabToCamel(name);
+        String convertedName = Strings.camelCase(name);
         return super.getProperty(type, convertedName);
       }
     };
@@ -111,8 +117,11 @@ public class DefinitionLoader {
       assignDefaultIndices(value);
       // 合并全局配置
       DataDefinition mergedDefinition = mergeDefinition(globalDefinition, value);
-      // 按 index 排序
-//      sortColumnsByIndex(mergedDefinition);
+
+      List<TableColumn> columns = mergedDefinition.getColumns().values().stream().toList();
+      HeaderStructure headerStructure = HeaderBuilder.build(columns);
+      mergedDefinition.setHeaders(headerStructure);
+
       // 注册配置
       DefinitionRegistry.register(key, mergedDefinition);
     });
@@ -123,8 +132,19 @@ public class DefinitionLoader {
    */
   private GlobalDefinition loadGlobalDefinition() {
     try {
-      Resource resource = resourcePatternResolver.getResource(globalLocation);
-      InputStream inputStream = resource.getInputStream();
+      Resource globalResource;
+      Resource[] resources = resourcePatternResolver.getResources(globalLocation);
+      if (resources.length > 1) {
+        globalResource = resources[0];
+        logger.warn("存在多个全局数据导出配置，默认将使用：{}", globalResource.getURI().toString());
+      } else if (resources.length == 1) {
+        globalResource = resources[0];
+      } else {
+        throw new DefinitionLoaderException("找不到全局数据导出配置文件，请检查路径 labzen.yml 中的 global-definition-name 配置");
+      }
+
+      InputStream inputStream = globalResource.getInputStream();
+      globalDefinitionUrl = globalResource.getURL().toExternalForm();
 
       GlobalDefinition definition = globalYaml.load(inputStream);
       validateGlobalDefinition(definition);
@@ -163,6 +183,15 @@ public class DefinitionLoader {
     try {
       Resource[] resources = resourcePatternResolver.getResources(dataLocationPattern);
       return Arrays.stream(resources)
+        .filter(resource -> {
+          // 判断资源对象是已经读取过的全局定义文件，过滤掉
+          try {
+            String url = resource.getURL().toExternalForm();
+            return !globalDefinitionUrl.contains(url);
+          } catch (IOException e) {
+            return true;
+          }
+        })
         .map(this::loadDataDefinition)
         .filter(Objects::nonNull)
         .collect(Collectors.toMap(DataDefinition::getDomainName, definition -> definition));
@@ -237,11 +266,14 @@ public class DefinitionLoader {
     }
 
     // 合并全局列样式（body -> columnStyle）
-    if (globalDefinition.getColumn() != null && globalDefinition.getColumn().getStyle() != null) {
-      if (dataDefinition.getColumnStyle() == null) {
-        dataDefinition.setColumnStyle(cloneStyle(globalDefinition.getColumn().getStyle()));
+    Style fileScopedColumnStyle = dataDefinition.getColumnStyle();
+    GlobalColumn globalColumn = globalDefinition.getColumn();
+    if (globalColumn != null && globalColumn.getStyle() != null) {
+      if (fileScopedColumnStyle == null) {
+        dataDefinition.setColumnStyle(cloneStyle(globalColumn.getStyle()));
+        fileScopedColumnStyle = dataDefinition.getColumnStyle();
       } else {
-        mergeStyle(globalDefinition.getColumn().getStyle(), dataDefinition.getColumnStyle());
+        mergeStyle(globalColumn.getStyle(), fileScopedColumnStyle);
       }
     }
 
@@ -249,7 +281,7 @@ public class DefinitionLoader {
     Map<String, TableColumn> columns = dataDefinition.getColumns();
     if (columns != null) {
       for (TableColumn column : columns.values()) {
-        mergeColumnDefinition(globalDefinition, column);
+        mergeColumnDefinition(globalColumn, fileScopedColumnStyle, column);
       }
     }
 
@@ -259,12 +291,7 @@ public class DefinitionLoader {
   /**
    * 合并列定义
    */
-  private void mergeColumnDefinition(GlobalDefinition globalConfig, TableColumn column) {
-    GlobalColumn globalColumn = globalConfig.getColumn();
-    if (globalColumn == null) {
-      return;
-    }
-
+  private void mergeColumnDefinition(GlobalColumn globalColumn, Style fileScopedColumnStyle, TableColumn column) {
     // 列宽
     if (column.getWidth() == null) {
       column.setWidth(globalColumn.getWidth());
@@ -291,12 +318,10 @@ public class DefinitionLoader {
     }
 
     // 列样式覆盖
-    if (globalColumn.getStyle() != null) {
-      if (column.getStyle() == null) {
-        column.setStyle(cloneStyle(globalColumn.getStyle()));
-      } else {
-        mergeStyle(globalColumn.getStyle(), column.getStyle());
-      }
+    if (column.getStyle() == null) {
+      column.setStyle(cloneStyle(fileScopedColumnStyle));
+    } else {
+      mergeStyle(fileScopedColumnStyle, column.getStyle());
     }
   }
 
@@ -311,23 +336,19 @@ public class DefinitionLoader {
     if (target.getAlign() == null) {
       target.setAlign(source.getAlign());
     }
-
     if (target.getBackground() == null) {
       target.setBackground(source.getBackground());
     }
-
     if (target.getFont() == null) {
       target.setFont(cloneFont(source.getFont()));
     } else if (source.getFont() != null) {
       mergeFont(source.getFont(), target.getFont());
     }
-
     if (target.getBorder() == null) {
       target.setBorder(cloneBorder(source.getBorder()));
     } else if (source.getBorder() != null) {
       mergeBorder(source.getBorder(), target.getBorder());
     }
-
     if (target.getWrapped() == null) {
       target.setWrapped(source.getWrapped());
     }
@@ -443,8 +464,12 @@ public class DefinitionLoader {
       String fieldName = entry.getKey();
       TableColumn column = entry.getValue();
 
-      if (Collections.isNullOrEmpty(column.getHeader())) {
+      if (Strings.isBlank(column.getHeader())) {
         throw new DefinitionLoaderException("{} 定义文件中的列 [{}] 的 header 不能为空", definition.getDomainName(), fieldName);
+      }
+      int headerSeparatorTimes = Strings.times(column.getHeader(), HEADER_LEVEL_SEPARATOR);
+      if (headerSeparatorTimes > 1) {
+        throw new DefinitionLoaderException("{} 定义文件中的列 [{}] 的 header 暂时只能支持最多2级表头", definition.getDomainName(), fieldName);
       }
     }
   }

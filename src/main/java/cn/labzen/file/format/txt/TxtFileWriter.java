@@ -6,7 +6,6 @@ import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.exception.DataWriteException;
 import cn.labzen.file.format.AbstractDataFileWriter;
 import cn.labzen.file.meta.FileConfiguration;
-import cn.labzen.tool.util.Collections;
 import cn.labzen.tool.util.Strings;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
@@ -55,22 +54,22 @@ public final class TxtFileWriter<T> extends AbstractDataFileWriter<T> {
     this.separator = Strings.valueWhenEmpty(configuration.txtSeparator(), DEFAULT_SEPARATOR);
   }
 
+  @SuppressWarnings("DuplicatedCode")
   @Override
-  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream) {
-    List<Map<String, Object>> rows = extractRows(definition, data);
+  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<Map<String, Object>> rows, @Nonnull OutputStream outputStream) {
+    List<String> headers = definition.getHeaders().getLeafLevelHeaders();
     Map<String, TableColumn> columns = definition.getColumns();
 
     try (OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)) {
       // 第一行：标题行（使用 header 内容）
-      String headerLine = buildHeaderLine(columns);
-      writer.write(headerLine);
-      writer.write("\n");
+      // TXT 不支持多级表头，只取最低级别的表头（最后一个元素）
+      String headerLine = buildHeaderLine(headers);
+      writer.write(headerLine + "\n");
 
       // 后续行：数据行
       for (Map<String, Object> row : rows) {
         String dataLine = buildDataLine(row, columns);
-        writer.write(dataLine);
-        writer.write("\n");
+        writer.write(dataLine + "\n");
       }
 
       writer.flush();
@@ -84,16 +83,12 @@ public final class TxtFileWriter<T> extends AbstractDataFileWriter<T> {
    * <p>
    * 按 columns 的顺序，使用 header 的最后一个值作为列标题（取最低级别的表头）
    *
-   * @param columns 列定义映射
+   * @param headers 列定义映射
    * @return 标题行字符串
    */
-  private String buildHeaderLine(Map<String, TableColumn> columns) {
-    return columns.values().stream()
-      .map(col -> {
-        List<String> header = col.getHeader();
-        // TXT 不支持多级表头，只取最低级别的表头（最后一个元素）
-        return Collections.isNullOrEmpty(header) ? "unknown-header" : header.getLast();
-      })
+  private String buildHeaderLine(List<String> headers) {
+    return headers.stream()
+      .map(header -> Strings.valueWhenBlank(header, "unknown-header"))
       .collect(Collectors.joining(separator));
   }
 

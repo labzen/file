@@ -3,13 +3,11 @@ package cn.labzen.file.definition.bean.column;
 import cn.labzen.file.definition.bean.converter.Converter;
 import cn.labzen.file.definition.bean.converter.Pattern;
 import cn.labzen.file.definition.bean.style.Style;
+import cn.labzen.file.definition.bean.table.HeaderStructure;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * 列定义
@@ -28,23 +26,19 @@ import java.util.List;
 @NoArgsConstructor
 public class TableColumn extends GlobalColumn {
 
+  public static final String HEADER_LEVEL_SEPARATOR = ":-:";
+
   /**
-   * 表头标题列表，支持多级表头（CSV文件不支持）
-   * <p>
-   * 数组长度表示表头级别，示例：
-   * <ul>
-   *   <li>["姓名"] - 一级表头</li>
-   *   <li>["基本信息", "姓名"] - 二级表头</li>
-   *   <li>["基本信息", "级别一", "姓名"] - 三级表头</li>
-   * </ul>
+   * 表头标题，可支持二级表头，使用':-:'分隔，例如：'成绩:-:语文'；只在 Markdown, Excel, PDF, HTML 格式文件导出时生效，其余格式只包含最后一级表头的输出
    */
-  private List<String> header = new ArrayList<>();
+  private String header;
 
   /**
    * 列索引，从 0 开始，越小越靠左
    * <p>
    * 不需指定，会按照 YAML 文件中定义的顺序显示列
    */
+  @Deprecated
   private Integer index;
 
   /**
@@ -57,27 +51,28 @@ public class TableColumn extends GlobalColumn {
    */
   private Converter converter = new Converter();
 
-  /**
-   * 获取第一级表头标题
-   *
-   * @return 第一级表头，如无配置返回 null
-   */
-  public String getFirstHeader() {
-    if (header == null || header.isEmpty()) {
-      return null;
-    }
-    return header.getFirst();
-  }
-
-  /**
-   * 获取表头级别数（多级表头深度）
-   *
-   * @return 表头级别数
-   */
-  public int getHeaderLevel() {
-    if (header == null) {
-      return 0;
-    }
-    return header.size();
-  }
+//
+//  /**
+//   * 获取第一级表头标题
+//   *
+//   * @return 第一级表头，如无配置返回 null
+//   */
+//  public String getFirstHeader() {
+//    if (header == null || header.isEmpty()) {
+//      return null;
+//    }
+//    return header.getFirst();
+//  }
+//
+//  /**
+//   * 获取表头级别数（多级表头深度）
+//   *
+//   * @return 表头级别数
+//   */
+//  public int getHeaderLevel() {
+//    if (header == null) {
+//      return 0;
+//    }
+//    return header.size();
+//  }
 }

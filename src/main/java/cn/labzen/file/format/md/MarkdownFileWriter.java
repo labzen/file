@@ -7,6 +7,7 @@ import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.exception.DataWriteException;
 import cn.labzen.file.format.AbstractDataFileWriter;
 import cn.labzen.file.meta.FileConfiguration;
+import cn.labzen.tool.util.Strings;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 
@@ -25,12 +26,13 @@ import java.util.stream.Collectors;
  * 实现 Markdown 表格格式文件的生成。
  * 结构：
  * <pre>
- * # 系统属性
+ * # 标题
  *
- * | 属性名称 | 索引 | 属性值 | 创建时间 | 大小 |
- * |:---------|-----:|----------|----------|-----:|
- * | __系统配置 | 1 | debug=true | 2026-05-12 | 1024.5 |
- * | __数据库连接 | 2 | jdbc:mysql://... | 2026-05-11 | 2048.75 |
+ * | 表头A | 表头B | 表头C | 表头D | 表头E |
+ * |:---|---:|---|---|---:|
+ * | 数据1A | 数据1B | 数据1C | 数据1D | 数据1E |
+ * | 数据2A | 数据2B | 数据2C | 数据2D | 数据2E |
+ * | 数据3A | 数据3B | 数据3C | 数据3D | 数据3E |
  * </pre>
  * 第一行为 title 作为 Markdown 大标题（# 标题），
  * 第二行为空行，
@@ -52,8 +54,11 @@ public final class MarkdownFileWriter<T> extends AbstractDataFileWriter<T> {
   /**
    * 表格分隔符（前后都有空格）
    */
-  private static final String TABLE_SEPARATOR = "| ";
-
+  private static final String TABLE_SEPARATOR = " | ";
+  /**
+   * 表格开始边框
+   */
+  private static final String TABLE_START = "| ";
   /**
    * 表格结束边框
    */
@@ -70,32 +75,27 @@ public final class MarkdownFileWriter<T> extends AbstractDataFileWriter<T> {
   }
 
   @Override
-  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream) {
-    List<Map<String, Object>> rows = extractRows(definition, data);
+  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<Map<String, Object>> rows, @Nonnull OutputStream outputStream) {
+    List<String> headers = definition.getHeaders().getLeafLevelHeaders();
     Map<String, TableColumn> columns = definition.getColumns();
     String title = definition.getTitle();
 
     try (OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)) {
       // 第一行：Markdown 大标题
-      writer.write("# ");
-      writer.write(title);
-      writer.write("\n\n");
+      writer.write("# " + title + "\n\n");
 
       // 第二部分：表格标题行
-      String headerLine = buildHeaderLine(columns);
-      writer.write(headerLine);
-      writer.write("\n");
+      String headerLine = buildHeaderLine(headers);
+      writer.write(headerLine + "\n");
 
       // 第三部分：表格分隔行（---|---|格式）
       String separatorLine = buildSeparatorLine(columns);
-      writer.write(separatorLine);
-      writer.write("\n");
+      writer.write(separatorLine + "\n");
 
       // 第四部分：数据行
       for (Map<String, Object> row : rows) {
         String dataLine = buildDataLine(row, columns);
-        writer.write(dataLine);
-        writer.write("\n");
+        writer.write(dataLine + "\n");
       }
 
       writer.flush();
@@ -104,24 +104,11 @@ public final class MarkdownFileWriter<T> extends AbstractDataFileWriter<T> {
     }
   }
 
-  /**
-   * 构建表格标题行
-   * <p>
-   * 按 columns 的顺序，使用 header 的最后一个值作为列标题（取最低级别的表头）
-   *
-   * @param columns 列定义映射
-   * @return 表格标题行字符串
-   */
-  private String buildHeaderLine(Map<String, TableColumn> columns) {
-    String headers = columns.values().stream()
-      .map(col -> {
-        List<String> header = col.getHeader();
-        // Markdown 表格不支持多级表头，只取最低级别的表头（最后一个元素）
-        return header != null && !header.isEmpty() ? header.getLast() : "";
-      })
-      .collect(Collectors.joining(" | "));
-
-    return TABLE_SEPARATOR + headers + TABLE_END;
+  private String buildHeaderLine(List<String> headers) {
+    String headerText = headers.stream()
+      .map(header -> Strings.valueWhenBlank(header, "unknown-header"))
+      .collect(Collectors.joining(TABLE_SEPARATOR));
+    return TABLE_START + headerText + TABLE_END;
   }
 
   /**
@@ -140,9 +127,9 @@ public final class MarkdownFileWriter<T> extends AbstractDataFileWriter<T> {
   private String buildSeparatorLine(Map<String, TableColumn> columns) {
     String separators = columns.values().stream()
       .map(this::getAlignmentSeparator)
-      .collect(Collectors.joining(" | "));
+      .collect(Collectors.joining(TABLE_SEPARATOR));
 
-    return TABLE_SEPARATOR + separators + TABLE_END;
+    return TABLE_START + separators + TABLE_END;
   }
 
   /**
@@ -152,7 +139,7 @@ public final class MarkdownFileWriter<T> extends AbstractDataFileWriter<T> {
    * @return 分隔符（:---、---:、:---:）
    */
   private String getAlignmentSeparator(TableColumn column) {
-    if (column == null || column.getStyle() == null || column.getStyle().getAlign() == null) {
+    if ( column.getStyle() == null || column.getStyle().getAlign() == null) {
       return ":---:"; // 默认居中对齐
     }
 
@@ -179,8 +166,8 @@ public final class MarkdownFileWriter<T> extends AbstractDataFileWriter<T> {
         Object value = row.get(key);
         return value != null ? String.valueOf(value) : "";
       })
-      .collect(Collectors.joining(" | "));
+      .collect(Collectors.joining(TABLE_SEPARATOR));
 
-    return TABLE_SEPARATOR + values + TABLE_END;
+    return TABLE_START + values + TABLE_END;
   }
 }

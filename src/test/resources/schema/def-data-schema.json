@@ -56,7 +56,7 @@
         "background": {
           "type": "string",
           "pattern": "^#[0-9A-Fa-f]{6}$",
-          "description": "背景色，十六进制 RGB 格式，如 #FFFFFF"
+          "description": "背景色，暂只支持设置表头背景生效，十六进制 RGB 格式，如 #FFFFFF"
         },
         "font": {
           "type": "object",
@@ -120,12 +120,8 @@
       "description": "表字段名映射的类属性名",
       "properties": {
         "header": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "minItems": 1,
-          "description": "表头标题，支持多级表头（数组长度表示级别），CSV格式不支持"
+          "type": "string",
+          "description": "表头标题，可支持二级表头，使用':-:'分隔，例如：'成绩:-:语文'；只在 Markdown, Excel, PDF, HTML 格式文件导出时生效，其余格式只包含最后一级表头的输出"
         },
         "width": {
           "type": "integer",

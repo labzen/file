@@ -15,6 +15,8 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+// 不打算要边框的配置了，没啥意义
+@Deprecated
 public class Border {
 
   /**

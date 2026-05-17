@@ -2,6 +2,7 @@ package cn.labzen.file.definition.bean;
 
 import cn.labzen.file.definition.bean.column.TableColumn;
 import cn.labzen.file.definition.bean.style.Style;
+import cn.labzen.file.definition.bean.table.HeaderStructure;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -37,9 +38,7 @@ import java.util.Map;
  *     align: CENTER
  * columns:
  *   username:
- *     header:
- *       - "基本信息"
- *       - "用户名"
+ *     header: "基本信息:-:用户名"
  *     index: 0
  *     width: 100
  *     when-null: "匿名"
@@ -98,4 +97,6 @@ public class DataDefinition {
    * 例如：表字段名为 parent_code，映射的属性名为 parentCode，使用 parentCode 作为 key
    */
   private Map<String, TableColumn> columns = new LinkedHashMap<>();
+
+  private HeaderStructure headers;
 }

@@ -52,9 +52,7 @@ public final class XmlFileWriter<T> extends AbstractDataFileWriter<T> {
   }
 
   @Override
-  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream) {
-    List<Map<String, Object>> rows = extractRows(definition, data);
-
+  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<Map<String, Object>> rows, @Nonnull OutputStream outputStream) {
     String filename = definition.getFilename();
     String title = definition.getTitle();
 

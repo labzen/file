@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * CSV 文件写入器
@@ -48,20 +49,26 @@ public final class CsvFileWriter<T> extends AbstractDataFileWriter<T> {
     this.quote = Strings.valueWhenEmpty(configuration.csvQuote(), DEFAULT_QUOTE);
   }
 
+  @SuppressWarnings("DuplicatedCode")
   @Override
-  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream) {
+  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<Map<String, Object>> rows, @Nonnull OutputStream outputStream) {
     LinkedHashMap<String, TableColumn> columns = new LinkedHashMap<>(definition.getColumns());
-    List<List<String>> headers = extractHeaders(definition);
-    List<Map<String, Object>> rows = extractRows(definition, data);
+    List<String> headers = definition.getHeaders().getLeafLevelHeaders();
 
-    try (Writer writer = new BufferedWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8), DEFAULT_BUFFER_SIZE)) {
+    try (Writer writer = new BufferedWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8))) {
       // 写入 UTF-8 BOM，Excel 能正确识别中文
       writer.write("\uFEFF");
 
       // 写入表头行
-      writeHeaderRow(writer, headers, columns);
+      // CSV 不支持多级表头，只取最低级别的表头（最后一个元素）
+      String headerLine = buildHeaderLine(headers);
+      writer.write(headerLine + "\n");
+
       // 写入数据行
-      writeDataRows(writer, rows, columns);
+      for (Map<String, Object> row : rows) {
+        String dataLine = buildDataLine(row, columns);
+        writer.write(dataLine + "\n");
+      }
 
       writer.flush();
     } catch (IOException e) {
@@ -69,43 +76,28 @@ public final class CsvFileWriter<T> extends AbstractDataFileWriter<T> {
     }
   }
 
-  /**
-   * 写入表头行
-   */
-  private void writeHeaderRow(Writer writer, List<List<String>> headers, LinkedHashMap<String, TableColumn> columns) throws IOException {
-    int colIndex = 0;
-    for (Map.Entry<String, TableColumn> entry : columns.entrySet()) {
-      TableColumn column = entry.getValue();
-      List<String> header = column.getHeader();
-      String headerText = (header != null && !header.isEmpty()) ? header.getLast() : entry.getKey();
-
-      if (colIndex > 0) {
-        writer.write(delimiter);
-      }
-      writer.write(escapeField(headerText));
-      colIndex++;
-    }
-    writer.write("\n");
+  private String buildHeaderLine(List<String> headers) {
+    return headers.stream()
+      .map(header -> Strings.valueWhenBlank(header, "unknown-header"))
+      .collect(Collectors.joining(delimiter));
   }
 
   /**
-   * 写入数据行
+   * 构建数据行
+   * <p>
+   * 按 columns 的顺序，提取 row 中对应字段的值
+   *
+   * @param row     数据行映射
+   * @param columns 列定义映射
+   * @return 数据行字符串
    */
-  private void writeDataRows(Writer writer, List<Map<String, Object>> rows, LinkedHashMap<String, TableColumn> columns) throws IOException {
-    for (Map<String, Object> row : rows) {
-      int colIndex = 0;
-      for (Map.Entry<String, TableColumn> entry : columns.entrySet()) {
-        String fieldName = entry.getKey();
-        Object value = row.get(fieldName);
-
-        if (colIndex > 0) {
-          writer.write(delimiter);
-        }
-        writer.write(escapeField(value));
-        colIndex++;
-      }
-      writer.write("\n");
-    }
+  private String buildDataLine(Map<String, Object> row, Map<String, TableColumn> columns) {
+    return columns.keySet().stream()
+      .map(key -> {
+        Object value = row.get(key);
+        return escapeField(value);
+      })
+      .collect(Collectors.joining(delimiter));
   }
 
   /**

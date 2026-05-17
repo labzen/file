@@ -41,8 +41,7 @@ public final class ExcelFileWriter<T> extends AbstractDataFileWriter<T> {
   }
 
   @Override
-  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream) {
-    List<Map<String, Object>> rows = extractRows(definition, data);
+  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<Map<String, Object>> rows, @Nonnull OutputStream outputStream) {
     Map<String, TableColumn> columns = definition.getColumns();
 
     try (Workbook workbook = new XSSFWorkbook()) {
@@ -112,7 +111,7 @@ public final class ExcelFileWriter<T> extends AbstractDataFileWriter<T> {
 
   private List<List<String>> buildHeaderList(Map<String, TableColumn> columns) {
     int maxLevel = columns.values().stream()
-      .mapToInt(col -> col.getHeader() != null ? col.getHeader().size() : 0)
+      .mapToInt(col -> col.getHeader() != null ? /*col.getHeader().size()*/ 1: 0)
       .max()
       .orElse(1);
 
@@ -123,7 +122,7 @@ public final class ExcelFileWriter<T> extends AbstractDataFileWriter<T> {
       List<String> levelHeaders = new ArrayList<>();
       int colIdx = 0;
       for (TableColumn column : columns.values()) {
-        List<String> header = column.getHeader();
+        List<String> header = /*column.getHeader()*/List.of();
         String headerText = "";
 
         if (header != null && !header.isEmpty()) {
@@ -158,7 +157,7 @@ public final class ExcelFileWriter<T> extends AbstractDataFileWriter<T> {
    */
   private List<Integer> calculateHeaderLevel(Map<String, TableColumn> columns) {
     return columns.values().stream()
-      .map(col -> col.getHeader() != null ? col.getHeader().size() : 1)
+      .map(col -> col.getHeader() != null ? /*col.getHeader().size()*/0 : 1)
       .collect(Collectors.toList());
   }
 }

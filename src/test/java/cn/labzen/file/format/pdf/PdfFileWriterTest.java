@@ -45,13 +45,14 @@ class PdfFileWriterTest {
 
   @BeforeEach
   void setUp() {
+    new LabzenMetaInitializer().initialize(null);
     // 清理之前的注册数据
     DefinitionRegistry.clear();
 
     // 创建配置加载器
     DefinitionLoader loader = new DefinitionLoader(
       "classpath*:data-export/**/*.yml",
-      "classpath*:global/__global__.yml"
+      "classpath*:data-export/__global__.yml"
     );
     loader.load();
 
@@ -109,8 +110,6 @@ class PdfFileWriterTest {
   @Test
   @DisplayName("测试通过 DataFileGenerator 生成 PDF 文件")
   void testDataFileGenerator() throws IOException {
-    new LabzenMetaInitializer().initialize(null);
-
     // 准备测试数据
     List<Property> data = MockData.createMockData();
 

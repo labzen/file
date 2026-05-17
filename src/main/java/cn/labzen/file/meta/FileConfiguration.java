@@ -53,4 +53,16 @@ public interface FileConfiguration {
    */
   @Item(path = "yaml.pretty", required = false, defaultValue = "true")
   boolean yamlPrettyFormat();
+
+  /**
+   * YAML文件的内容键命名使用 kebab-case，默认true
+   */
+  @Item(path = "yaml.kebab-case", required = false, defaultValue = "true")
+  boolean yamlKebabCaseEnabled();
+
+  /**
+   * PDF文件中字体缩放因子，相同字体大小在PDF中会显得很大，指定一个缩小系数，能让页面显示更多数据。不缩放设置为1，默认1.5
+   */
+  @Item(path = "pdf.font-reduction-factor", required = false, defaultValue = "1.5")
+  float pdfFontReductionFactor();
 }

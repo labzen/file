@@ -27,11 +27,6 @@ import java.util.stream.Collectors;
 public abstract class AbstractDataFileWriter<T> implements DataFileWriter<T> {
 
   /**
-   * 默认缓冲区大小
-   */
-  protected static final int DEFAULT_BUFFER_SIZE = 8192;
-
-  /**
    * 将数据对象转换为行数据映射
    * <p>
    * key: 字段名（属性名），value: 字段值
@@ -40,7 +35,8 @@ public abstract class AbstractDataFileWriter<T> implements DataFileWriter<T> {
    * @param data       数据集合
    * @return 行数据列表
    */
-  protected List<Map<String, Object>> extractRows(@Nonnull DataDefinition definition, @Nonnull List<T> data) {    return data.stream().map(item -> extractRow(definition, item)).collect(Collectors.toList());
+  private List<Map<String, Object>> extractRows(@Nonnull DataDefinition definition, @Nonnull List<T> data) {
+    return data.stream().map(item -> extractRow(definition, item)).collect(Collectors.toList());
   }
 
   /**
@@ -86,29 +82,6 @@ public abstract class AbstractDataFileWriter<T> implements DataFileWriter<T> {
   }
 
   /**
-   * 获取表头行列表
-   *
-   * @param definition 数据定义
-   * @return 表头列表（每个表头可能有多级）
-   */
-  protected List<List<String>> extractHeaders(@Nonnull DataDefinition definition) {
-    return definition.getColumns().values().stream()
-      .map(TableColumn::getHeader)
-      .collect(Collectors.toList());
-  }
-
-//  /**
-//   * 创建带缓冲的输出流写入器
-//   *
-//   * @param outputStream 底层输出流
-//   * @param charset      字符编码
-//   * @return 缓冲写入器
-//   */
-//  protected BufferedWriter createBufferedWriter(OutputStream outputStream, java.nio.charset.Charset charset) {
-//    return new BufferedWriter(new OutputStreamWriter(outputStream, charset != null ? charset : StandardCharsets.UTF_8), DEFAULT_BUFFER_SIZE);
-//  }
-
-  /**
    * 创建字节输出流
    *
    * @param file 输出文件
@@ -117,7 +90,10 @@ public abstract class AbstractDataFileWriter<T> implements DataFileWriter<T> {
   protected FileOutputStream createFileOutputStream(File file) throws FileNotFoundException {
     File parent = file.getParentFile();
     if (parent != null && !parent.exists()) {
-      parent.mkdirs();
+      boolean make = parent.mkdirs();
+      if (!make) {
+        logger.warn("创建文件夹失败: {}", parent.getAbsolutePath());
+      }
     }
     return new FileOutputStream(file);
   }
@@ -133,7 +109,8 @@ public abstract class AbstractDataFileWriter<T> implements DataFileWriter<T> {
    */
   @Override
   public void write(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream) {
-    generateContent(definition, data, outputStream);
+    List<Map<String, Object>> rows = extractRows(definition, data);
+    generateContent(definition, rows, outputStream);
   }
 
   /**
@@ -174,10 +151,10 @@ public abstract class AbstractDataFileWriter<T> implements DataFileWriter<T> {
    * 子类实现此方法定义具体的格式生成逻辑
    *
    * @param definition   数据定义
-   * @param data         数据集合
+   * @param rows         数据集合
    * @param outputStream 输出流
    */
   protected abstract void generateContent(@Nonnull DataDefinition definition,
-                                          @Nonnull List<T> data,
+                                          @Nonnull List<Map<String, Object>> rows,
                                           @Nonnull OutputStream outputStream);
 }

@@ -7,6 +7,7 @@ import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.format.DataFileGenerator;
 import cn.labzen.file.format.MockData;
+import cn.labzen.meta.LabzenMetaInitializer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -48,15 +49,15 @@ class HtmlFileWriterTest {
 
   @BeforeEach
   void setUp() {
+    new LabzenMetaInitializer().initialize(null);
     // 清理之前的注册数据
     DefinitionRegistry.clear();
 
     // 创建配置加载器
     DefinitionLoader loader = new DefinitionLoader(
       "classpath*:data-export/**/*.yml",
-      "classpath*:global/__global__.yml"
-    );
-    loader.load();
+      "classpath*:data-export/__global__.yml"
+    );    loader.load();
 
     // 创建 HTML 写入器
     htmlWriter = new HtmlFileWriter<>();

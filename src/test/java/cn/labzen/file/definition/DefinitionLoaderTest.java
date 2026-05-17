@@ -33,7 +33,7 @@ class DefinitionLoaderTest {
     // globalLocation: 全局配置文件路径
     loader = new DefinitionLoader(
       "classpath*:data-export/**/*.yml",
-      "classpath*:global/__global__.yml"
+      "classpath*:data-export/__global__.yml"
     );
   }
 

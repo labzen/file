@@ -56,7 +56,7 @@ class YamlFileWriterTest {
     // 创建配置加载器
     DefinitionLoader loader = new DefinitionLoader(
       "classpath*:data-export/**/*.yml",
-      "classpath*:global/__global__.yml"
+      "classpath*:data-export/__global__.yml"
     );
     loader.load();
 

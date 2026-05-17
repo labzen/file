@@ -2,6 +2,7 @@ package cn.labzen.file.definition;
 
 import cn.labzen.file.converter.ChainableConverterExecutor;
 import cn.labzen.file.definition.bean.DataDefinition;
+import cn.labzen.file.definition.bean.table.HeaderStructure;
 
 import javax.annotation.Nonnull;
 import java.util.Map;
@@ -26,6 +27,7 @@ public final class DefinitionRegistry {
    * value: 合并后的配置对象
    */
   private static final Map<String, DataDefinition> DEFINITION_MAP = new ConcurrentHashMap<>();
+//  private static final Map<String, HeaderStructure> HEADER_STRUCTURE_MAP = new ConcurrentHashMap<>();
 
   private DefinitionRegistry() {
   }
@@ -33,16 +35,17 @@ public final class DefinitionRegistry {
   /**
    * 注册配置
    *
-   * @param name   配置名称
+   * @param name       配置名称
    * @param definition 数据配置对象
    */
-  static void register(@Nonnull String name, @Nonnull DataDefinition definition) {
+  static void register(@Nonnull String name, @Nonnull DataDefinition definition/*, @Nonnull HeaderStructure headerStructure*/) {
     if (name.isBlank()) {
       throw new IllegalArgumentException("配置名称不能为空");
     }
 
     ChainableConverterExecutor.build(definition);
     DEFINITION_MAP.put(name, definition);
+//    HEADER_STRUCTURE_MAP.put(name, headerStructure);
   }
 
   /**

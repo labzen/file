@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.representer.Representer;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -43,15 +44,21 @@ public final class YamlFileWriter<T> extends AbstractDataFileWriter<T> {
 
   @Override
   public void initialize(@NonNull FileConfiguration configuration) {
-    DumperOptions options = new DumperOptions();
-    options.setPrettyFlow(configuration.yamlPrettyFormat());
-    yaml = new Yaml(options);
+    DumperOptions dumperOptions = new DumperOptions();
+    dumperOptions.setPrettyFlow(configuration.yamlPrettyFormat());
+
+    Representer representer;
+    if (configuration.yamlKebabCaseEnabled()) {
+      representer = new KebabPresenter(dumperOptions);
+    } else {
+      representer = new Representer(dumperOptions);
+    }
+
+    yaml = new Yaml(representer, dumperOptions);
   }
 
   @Override
-  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream) {
-    List<Map<String, Object>> rows = extractRows(definition, data);
-
+  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<Map<String, Object>> rows, @Nonnull OutputStream outputStream) {
     try (OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)) {
       yaml.dump(rows, writer);
       writer.flush();

@@ -1,28 +1,34 @@
 package cn.labzen.file.format.excel;
 
 import cn.labzen.file.definition.bean.DataDefinition;
-import cn.labzen.file.definition.bean.column.TableColumn;
 import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.exception.DataWriteException;
 import cn.labzen.file.format.AbstractDataFileWriter;
 import cn.labzen.file.meta.FileConfiguration;
+import cn.labzen.tool.util.Strings;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.jspecify.annotations.NonNull;
 
 import javax.annotation.Nonnull;
 import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Excel 文件写入器
+ * <p>
+ * 使用 Apache POI 库实现 Excel（.xlsx）文件的生成，支持：
+ * <ul>
+ *   <li>多级表头（通过 {@link cn.labzen.file.definition.bean.table.HeaderStructure} 预计算合并信息）</li>
+ *   <li>单元格背景色、字体、边框、对齐方式</li>
+ *   <li>列宽配置</li>
+ *   <li>样式缓存，避免重复创建 CellStyle</li>
+ * </ul>
+ * <p>
+ * 类结构设计参考 {@link cn.labzen.file.format.pdf.PdfFileWriter} 的协调者模式：
+ * 本类作为协调者，将表头渲染、数据渲染、样式应用等职责委托给专门的渲染器，
+ * 各渲染器通过 {@link ExcelWorkbookContext} 共享工作簿上下文。
  *
  * @param <T> 数据对象类型
  * @author labzen
@@ -37,71 +43,21 @@ public final class ExcelFileWriter<T> extends AbstractDataFileWriter<T> {
 
   @Override
   public void initialize(@NonNull FileConfiguration configuration) {
-
+    // Excel 写入器无需额外的初始化配置
   }
 
   @Override
   protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<Map<String, Object>> rows, @Nonnull OutputStream outputStream) {
-    Map<String, TableColumn> columns = definition.getColumns();
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      ExcelWorkbookContext context = new ExcelWorkbookContext(workbook, resolveSheetName(definition), definition.getColumns());
 
-    try (Workbook workbook = new XSSFWorkbook()) {
-      Sheet sheet = workbook.createSheet("data");
+      // 渲染表头
+      int headerRowCount = context.createHeaderRenderer().render(definition.getHeaders(), definition.getHeaderStyle());
 
-      // 构建表头
-      List<List<String>> head = buildHeaderList(columns);
-      int headerRowCount = head.size();
-      List<Integer> headerLevel = calculateHeaderLevel(columns);
+      // 渲染数据行
+      context.createDataRenderer().render(rows, headerRowCount, definition.getColumnStyle());
 
-      // 写入表头
-      for (int rowIdx = 0; rowIdx < headerRowCount; rowIdx++) {
-        Row row = sheet.createRow(rowIdx);
-        List<String> rowHeaders = head.get(rowIdx);
-        for (int colIdx = 0; colIdx < rowHeaders.size(); colIdx++) {
-          Cell cell = row.createCell(colIdx);
-          cell.setCellValue(rowHeaders.get(colIdx));
-        }
-      }
-
-      // 应用多级表头合并
-      HeaderMergeHandler mergeHandler = new HeaderMergeHandler(columns, headerLevel);
-      mergeHandler.applyMerges(sheet);
-
-      // 写入数据
-//      int startDataRow = headerRowCount;
-      for (int rowIdx = 0; rowIdx < rows.size(); rowIdx++) {
-        Row row = sheet.createRow(headerRowCount + rowIdx);
-        Map<String, Object> rowData = rows.get(rowIdx);
-
-        int colIdx = 0;
-        for (String colKey : columns.keySet()) {
-          Cell cell = row.createCell(colIdx);
-          Object value = rowData.get(colKey);
-          if (value != null) {
-            cell.setCellValue(value.toString());
-          }
-          colIdx++;
-        }
-      }
-
-      // 应用列宽
-      ExcelColumnWidthHandler columnWidthHandler = new ExcelColumnWidthHandler(columns);
-      columnWidthHandler.applyColumnWidths(sheet);
-
-      // 应用样式
-      ExcelCellStyleHandler cellStyleHandler = new ExcelCellStyleHandler(
-        columns, definition.getHeaderStyle(), definition.getColumnStyle(), workbook, headerLevel);
-
-      // 表头样式
-      for (int rowIdx = 0; rowIdx < headerRowCount; rowIdx++) {
-        cellStyleHandler.applyStyles(sheet, rowIdx, true);
-      }
-
-      // 数据样式
-      for (int rowIdx = 0; rowIdx < rows.size(); rowIdx++) {
-        cellStyleHandler.applyStyles(sheet, headerRowCount + rowIdx, false);
-      }
-
-      // 写入文件
+      // 写入输出流
       workbook.write(outputStream);
 
     } catch (Exception e) {
@@ -109,55 +65,24 @@ public final class ExcelFileWriter<T> extends AbstractDataFileWriter<T> {
     }
   }
 
-  private List<List<String>> buildHeaderList(Map<String, TableColumn> columns) {
-    int maxLevel = columns.values().stream()
-      .mapToInt(col -> col.getHeader() != null ? /*col.getHeader().size()*/ 1: 0)
-      .max()
-      .orElse(1);
-
-    List<List<String>> headers = new ArrayList<>();
-
-    for (int level = 0; level < maxLevel; level++) {
-      final int currentLevel = level;
-      List<String> levelHeaders = new ArrayList<>();
-      int colIdx = 0;
-      for (TableColumn column : columns.values()) {
-        List<String> header = /*column.getHeader()*/List.of();
-        String headerText = "";
-
-        if (header != null && !header.isEmpty()) {
-          int headerCount = header.size();
-          if (headerCount == 1) {
-            // 只有一级表头：文字放在第一行（纵向合并后只显示第一行）
-            if (currentLevel == 0) {
-              headerText = header.get(0);
-            }
-          } else {
-            // 多级表头：正常逻辑
-            int index = header.size() - maxLevel + currentLevel;
-            if (index >= 0 && index < header.size()) {
-              headerText = header.get(index);
-            }
-          }
-        }
-        levelHeaders.add(headerText);
-        colIdx++;
-      }
-      headers.add(levelHeaders);
-    }
-
-    return headers;
-  }
-
   /**
-   * 计算每个列的表头级别
+   * 解析 Sheet 名称
    * <p>
+   * 优先使用数据定义的 title，若为空则使用默认名称 "data"。
+   * Excel Sheet 名称有长度和字符限制，这里做简单处理：
+   * 截断至 31 字符（Excel 最大限制），并替换非法字符。
    *
-   * @return 每个列的表头级别列表，级别从1开始
+   * @param definition 数据定义
+   * @return 合法的 Sheet 名称
    */
-  private List<Integer> calculateHeaderLevel(Map<String, TableColumn> columns) {
-    return columns.values().stream()
-      .map(col -> col.getHeader() != null ? /*col.getHeader().size()*/0 : 1)
-      .collect(Collectors.toList());
+  private String resolveSheetName(DataDefinition definition) {
+    String title = Strings.valueWhenBlank(definition.getTitle(), "data");
+
+    // Excel sheet 名称最大 31 字符，不能包含 : \ / ? * [ ]
+    String sanitized = title.replaceAll("[:\\\\/?*\\[\\]]", "_").trim();
+    if (sanitized.length() > 31) {
+      sanitized = sanitized.substring(0, 31);
+    }
+    return sanitized.isEmpty() ? "data" : sanitized;
   }
 }

@@ -7,6 +7,7 @@ import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.format.DataFileGenerator;
 import cn.labzen.file.format.MockData;
+import cn.labzen.meta.LabzenMetaInitializer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -47,6 +48,7 @@ class ExcelFileWriterTest {
 
   @BeforeEach
   void setUp() {
+    new LabzenMetaInitializer().initialize(null);
     // 清理之前的注册数据
     DefinitionRegistry.clear();
 

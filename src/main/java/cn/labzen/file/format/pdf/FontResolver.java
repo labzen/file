@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 
 import java.io.File;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -22,6 +22,9 @@ import java.util.concurrent.ConcurrentHashMap;
  *   <li>指定字体名，验证并使用系统字体</li>
  *   <li>字体缓存，避免重复加载</li>
  * </ul>
+ * <p>
+ * 缓存策略：以字体族名为 key 缓存 {@link FontInfo}，每个 FontInfo 始终包含常规和粗体两种变体。
+ * 不同的字体族名独立缓存，互不影响。
  *
  * @author labzen
  */
@@ -29,23 +32,54 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class FontResolver {
 
   /**
-   * 字体缓存映射：字体族名 -> FontInfo
+   * 自动选择字体的缓存 key
+   */
+  private static final String AUTO_CACHE_KEY = "__auto__";
+
+  /**
+   * 字体缓存映射：字体族名（或 auto 标识）-> FontInfo
    */
   private static final Map<String, FontInfo> FONT_CACHE = new ConcurrentHashMap<>();
 
   /**
-   * 字体目录缓存
+   * Windows 系统已知的中文候选项描述符
+   * <p>
+   * 每个描述符包含：字体族名、常规字体文件名、粗体字体文件名（可为 null）
    */
-  private static String cachedFontsDir;
+  private static final List<FontDescriptor> WINDOWS_FONT_CANDIDATES = List.of(
+    FontDescriptor.of("Microsoft YaHei", "msyh.ttc", "msyhbd.ttc"),
+    FontDescriptor.of("SimHei", "simhei.ttf", null),
+    FontDescriptor.of("SimSun", "simsun.ttc", null),
+    FontDescriptor.of("STZhongsong", "STZHONGS.TTF", null),
+    FontDescriptor.of("STKaiti", "stkaiti.ttf", null),
+    FontDescriptor.of("STSong", "STSONG.TTF", null)
+  );
 
   /**
-   * 缓存刷新标识，用于配置变更时清除缓存
+   * Linux 系统已知的中文候选项字体路径
    */
-  private static String lastConfig;
+  private static final List<String> LINUX_FONT_PATHS = List.of(
+    "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc",
+    "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",
+    "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+    "/usr/share/fonts/truetype/arphic/uming.ttc",
+    "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+  );
+
+  /**
+   * Mac 系统已知的中文候选项字体族名
+   */
+  private static final List<String> MAC_FONT_NAMES = List.of(
+    "PingFang SC",
+    "PingFang HK",
+    "STHeiti",
+    "Hiragino Sans GB"
+  );
 
   private FontResolver() {
-    // 私有构造函数，防止实例化
   }
+
+  // ==================== 公共 API ====================
 
   /**
    * 获取 PDF 常规字体
@@ -69,21 +103,17 @@ public final class FontResolver {
 
   /**
    * 获取字体信息（包含常规和粗体字体）
+   * <p>
+   * FontInfo 始终包含常规和粗体两种变体（粗体不可用时回退为常规字体），
+   * 不受传入 Style 的 bold 属性影响。
    *
    * @param style 样式配置（可为 null，使用全局默认字体）
    * @return FontInfo 对象
    */
   public static @NonNull FontInfo getFontInfo(Style style) {
-    // 从 Style.font 或全局配置获取字体族名
     String fontFamily = resolveFontFamily(style);
-    // 使用字体族名作为缓存键
-    String cacheKey = fontFamily != null ? fontFamily : "auto";
-
-    // 检查是否需要清除缓存（配置已变更）
-    checkAndClearCache(cacheKey);
-
-    // 尝试从缓存获取
-    return FONT_CACHE.computeIfAbsent(cacheKey, key -> resolveFont(fontFamily, style));
+    String cacheKey = fontFamily != null ? fontFamily : AUTO_CACHE_KEY;
+    return FONT_CACHE.computeIfAbsent(cacheKey, key -> resolveFont(fontFamily));
   }
 
   /**
@@ -100,42 +130,29 @@ public final class FontResolver {
    */
   public static void clearCache() {
     FONT_CACHE.clear();
-    cachedFontsDir = null;
-    lastConfig = null;
     logger.debug("字体缓存已清除");
   }
 
-  /**
-   * 检查配置是否变更，如变更则清除缓存
-   *
-   * @param cacheKey 当前缓存键
-   */
-  private static void checkAndClearCache(String cacheKey) {
-    if (!cacheKey.equals(lastConfig)) {
-      clearCache();
-      lastConfig = cacheKey;
-    }
-  }
+  // ==================== 字体族名解析 ====================
 
   /**
    * 从样式配置或全局配置中解析字体族名
+   * <p>
+   * 优先级：Style.font.family > 全局 defaultFontFamily
    *
    * @param style 样式配置（可为 null）
    * @return 字体族名（null 表示使用 auto 自动选择）
    */
   private static String resolveFontFamily(Style style) {
-    // 优先级：Style.font.family > 全局 defaultFontFamily
     if (style != null && style.getFont() != null && style.getFont().getFamily() != null) {
       String family = style.getFont().getFamily();
       logger.debug("使用样式指定的字体: {}", family);
       return family;
     }
 
-    // 使用全局配置
     FileConfiguration config = Labzens.configurationWith(FileConfiguration.class);
     String defaultFamily = config.defaultFontFamily();
 
-    // 如果是 "auto" 或空，返回 null 表示自动选择
     if (defaultFamily == null || defaultFamily.isEmpty() || "auto".equalsIgnoreCase(defaultFamily)) {
       return null;
     }
@@ -144,354 +161,444 @@ public final class FontResolver {
     return defaultFamily;
   }
 
+  // ==================== 字体解析主流程 ====================
+
   /**
-   * 解析字体配置，获取字体信息
+   * 解析字体：尝试加载指定字体，失败则回退到系统自动选择
    *
    * @param fontFamily 字体族名（null 表示自动选择）
-   * @param style      样式配置（用于获取 bold 属性）
    * @return FontInfo 对象
    */
-  private static FontInfo resolveFont(String fontFamily, Style style) {
-    logger.debug("解析字体配置: {}", fontFamily != null ? fontFamily : "auto");
+  private static FontInfo resolveFont(String fontFamily) {
+    logger.debug("解析字体: {}", fontFamily != null ? fontFamily : "auto");
 
-    // 尝试加载字体，失败则回退到自动选择
-    try {
-      return createSystemFont(fontFamily, style);
-    } catch (Exception e) {
-      logger.debug("字体 [{}] 加载失败，尝试自动选择: {}", fontFamily, e.getMessage());
-      return createSystemFont(null, null);
-    }
-  }
-
-  /**
-   * 创建系统字体
-   *
-   * @param preferredFont 优先使用的字体名（null 表示自动选择）
-   * @param style         样式配置（用于获取 bold 属性）
-   * @return FontInfo 对象
-   */
-  private static FontInfo createSystemFont(String preferredFont, Style style) {
-    String osName = System.getProperty("os.name", "").toLowerCase();
-
-    // 如果指定了字体名且该字体存在，直接使用
-    if (preferredFont != null && isFontAvailable(preferredFont)) {
-      logger.debug("使用指定字体: {}", preferredFont);
-      return createFontByName(preferredFont, style);
+    // 尝试加载指定字体
+    if (fontFamily != null) {
+      FontInfo result = tryLoadSpecifiedFont(fontFamily);
+      if (result != null) {
+        return result;
+      }
+      logger.warn("指定字体 [{}] 加载失败，回退到系统自动选择", fontFamily);
     }
 
     // 自动选择系统字体
-    if (osName.contains("win")) {
-      return createWindowsFont(preferredFont, style);
-    } else if (osName.contains("linux")) {
-      return createLinuxFont(style);
-    } else if (osName.contains("mac") || osName.contains("darwin")) {
-      return createMacFont(style);
-    } else {
-      return createGenericFont(style);
-    }
+    return autoSelectSystemFont();
+  }
+
+  // ==================== 指定字体加载 ====================
+
+  /**
+   * 尝试加载指定字体的字体族
+   *
+   * @param fontFamily 字体族名
+   * @return FontInfo，加载失败返回 null
+   */
+  private static FontInfo tryLoadSpecifiedFont(String fontFamily) {
+    String os = detectOs();
+
+    return switch (os) {
+      case "windows" -> tryLoadSpecifiedWindowsFont(fontFamily);
+      case "linux" -> tryLoadSpecifiedLinuxFont(fontFamily);
+      case "mac" -> tryLoadSpecifiedMacFont(fontFamily);
+      default -> null;
+    };
   }
 
   /**
-   * 检查字体在当前系统中是否可用
-   *
-   * @param fontName 字体名
-   * @return 是否可用
+   * Windows 平台：尝试加载指定字体
+   * <p>
+   * 先在已知字体描述符中匹配，再尝试用字体族名直接查找字体文件
    */
-  private static boolean isFontAvailable(String fontName) {
-    java.awt.Font[] fonts = java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment().getAllFonts();
-    for (java.awt.Font font : fonts) {
-      if (font.getFontName().equalsIgnoreCase(fontName) || font.getName().equalsIgnoreCase(fontName)) {
-        return true;
-      }
-    }
-    return false;
-  }
+  private static FontInfo tryLoadSpecifiedWindowsFont(String fontFamily) {
+    String fontsDir = getWindowsFontsDir();
+    String lowerFamily = fontFamily.toLowerCase();
 
-  /**
-   * 根据字体名创建字体对象
-   *
-   * @param fontName 字体名
-   * @param style    样式配置（用于获取 bold 属性）
-   * @return FontInfo 对象
-   */
-  private static FontInfo createFontByName(String fontName, Style style) {
-    String osName = System.getProperty("os.name", "").toLowerCase();
-    String fontsDir = getFontsDirectory();
-    String baseFontPath;
-    String boldFontPath;
-
-    if (osName.contains("win")) {
-      // Windows 系统字体路径（优先 .ttc）
-      baseFontPath = fontsDir + "\\" + fontName + ".ttc";
-      boldFontPath = fontsDir + "\\" + fontName + ",1";
-    } else if (osName.contains("linux")) {
-      // Linux 系统字体路径
-      baseFontPath = "/usr/share/fonts/truetype/" + fontName + ".ttc";
-      boldFontPath = "/usr/share/fonts/truetype/" + fontName + ",1";
-    } else {
-      // Mac 系统
-      baseFontPath = "/Library/Fonts/" + fontName + ".ttf";
-      boldFontPath = "/Library/Fonts/" + fontName + "bd.ttf";
-    }
-
-    return loadFontFromPath(baseFontPath, boldFontPath, fontName, style);
-  }
-
-  /**
-   * 从指定路径加载字体
-   *
-   * @param baseFontPath 常规字体路径
-   * @param boldFontPath 粗体字体路径（可以是索引如 "font.ttc,1"）
-   * @param fontName     字体名（用于日志）
-   * @param style        样式配置（用于获取 bold 属性）
-   * @return FontInfo 对象
-   */
-  private static FontInfo loadFontFromPath(String baseFontPath, String boldFontPath, String fontName, Style style) {
-    File regularFile = new File(baseFontPath);
-    File boldFile = new File(boldFontPath.contains(",") ? extractPath(boldFontPath) : boldFontPath);
-    boolean isTtc = baseFontPath.toLowerCase().endsWith(".ttc");
-
-    // 判断是否需要加载粗体字体
-    boolean useBold = isBoldRequested(style);
-
-    if (regularFile.exists()) {
-      try {
-        if (isTtc) {
-          // .ttc 文件（TrueType Collection）
-          PdfFont regularFont = PdfFontFactory.createFont(regularFile.getAbsolutePath() + ",0", "Identity-H", PdfFontFactory.EmbeddingStrategy.PREFER_EMBEDDED);
-          PdfFont boldFont = useBold ? loadBoldFont(regularFile.getAbsolutePath(), regularFont) : regularFont;
-          logger.debug("使用 TTC 字体: {}", fontName);
-          return new FontInfo(regularFont, boldFont);
-        } else {
-          // .ttf 文件
-          PdfFont regularFont = PdfFontFactory.createFont(regularFile.getAbsolutePath(), "Identity-H", PdfFontFactory.EmbeddingStrategy.PREFER_EMBEDDED);
-          PdfFont boldFont = (useBold && boldFile.exists())
-            ? PdfFontFactory.createFont(boldFile.getAbsolutePath(), "Identity-H", PdfFontFactory.EmbeddingStrategy.PREFER_EMBEDDED)
-            : regularFont;
-          logger.debug("使用 TTF 字体: {}", fontName);
-          return new FontInfo(regularFont, boldFont);
+    // 1. 在已知字体描述符中匹配
+    for (FontDescriptor desc : WINDOWS_FONT_CANDIDATES) {
+      if (desc.familyName().toLowerCase().contains(lowerFamily) ||
+          lowerFamily.contains(desc.familyName().toLowerCase())) {
+        FontInfo result = loadFromFontDescriptor(fontsDir, desc);
+        if (result != null) {
+          return result;
         }
-      } catch (Exception e) {
-        logger.warn("从路径加载字体失败: {}", e.getMessage());
       }
     }
 
-    // 尝试使用 iText 的字体工厂方法（支持字体名）
+    // 2. 尝试直接用字体族名查找字体文件
+    return tryDirectFileLookup(fontsDir, fontFamily);
+  }
+
+  /**
+   * Linux 平台：尝试加载指定字体
+   * <p>
+   * 在常用字体目录中递归搜索包含字体族名的字体文件
+   */
+  private static FontInfo tryLoadSpecifiedLinuxFont(String fontFamily) {
+    String[] searchDirs = {
+      "/usr/share/fonts/truetype",
+      "/usr/share/fonts/opentype",
+      "/usr/local/share/fonts",
+      System.getProperty("user.home") + "/.fonts",
+      System.getProperty("user.home") + "/.local/share/fonts"
+    };
+
+    String lowerFamily = fontFamily.toLowerCase().replace(" ", "");
+
+    for (String dir : searchDirs) {
+      File found = searchFontFile(new File(dir), lowerFamily);
+      if (found != null) {
+        FontInfo result = loadFromFontFile(found);
+        if (result != null) {
+          return result;
+        }
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Mac 平台：尝试加载指定字体
+   * <p>
+   * Mac 支持 iText 的字体名直接加载
+   */
+  private static FontInfo tryLoadSpecifiedMacFont(String fontFamily) {
     try {
-      PdfFont regularFont = PdfFontFactory.createFont(fontName, "Identity-H");
-      PdfFont boldFont = useBold ? PdfFontFactory.createFont(fontName + " Bold", "Identity-H") : regularFont;
+      PdfFont regularFont = PdfFontFactory.createFont(fontFamily, "Identity-H");
+      PdfFont boldFont = loadMacBoldFont(fontFamily, regularFont);
+      logger.debug("Mac 使用指定字体: {}", fontFamily);
       return new FontInfo(regularFont, boldFont);
     } catch (Exception e) {
-      throw new RuntimeException("无法创建字体: " + fontName, e);
+      logger.debug("Mac 字体 [{}] 加载失败: {}", fontFamily, e.getMessage());
+      return null;
+    }
+  }
+
+  // ==================== 自动选择 ====================
+
+  /**
+   * 自动选择系统默认中文字体
+   */
+  private static FontInfo autoSelectSystemFont() {
+    String os = detectOs();
+
+    return switch (os) {
+      case "windows" -> autoSelectWindowsFont();
+      case "linux" -> autoSelectLinuxFont();
+      case "mac" -> autoSelectMacFont();
+      default -> createFallbackFont();
+    };
+  }
+
+  /**
+   * Windows 自动选择：按优先级遍历已知中文字体描述符
+   */
+  private static FontInfo autoSelectWindowsFont() {
+    String fontsDir = getWindowsFontsDir();
+
+    for (FontDescriptor desc : WINDOWS_FONT_CANDIDATES) {
+      FontInfo result = loadFromFontDescriptor(fontsDir, desc);
+      if (result != null) {
+        logger.debug("Windows 自动选择字体: {}", desc.familyName());
+        return result;
+      }
+    }
+
+    return createFallbackFont();
+  }
+
+  /**
+   * Linux 自动选择：按优先级遍历已知字体路径
+   */
+  private static FontInfo autoSelectLinuxFont() {
+    for (String path : LINUX_FONT_PATHS) {
+      File file = new File(path);
+      if (file.exists()) {
+        FontInfo result = loadFromFontFile(file);
+        if (result != null) {
+          logger.debug("Linux 自动选择字体: {}", file.getName());
+          return result;
+        }
+      }
+    }
+
+    return createFallbackFont();
+  }
+
+  /**
+   * Mac 自动选择：按优先级遍历已知中文字体族名
+   */
+  private static FontInfo autoSelectMacFont() {
+    for (String fontName : MAC_FONT_NAMES) {
+      try {
+        PdfFont regularFont = PdfFontFactory.createFont(fontName, "Identity-H");
+        PdfFont boldFont = loadMacBoldFont(fontName, regularFont);
+        logger.debug("Mac 自动选择字体: {}", fontName);
+        return new FontInfo(regularFont, boldFont);
+      } catch (Exception e) {
+        logger.debug("Mac 字体 [{}] 不可用", fontName);
+      }
+    }
+
+    return createFallbackFont();
+  }
+
+  // ==================== 字体文件加载 ====================
+
+  /**
+   * 从字体描述符加载字体
+   * <p>
+   * 根据描述符中定义的常规/粗体文件名，在指定目录中查找并加载。
+   * 始终加载常规和粗体两种变体（粗体不可用时回退为常规字体）。
+   *
+   * @param dir        字体文件所在目录
+   * @param descriptor 字体描述符
+   * @return FontInfo，加载失败返回 null
+   */
+  private static FontInfo loadFromFontDescriptor(String dir, FontDescriptor descriptor) {
+    File regularFile = new File(dir, descriptor.regularFile());
+    if (!regularFile.exists()) {
+      return null;
+    }
+
+    try {
+      PdfFont regularFont = loadPdfFont(regularFile, 0);
+      PdfFont boldFont;
+
+      if (descriptor.boldFile() != null) {
+        // 粗体有独立的字体文件
+        File boldFile = new File(dir, descriptor.boldFile());
+        if (boldFile.exists()) {
+          boldFont = loadPdfFont(boldFile, 0);
+        } else {
+          boldFont = regularFont;
+        }
+      } else if (isTtcFile(regularFile)) {
+        // TTC 文件尝试索引 1 作为粗体变体
+        boldFont = loadPdfFont(regularFile, 1, regularFont);
+      } else {
+        boldFont = regularFont;
+      }
+
+      logger.debug("加载字体: {} -> 常规: {}, 粗体: {}",
+        descriptor.familyName(), regularFile.getName(),
+        boldFont == regularFont ? "(同常规)" : descriptor.boldFile());
+      return new FontInfo(regularFont, boldFont);
+    } catch (Exception e) {
+      logger.debug("字体描述符加载失败 [{}]: {}", descriptor.familyName(), e.getMessage());
+      return null;
     }
   }
 
   /**
-   * 加载粗体字体
+   * 从单个字体文件加载字体
+   * <p>
+   * TTC 文件同时尝试加载索引 0（常规）和索引 1（粗体），
+   * TTF 文件常规和粗体使用同一字体。
+   *
+   * @param file 字体文件
+   * @return FontInfo，加载失败返回 null
    */
-  private static PdfFont loadBoldFont(String fontPath, PdfFont fallback) {
+  private static FontInfo loadFromFontFile(File file) {
     try {
-      return PdfFontFactory.createFont(fontPath + ",1", "Identity-H", PdfFontFactory.EmbeddingStrategy.PREFER_EMBEDDED);
+      PdfFont regularFont = loadPdfFont(file, 0);
+      PdfFont boldFont;
+
+      if (isTtcFile(file)) {
+        boldFont = loadPdfFont(file, 1, regularFont);
+      } else {
+        boldFont = regularFont;
+      }
+
+      logger.debug("加载字体文件: {}", file.getAbsolutePath());
+      return new FontInfo(regularFont, boldFont);
     } catch (Exception e) {
+      logger.debug("字体文件加载失败 [{}]: {}", file.getName(), e.getMessage());
+      return null;
+    }
+  }
+
+  /**
+   * 在目录中递归搜索包含指定名称的字体文件
+   *
+   * @param dir         搜索目录
+   * @param lowerFamily 字体族名（小写、去空格）
+   * @return 找到的字体文件，未找到返回 null
+   */
+  private static File searchFontFile(File dir, String lowerFamily) {
+    if (!dir.exists() || !dir.isDirectory()) {
+      return null;
+    }
+
+    File[] children = dir.listFiles();
+    if (children == null) {
+      return null;
+    }
+
+    for (File child : children) {
+      if (child.isDirectory()) {
+        File found = searchFontFile(child, lowerFamily);
+        if (found != null) {
+          return found;
+        }
+      } else {
+        String lowerName = child.getName().toLowerCase().replace(" ", "");
+        if ((lowerName.endsWith(".ttf") || lowerName.endsWith(".ttc"))
+            && lowerName.contains(lowerFamily)) {
+          return child;
+        }
+      }
+    }
+    return null;
+  }
+
+  /**
+   * 尝试直接用字体族名查找字体文件（遍历常见扩展名）
+   */
+  private static FontInfo tryDirectFileLookup(String dir, String fontFamily) {
+    String[] extensions = {".ttc", ".ttf"};
+
+    for (String ext : extensions) {
+      // 尝试原始名称
+      File file = new File(dir, fontFamily + ext);
+      if (file.exists()) {
+        FontInfo result = loadFromFontFile(file);
+        if (result != null) {
+          return result;
+        }
+      }
+
+      // 尝试去空格后的名称
+      File compactFile = new File(dir, fontFamily.replace(" ", "") + ext);
+      if (compactFile.exists() && !compactFile.equals(file)) {
+        FontInfo result = loadFromFontFile(compactFile);
+        if (result != null) {
+          return result;
+        }
+      }
+    }
+    return null;
+  }
+
+  // ==================== 底层字体创建 ====================
+
+  /**
+   * 从文件加载 PDF 字体（TTC 文件使用指定索引）
+   *
+   * @param file  字体文件
+   * @param index TTC 文件中的字体索引
+   * @return PdfFont
+   * @throws Exception 加载失败时抛出
+   */
+  private static PdfFont loadPdfFont(File file, int index) throws Exception {
+    String path = isTtcFile(file)
+      ? file.getAbsolutePath() + "," + index
+      : file.getAbsolutePath();
+    return PdfFontFactory.createFont(path, "Identity-H", PdfFontFactory.EmbeddingStrategy.PREFER_EMBEDDED);
+  }
+
+  /**
+   * 从文件加载 PDF 字体（TTC 文件使用指定索引），失败时返回回退字体
+   *
+   * @param file     字体文件
+   * @param index    TTC 文件中的字体索引
+   * @param fallback 加载失败时的回退字体
+   * @return PdfFont
+   */
+  private static PdfFont loadPdfFont(File file, int index, PdfFont fallback) {
+    try {
+      return loadPdfFont(file, index);
+    } catch (Exception e) {
+      logger.debug("TTC 索引 {} 加载失败，使用回退字体: {}", index, e.getMessage());
       return fallback;
     }
   }
 
   /**
-   * 从完整路径（含索引）中提取纯文件路径
+   * 加载 Mac 粗体字体，失败时返回回退字体
    */
-  private static String extractPath(String pathWithIndex) {
-    int commaIndex = pathWithIndex.lastIndexOf(',');
-    return commaIndex > 0 ? pathWithIndex.substring(0, commaIndex) : pathWithIndex;
-  }
-
-  /**
-   * 创建 Windows 系统字体
-   *
-   * @param preferredFont 优先使用的字体名（null 表示自动选择）
-   * @param style         样式配置（用于获取 bold 属性）
-   * @return FontInfo 对象
-   */
-  private static FontInfo createWindowsFont(String preferredFont, Style style) {
-    // Windows 常用的中文字体
-    String[] commonFonts = {
-      "MSYHBD",   // 微软雅黑 Bold
-      "MSYH",     // 微软雅黑
-      "SIMHEI",   // 黑体
-      "SIMSUN",   // 宋体
-      "STZHONGS", // 华文中宋
-      "STKAITI",  // 华文楷体
-      "STSONG"    // 华文宋体
-    };
-
-    String fontsDir = getFontsDirectory();
-    boolean useBold = isBoldRequested(style);
-
-    for (String fontName : commonFonts) {
-      // 尝试 .ttc 格式（微软雅黑等）
-      File ttcFile = new File(fontsDir + "\\" + fontName + ".ttc");
-      File ttfFile = new File(fontsDir + "\\" + fontName + ".ttf");
-      File boldFile = new File(fontsDir + "\\" + fontName + "bd.ttf");
-
-      if (ttcFile.exists()) {
-        try {
-          PdfFont regularFont = PdfFontFactory.createFont(ttcFile.getAbsolutePath() + ",0", "Identity-H", PdfFontFactory.EmbeddingStrategy.PREFER_EMBEDDED);
-          PdfFont boldFont = useBold ? loadBoldFont(ttcFile.getAbsolutePath(), regularFont) : regularFont;
-          logger.debug("Windows 系统使用 TTC 字体: {}", fontName);
-          return new FontInfo(regularFont, boldFont);
-        } catch (Exception e) {
-          logger.debug("TTC 字体 [{}] 加载失败: {}", fontName, e.getMessage());
-        }
-      } else if (ttfFile.exists()) {
-        try {
-          PdfFont regularFont = PdfFontFactory.createFont(ttfFile.getAbsolutePath(), "Identity-H", PdfFontFactory.EmbeddingStrategy.PREFER_EMBEDDED);
-          PdfFont boldFont = (useBold && boldFile.exists())
-            ? PdfFontFactory.createFont(boldFile.getAbsolutePath(), "Identity-H", PdfFontFactory.EmbeddingStrategy.PREFER_EMBEDDED)
-            : regularFont;
-          logger.debug("Windows 系统使用 TTF 字体: {}", fontName);
-          return new FontInfo(regularFont, boldFont);
-        } catch (Exception e) {
-          logger.debug("TTF 字体 [{}] 加载失败: {}", fontName, e.getMessage());
-        }
-      }
+  private static PdfFont loadMacBoldFont(String fontFamily, PdfFont fallback) {
+    try {
+      return PdfFontFactory.createFont(fontFamily + " Bold", "Identity-H");
+    } catch (Exception e) {
+      logger.debug("Mac 粗体字体 [{}] 不可用，使用常规字体", fontFamily);
+      return fallback;
     }
-
-    return createGenericFont(style);
   }
 
   /**
-   * 创建 Linux 系统字体
-   *
-   * @param style 样式配置（用于获取 bold 属性）
-   * @return FontInfo 对象
+   * 创建回退字体（Helvetica），不支持中文
    */
-  private static FontInfo createLinuxFont(Style style) {
-    // Linux 常用的中文字体路径
-    String[] fontPaths = {
-      "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc",
-      "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",
-      "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
-      "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-      "/usr/share/fonts/truetype/arphic/uming.ttc"
-    };
-
-    boolean useBold = isBoldRequested(style);
-
-    for (String fontPath : fontPaths) {
-      File fontFile = new File(fontPath);
-      if (fontFile.exists()) {
-        try {
-          // 尝试获取常规和粗体变体
-          PdfFont regularFont = PdfFontFactory.createFont(fontPath + ",1", "Identity-H", PdfFontFactory.EmbeddingStrategy.PREFER_EMBEDDED);
-          PdfFont boldFont = useBold
-            ? PdfFontFactory.createFont(fontPath + ",0", "Identity-H", PdfFontFactory.EmbeddingStrategy.PREFER_EMBEDDED)
-            : regularFont;
-          logger.debug("Linux 系统使用字体: {}", fontPath);
-          return new FontInfo(regularFont, boldFont);
-        } catch (Exception e) {
-          try {
-            PdfFont regularFont = PdfFontFactory.createFont(fontPath, "Identity-H", PdfFontFactory.EmbeddingStrategy.PREFER_EMBEDDED);
-            PdfFont boldFont = regularFont;
-            logger.debug("Linux 系统使用字体: {} (单一字体)", fontPath);
-            return new FontInfo(regularFont, boldFont);
-          } catch (Exception ex) {
-            logger.debug("字体 [{}] 加载失败: {}", fontPath, ex.getMessage());
-          }
-        }
-      }
-    }
-
-    return createGenericFont(style);
-  }
-
-  /**
-   * 创建 Mac 系统字体
-   *
-   * @param style 样式配置（用于获取 bold 属性）
-   * @return FontInfo 对象
-   */
-  private static FontInfo createMacFont(Style style) {
-    // Mac 常用的中文字体
-    String[] fontNames = {
-      "PingFang HK",
-      "PingFang SC",
-      "STHeiti Light",
-      "STHeiti",
-      "Hiragino Sans GB"
-    };
-
-    boolean useBold = isBoldRequested(style);
-
-    for (String fontName : fontNames) {
-      try {
-        PdfFont regularFont = PdfFontFactory.createFont(fontName, "Identity-H");
-        PdfFont boldFont = useBold ? PdfFontFactory.createFont(fontName + " Bold", "Identity-H") : regularFont;
-        logger.debug("Mac 系统使用字体: {}", fontName);
-        return new FontInfo(regularFont, boldFont);
-      } catch (Exception e) {
-        logger.debug("字体 [{}] 加载失败: {}", fontName, e.getMessage());
-      }
-    }
-
-    return createGenericFont(style);
-  }
-
-  /**
-   * 创建通用字体（作为最终回退方案）
-   *
-   * @param style 样式配置（用于获取 bold 属性）
-   * @return FontInfo 对象
-   */
-  private static FontInfo createGenericFont(Style style) {
-    boolean useBold = isBoldRequested(style);
-
+  private static FontInfo createFallbackFont() {
     try {
       PdfFont regularFont = PdfFontFactory.createFont("Helvetica", "Cp1252");
-      PdfFont boldFont = useBold ? PdfFontFactory.createFont("Helvetica-Bold", "Cp1252") : regularFont;
-      logger.debug("使用 Helvetica 字体（可能不支持中文）");
+      PdfFont boldFont = PdfFontFactory.createFont("Helvetica-Bold", "Cp1252");
+      logger.warn("使用 Helvetica 回退字体（不支持中文）");
       return new FontInfo(regularFont, boldFont);
     } catch (Exception e) {
       try {
         PdfFont font = PdfFontFactory.createFont();
+        logger.warn("使用默认回退字体");
         return new FontInfo(font, font);
       } catch (Exception ex) {
-        logger.warn("无法创建任何字体，使用空白字体", ex);
         throw new RuntimeException("无法创建 PDF 字体", ex);
       }
     }
   }
 
-  /**
-   * 获取系统字体目录
-   */
-  private static String getFontsDirectory() {
-    if (cachedFontsDir != null) {
-      return cachedFontsDir;
-    }
+  // ==================== 工具方法 ====================
 
-    String windir = System.getenv("WINDIR");
-    cachedFontsDir = (windir != null ? windir : "C:\\Windows") + "\\Fonts";
-    return cachedFontsDir;
+  /**
+   * 检测当前操作系统
+   *
+   * @return "windows" | "linux" | "mac" | "unknown"
+   */
+  private static String detectOs() {
+    String osName = System.getProperty("os.name", "").toLowerCase();
+    if (osName.contains("win")) {
+      return "windows";
+    } else if (osName.contains("linux")) {
+      return "linux";
+    } else if (osName.contains("mac") || osName.contains("darwin")) {
+      return "mac";
+    }
+    return "unknown";
   }
 
   /**
-   * 判断是否需要加载粗体字体
-   *
-   * @param style 样式配置
-   * @return 是否需要粗体
+   * 获取 Windows 系统字体目录
    */
-  private static boolean isBoldRequested(Style style) {
-    if (style != null && style.getFont() != null && Boolean.TRUE.equals(style.getFont().getBold())) {
-      return true;
+  private static String getWindowsFontsDir() {
+    String windir = System.getenv("WINDIR");
+    return (windir != null ? windir : "C:\\Windows") + "\\Fonts";
+  }
+
+  /**
+   * 判断是否为 TTC 字体文件
+   */
+  private static boolean isTtcFile(File file) {
+    return file.getName().toLowerCase().endsWith(".ttc");
+  }
+
+  // ==================== 内部数据结构 ====================
+
+  /**
+   * 字体描述符，描述一个字体族的文件名映射关系
+   *
+   * @param familyName   字体族名（如 "Microsoft YaHei"）
+   * @param regularFile  常规字体文件名（如 "msyh.ttc"）
+   * @param boldFile     粗体字体文件名（如 "msyhbd.ttc"），null 表示无独立粗体文件
+   */
+  private record FontDescriptor(String familyName, String regularFile, String boldFile) {
+    static FontDescriptor of(String familyName, String regularFile, String boldFile) {
+      return new FontDescriptor(familyName, regularFile, boldFile);
     }
-    return false;
   }
 
   /**
    * 字体信息记录
    *
    * @param regularFont 常规字体
-   * @param boldFont    粗体字体
+   * @param boldFont    粗体字体（粗体不可用时与常规字体相同）
    */
   public record FontInfo(PdfFont regularFont, PdfFont boldFont) {
   }

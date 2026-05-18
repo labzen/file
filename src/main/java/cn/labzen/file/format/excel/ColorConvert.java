@@ -1,6 +1,5 @@
 package cn.labzen.file.format.excel;
 
-import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 
 import java.util.Map;

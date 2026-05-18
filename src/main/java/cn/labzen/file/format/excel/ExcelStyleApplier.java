@@ -1,7 +1,6 @@
 package cn.labzen.file.format.excel;
 
 import cn.labzen.file.definition.bean.column.TableColumn;
-import cn.labzen.file.definition.bean.style.Border;
 import cn.labzen.file.definition.bean.style.Font;
 import cn.labzen.file.definition.bean.style.Style;
 import cn.labzen.file.definition.enums.Alignment;
@@ -87,14 +86,13 @@ public final class ExcelStyleApplier {
   }
 
   private String buildCacheKey(Style style) {
-    return String.format("%s-%s-%s-%s-%s-%s-%s",
+    return String.format("%s-%s-%s-%s-%s-%s",
       style.getAlign(),
       style.getBackground(),
       style.getWrapped(),
       style.getFont() != null ? style.getFont().getFamily() : "",
       style.getFont() != null ? style.getFont().getSize() : "",
-      style.getFont() != null ? style.getFont().getColor() : "",
-      style.getBorder() != null ? style.getBorder().getWidth() : "");
+      style.getFont() != null ? style.getFont().getColor() : "");
   }
 
   private CellStyle createCellStyle(Style style) {
@@ -102,10 +100,6 @@ public final class ExcelStyleApplier {
 
     applyAlignment(cellStyle, style.getAlign());
     applyBackground(cellStyle, style.getBackground());
-
-    if (style.getBorder() != null) {
-      applyBorder(cellStyle, style.getBorder());
-    }
 
     if (style.getFont() != null) {
       applyFont(cellStyle, style.getFont());
@@ -159,19 +153,6 @@ public final class ExcelStyleApplier {
     }
   }
 
-  private void applyBorder(CellStyle cellStyle, Border border) {
-    BorderStyle borderStyle = convertBorderStyle(border.getWidth());
-    cellStyle.setBorderTop(borderStyle);
-    cellStyle.setBorderRight(borderStyle);
-    cellStyle.setBorderBottom(borderStyle);
-    cellStyle.setBorderLeft(borderStyle);
-
-    cellStyle.setTopBorderColor(DEFAULT_BORDER_COLOR);
-    cellStyle.setRightBorderColor(DEFAULT_BORDER_COLOR);
-    cellStyle.setBottomBorderColor(DEFAULT_BORDER_COLOR);
-    cellStyle.setLeftBorderColor(DEFAULT_BORDER_COLOR);
-  }
-
   private BorderStyle convertBorderStyle(BorderWidth borderWidth) {
     if (borderWidth == null) {
       return BorderStyle.THIN;
@@ -223,11 +204,6 @@ public final class ExcelStyleApplier {
 
     // 字体
     style.setFont(resolveFont(column, defaultColumnStyle));
-
-    // 边框
-    if (defaultColumnStyle != null && defaultColumnStyle.getBorder() != null) {
-      style.setBorder(defaultColumnStyle.getBorder());
-    }
 
     // 自动换行
     style.setWrapped(resolveWrapped(column, defaultColumnStyle));

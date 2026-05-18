@@ -13,7 +13,6 @@ import lombok.NoArgsConstructor;
  *
  * @author labzen
  * @see Font
- * @see Border
  */
 @Data
 @AllArgsConstructor
@@ -34,11 +33,6 @@ public class Style {
    * 字体样式
    */
   private Font font = new Font();
-
-  /**
-   * 边框样式
-   */
-  private Border border = new Border();
 
   /**
    * 是否自动换行，默认 true

@@ -71,23 +71,4 @@ public class HeaderBuilder {
 
     return new HeaderStructure(isSingleHeader, ImmutableList.copyOf(firstRowHeaderCells), ImmutableList.copyOf(secondRowHeaderCells));
   }
-
-  public static void main(String[] args) {
-    List<TableColumn> columns = List.of(
-
-      new TableColumn("姓名", 1, null, null),
-      new TableColumn("性别", 1, null, null),
-      new TableColumn("成绩:-:数学", 2, null, null),
-      new TableColumn("成绩:-:英语", 3, null, null),
-      new TableColumn("成绩:-:物理", 4, null, null),
-      new TableColumn("年龄", 5, null, null),
-      new TableColumn("Other:-:班级", 6, null, null),
-      new TableColumn("Other:-:地址", 7, null, null)
-    );
-
-    HeaderStructure build = build(columns);
-    System.out.println(build);
-
-    build.getLeafLevelHeaders().forEach(System.out::println);
-  }
 }

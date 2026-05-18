@@ -4,7 +4,6 @@ import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.bean.GlobalDefinition;
 import cn.labzen.file.definition.bean.column.GlobalColumn;
 import cn.labzen.file.definition.bean.column.TableColumn;
-import cn.labzen.file.definition.bean.style.Border;
 import cn.labzen.file.definition.bean.style.Font;
 import cn.labzen.file.definition.bean.style.Style;
 import cn.labzen.file.definition.bean.table.HeaderBuilder;
@@ -113,8 +112,6 @@ public class DefinitionLoader {
 
     // 3. 合并、校验、排序并注册
     dataDefinitionMap.forEach((key, value) -> {
-      // 设置默认 index（按 yml 中出现的顺序）
-      assignDefaultIndices(value);
       // 合并全局配置
       DataDefinition mergedDefinition = mergeDefinition(globalDefinition, value);
 
@@ -200,50 +197,6 @@ public class DefinitionLoader {
       return null;
     }
   }
-
-  /**
-   * 为没有配置 index 的列设置默认 index
-   * <p>
-   * 按 yml 文件中出现的顺序分配 index（从0开始）
-   */
-  private void assignDefaultIndices(DataDefinition definition) {
-    Map<String, TableColumn> columns = definition.getColumns();
-    if (columns == null || columns.isEmpty()) {
-      return;
-    }
-
-    int index = 0;
-    for (TableColumn column : columns.values()) {
-      if (column.getIndex() == null) {
-        column.setIndex(index);
-      }
-      index++;
-    }
-  }
-
-//  /**
-//   * 按 index 对列进行排序
-//   * <p>
-//   * 使用 LinkedHashMap 保持排序后的顺序
-//   */
-//  private void sortColumnsByIndex(DataDefinition config) {
-//    Map<String, TableColumn> columns = config.getColumns();
-//    if (columns == null || columns.isEmpty()) {
-//      return;
-//    }
-//
-//    // 按 index 值排序并重新放入 LinkedHashMap
-//    LinkedHashMap<String, TableColumn> sortedColumns = columns.entrySet().stream()
-//      .sorted(Comparator.comparingInt(e -> e.getValue().getIndex() != null ? e.getValue().getIndex() : Integer.MAX_VALUE))
-//      .collect(Collectors.toMap(
-//        Map.Entry::getKey,
-//        Map.Entry::getValue,
-//        (e1, e2) -> e1,
-//        LinkedHashMap::new
-//      ));
-//
-//    config.setColumns(sortedColumns);
-//  }
 
   /**
    * 合并全局配置与单独配置
@@ -344,11 +297,6 @@ public class DefinitionLoader {
     } else if (source.getFont() != null) {
       mergeFont(source.getFont(), target.getFont());
     }
-    if (target.getBorder() == null) {
-      target.setBorder(cloneBorder(source.getBorder()));
-    } else if (source.getBorder() != null) {
-      mergeBorder(source.getBorder(), target.getBorder());
-    }
     if (target.getWrapped() == null) {
       target.setWrapped(source.getWrapped());
     }
@@ -380,22 +328,6 @@ public class DefinitionLoader {
   }
 
   /**
-   * 合并边框样式
-   */
-  private void mergeBorder(Border source, Border target) {
-    if (source == null || target == null) {
-      return;
-    }
-
-    if (target.getColor() == null) {
-      target.setColor(source.getColor());
-    }
-    if (target.getWidth() == null) {
-      target.setWidth(source.getWidth());
-    }
-  }
-
-  /**
    * 深度拷贝样式
    */
   private Style cloneStyle(Style source) {
@@ -408,7 +340,6 @@ public class DefinitionLoader {
     clone.setBackground(source.getBackground());
     clone.setWrapped(source.getWrapped());
     clone.setFont(cloneFont(source.getFont()));
-    clone.setBorder(cloneBorder(source.getBorder()));
     return clone;
   }
 
@@ -426,20 +357,6 @@ public class DefinitionLoader {
     clone.setColor(source.getColor());
     clone.setBold(source.getBold());
     clone.setItalic(source.getItalic());
-    return clone;
-  }
-
-  /**
-   * 深度拷贝边框
-   */
-  private Border cloneBorder(Border source) {
-    if (source == null) {
-      return new Border();
-    }
-
-    Border clone = new Border();
-    clone.setColor(source.getColor());
-    clone.setWidth(source.getWidth());
     return clone;
   }
 

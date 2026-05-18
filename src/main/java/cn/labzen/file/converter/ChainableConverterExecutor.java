@@ -12,10 +12,6 @@ import java.util.*;
 @Slf4j
 public class ChainableConverterExecutor {
 
-  // 方法匹配
-//  private static final Pattern METHOD_PATTERN = Pattern.compile("\\s*([a-zA-Z_$][\\w$]*)\\s*\\((.*?)\\)\\s*(?:;|$)");
-//  // 参数匹配
-//  private static final Pattern ARG_PATTERN = Pattern.compile("\\s*(?:\"([^\"]*)\"|([^,\\s][^,]*))\\s*(?:,|$)");
   private static final Map<String, ConverterInstance> CONVERTER_INSTANCES = Maps.newHashMap();
   private static final Map<String, ChainableConverterExecutor> CHAIN_CACHE = Maps.newHashMap();
 

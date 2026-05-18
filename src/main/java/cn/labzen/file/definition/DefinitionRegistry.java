@@ -27,7 +27,6 @@ public final class DefinitionRegistry {
    * value: 合并后的配置对象
    */
   private static final Map<String, DataDefinition> DEFINITION_MAP = new ConcurrentHashMap<>();
-//  private static final Map<String, HeaderStructure> HEADER_STRUCTURE_MAP = new ConcurrentHashMap<>();
 
   private DefinitionRegistry() {
   }
@@ -45,7 +44,6 @@ public final class DefinitionRegistry {
 
     ChainableConverterExecutor.build(definition);
     DEFINITION_MAP.put(name, definition);
-//    HEADER_STRUCTURE_MAP.put(name, headerStructure);
   }
 
   /**

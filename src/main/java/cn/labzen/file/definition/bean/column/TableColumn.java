@@ -33,13 +33,13 @@ public class TableColumn extends GlobalColumn {
    */
   private String header;
 
-  /**
-   * 列索引，从 0 开始，越小越靠左
-   * <p>
-   * 不需指定，会按照 YAML 文件中定义的顺序显示列
-   */
-  @Deprecated
-  private Integer index;
+//  /**
+//   * 列索引，从 0 开始，越小越靠左
+//   * <p>
+//   * 不需指定，会按照 YAML 文件中定义的顺序显示列
+//   */
+//  @Deprecated
+//  private Integer index;
 
   /**
    * 数据格式化模式配置
@@ -50,29 +50,4 @@ public class TableColumn extends GlobalColumn {
    * 数据转换器配置
    */
   private Converter converter = new Converter();
-
-//
-//  /**
-//   * 获取第一级表头标题
-//   *
-//   * @return 第一级表头，如无配置返回 null
-//   */
-//  public String getFirstHeader() {
-//    if (header == null || header.isEmpty()) {
-//      return null;
-//    }
-//    return header.getFirst();
-//  }
-//
-//  /**
-//   * 获取表头级别数（多级表头深度）
-//   *
-//   * @return 表头级别数
-//   */
-//  public int getHeaderLevel() {
-//    if (header == null) {
-//      return 0;
-//    }
-//    return header.size();
-//  }
 }

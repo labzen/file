@@ -4,7 +4,6 @@ import cn.labzen.file.definition.bean.column.TableColumn;
 import cn.labzen.file.definition.bean.style.Font;
 import cn.labzen.file.definition.bean.style.Style;
 import cn.labzen.file.definition.enums.Alignment;
-import cn.labzen.file.definition.enums.BorderWidth;
 import com.google.common.collect.Maps;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
@@ -100,6 +99,7 @@ public final class ExcelStyleApplier {
 
     applyAlignment(cellStyle, style.getAlign());
     applyBackground(cellStyle, style.getBackground());
+    applyDefaultBorder(cellStyle);
 
     if (style.getFont() != null) {
       applyFont(cellStyle, style.getFont());
@@ -153,16 +153,16 @@ public final class ExcelStyleApplier {
     }
   }
 
-  private BorderStyle convertBorderStyle(BorderWidth borderWidth) {
-    if (borderWidth == null) {
-      return BorderStyle.THIN;
-    }
-    return switch (borderWidth) {
-      case MEDIUM -> BorderStyle.MEDIUM;
-      case THICK -> BorderStyle.THICK;
-      case DOUBLE -> BorderStyle.DOUBLE;
-      default -> BorderStyle.THIN;
-    };
+  private void applyDefaultBorder(CellStyle cellStyle) {
+    cellStyle.setBorderTop(BorderStyle.THIN);
+    cellStyle.setBorderRight(BorderStyle.THIN);
+    cellStyle.setBorderBottom(BorderStyle.THIN);
+    cellStyle.setBorderLeft(BorderStyle.THIN);
+
+    cellStyle.setTopBorderColor(DEFAULT_BORDER_COLOR);
+    cellStyle.setRightBorderColor(DEFAULT_BORDER_COLOR);
+    cellStyle.setBottomBorderColor(DEFAULT_BORDER_COLOR);
+    cellStyle.setLeftBorderColor(DEFAULT_BORDER_COLOR);
   }
 
   private void applyFont(CellStyle cellStyle, Font fontConfig) {

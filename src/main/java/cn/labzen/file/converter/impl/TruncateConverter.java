@@ -38,6 +38,9 @@ public class TruncateConverter extends CacheableConverter<String> {
     }
 
     String value = input.toString();
+    if (arguments == null || arguments.isEmpty()) {
+      return value;
+    }
     int length = Objects.canBeInt(Strings.value(arguments.getFirst(), "0"));
     if (length <= DEFAULT_ELLIPSIS_LENGTH) {
       return value;

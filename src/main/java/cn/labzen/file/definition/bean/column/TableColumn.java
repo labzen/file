@@ -33,14 +33,6 @@ public class TableColumn extends GlobalColumn {
    */
   private String header;
 
-//  /**
-//   * 列索引，从 0 开始，越小越靠左
-//   * <p>
-//   * 不需指定，会按照 YAML 文件中定义的顺序显示列
-//   */
-//  @Deprecated
-//  private Integer index;
-
   /**
    * 数据格式化模式配置
    */

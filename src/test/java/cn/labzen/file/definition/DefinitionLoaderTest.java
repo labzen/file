@@ -103,10 +103,10 @@ class DefinitionLoaderTest {
 
     assertNotNull(nameColumn);
 
-    // Property.yml 中 name 列定义了 when-null="无名氏"
+    // Property.yml 中 name 列定义了 when-null="未命名"
     // 如果配置中没有定义，会使用全局配置的 "-"
     // 这里应该使用 Property.yml 中的值
-    assertEquals("无名氏", nameColumn.getWhenNull());
+    assertEquals("未命名", nameColumn.getWhenNull());
   }
 
   @Test
@@ -122,9 +122,9 @@ class DefinitionLoaderTest {
     TableColumn nameColumn = config.getColumns().get("name");
 
     assertNotNull(nameColumn);
-    // Property.yml 中 name 列只有 style.align = CENTER
+    // Property.yml 中 name 列 style.align = LEFT
     // 此时应该能正确解析 style 对象（包含默认值）
     assertNotNull(nameColumn.getStyle(), "列样式不应为 null");
-    assertEquals("CENTER", nameColumn.getStyle().getAlign().name(), "align 应该为 CENTER");
+    assertEquals("LEFT", nameColumn.getStyle().getAlign().name(), "align 应该为 LEFT");
   }
 }

@@ -14,42 +14,104 @@ column-style:
   align: CENTER
 columns:
   name:
-    header: "标识:-:属性名称"
-    width: 15
+    header: "基本信息:-:属性名称"
+    width: 18
     when-null: "未命名"
-    prefix: "__"
+    prefix: "【"
+    suffix: "】"
     style:
       align: LEFT
       font:
         family: "simkai"
         color: "#3552d4"
   indexical:
-    header: "标识:-:索引"
-    width: 8
+    header: "基本信息:-:索引"
+    width: 10
     when-null: "0"
-    prefix: "No. "
+    prefix: "No."
     style:
       align: RIGHT
   value:
-    header: "属性值"
-    width: 20
+    header: "基本信息:-:属性值"
+    width: 22
     when-null: "无值"
+    when-blank: "空值"
+    converter:
+      mapping:
+        "debug=true": "调试开启"
+        "debug=false": "调试关闭"
+        "INFO": "信息级别"
+    style:
+      align: CENTER
+  status:
+    header: "状态信息:-:状态"
+    width: 10
+    when-null: "未知"
+    converter:
+      mapping:
+        "1": "启用"
+        "2": "禁用"
+        "3": "待审核"
+    style:
+      align: CENTER
+  category:
+    header: "状态信息:-:分类"
+    width: 10
+    when-null: "未分类"
+    converter:
+      mapping:
+        "A": "系统"
+        "B": "业务"
+        "C": "其他"
     style:
       align: CENTER
   phone:
-    header: "手机号码"
+    header: "联系方式:-:手机号码"
+    width: 16
     converter:
-      # 这里正则表达式不需要加斜线转义
-      named: desensitize("(\d{3})\d{4}(\d{4})", "$1****$2");
+      named: desensitize("(\\d{3})\\d{4}(\\d{4})", "$1****$2");
+  email:
+    header: "联系方式:-:电子邮箱"
+    width: 22
+    converter:
+      named: desensitize("(^.{2})(.*)(@.*)$", "$1****$3");
+  description:
+    header: "内容描述"
+    width: 25
+    when-null: "暂无描述"
+    converter:
+      named: truncate(20);
+  size:
+    header: "数值:-:大小"
+    width: 12
+    when-null: "0"
+    suffix: " MB"
+    pattern:
+      number: "#,##0.00"
+  amount:
+    header: "数值:-:金额"
+    width: 14
+    when-null: "0.00"
+    prefix: "￥"
+    pattern:
+      number: "#,##0.00"
   createTime:
-    header: "创建时间"
-    width: 15
+    header: "时间:-:创建时间"
+    width: 18
     pattern:
       date: "yyyy-MM-dd HH:mm:ss"
-  size:
-    header: "大小"
-    width: 10
-    when-null: "0"
-    suffix: "KG"
+  effectiveDate:
+    header: "时间:-:生效日期"
+    width: 14
     pattern:
-      decimal: "#.#"
+      date: "yyyy-MM-dd"
+  lastModified:
+    header: "时间:-:最后修改"
+    width: 18
+    pattern:
+      date: "yyyy/MM/dd HH:mm"
+  remindTime:
+    header: "时间:-:提醒时间"
+    width: 12
+    pattern:
+      date: "HH:mm"

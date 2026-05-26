@@ -23,6 +23,16 @@ public class DataWriteException extends LabzenRuntimeException {
   /**
    * 构造器
    *
+   * @param message 占位符消息
+   * @param args    参数
+   */
+  public DataWriteException(String message, Object... args) {
+    super(message, args);
+  }
+
+  /**
+   * 构造器
+   *
    * @param cause   原因异常
    * @param message 占位符消息
    * @param args    参数

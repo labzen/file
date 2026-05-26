@@ -61,10 +61,15 @@ class MarkdownFileWriterTest {
   void testDataFileGenerator() throws IOException {
     var data = MockData.createMockData();
 
+//    DataFileGenerator.by(Property.class)
+//      .with(data)
+//      .as(FileFormat.MARKDOWN)
+//      .to(OUTPUT_FILE);
     DataFileGenerator.by(Property.class)
       .with(data)
       .as(FileFormat.MARKDOWN)
-      .to(OUTPUT_FILE);
+      .folder(OUTPUT_DIR)
+      .to();
 
     File outputFile = new File(OUTPUT_FILE);
     assertTrue(outputFile.exists(), "Markdown 文件应已创建");

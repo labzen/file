@@ -124,6 +124,10 @@ public abstract class AbstractDataFileWriter<T> implements DataFileWriter<T> {
    */
   @Override
   public void write(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull File file) {
+    if (file.isDirectory()) {
+      throw new DataWriteException("输出文件不能是目录: {}", file.getAbsolutePath());
+    }
+
     try (OutputStream outputStream = createFileOutputStream(file)) {
       write(definition, data, outputStream);
     } catch (IOException e) {

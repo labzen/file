@@ -1,57 +1,64 @@
 package cn.labzen.file.definition.enums;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
 /**
  * 定义支持的文件导出格式
  */
+@RequiredArgsConstructor
 public enum FileFormat {
 
   /**
    * Excel 格式
    */
-  EXCEL,
+  EXCEL(".xlsx"),
 
   /**
    * CSV 格式
    */
-  CSV,
+  CSV(".csv"),
 
   /**
    * PDF 格式
    */
-  PDF,
+  PDF(".pdf"),
 
   /**
    * Markdown 格式
    */
-  MARKDOWN,
+  MARKDOWN(".md"),
 
   /**
    * HTML 格式
    */
-  HTML,
+  HTML(".html"),
 
   /**
    * JSON 格式
    */
-  JSON,
+  JSON(".json"),
 
   /**
    * YAML 格式
    */
-  YAML,
+  YAML(".yml"),
 
   /**
    * XML 格式
    */
-  XML,
+  XML(".xml"),
 
   /**
    * 纯文本文件
    */
-  TXT,
+  TXT(".txt"),
 
   /**
    * 无法识别类型，可兼容任何文件格式
    */
-  UNKNOWN
+  UNKNOWN("");
+
+  @Getter
+  private final String extension;
 }

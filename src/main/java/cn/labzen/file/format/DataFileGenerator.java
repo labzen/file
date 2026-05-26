@@ -9,6 +9,8 @@ import cn.labzen.meta.Labzens;
 import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.OutputStream;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +35,7 @@ public final class DataFileGenerator<T> {
    * 文件格式到写入器构造器的映射
    */
   private static final Map<FileFormat, DataFileWriter<?>> WRITER_INSTANCES = new EnumMap<>(FileFormat.class);
+  private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
   static {
     FileConfiguration configuration = Labzens.configurationWith(FileConfiguration.class);
@@ -46,6 +49,8 @@ public final class DataFileGenerator<T> {
   private final DataDefinition definition;
   private List<T> data;
   private FileFormat format;
+  private String filename;
+  private File file;
 
   private DataFileGenerator(Class<T> type) {
     String name = type.getSimpleName();
@@ -79,7 +84,46 @@ public final class DataFileGenerator<T> {
   }
 
   /**
+   * 设置文件名，默认格式 {定义的文件名}_{年月日时分秒}.{文件格式后缀}，例如 test_20250601120000.xlsx
+   */
+  public DataFileGenerator<T> name() {
+    this.filename = definition.getFilename() + "_" + DATE_TIME_FORMATTER.format(LocalDateTime.now()) + "." + format.getExtension();
+
+    if (file != null) {
+      // 重新设置文件路径
+      folder(file.getParentFile());
+    }
+    return this;
+  }
+
+  /**
+   * 设置文件夹路径，生成的文件将存储到这里，文件名默认由{@link #name()}方法指定
+   */
+  public DataFileGenerator<T> folder(String path) {
+    if (filename == null) {
+      name();
+    }
+
+    this.file = new File(path, filename);
+    return this;
+  }
+
+  /**
+   * 设置文件夹路径，生成的文件将存储到这里，文件名默认由{@link #name()}方法指定
+   */
+  public DataFileGenerator<T> folder(File folder) {
+    if (filename == null) {
+      name();
+    }
+
+    this.file = new File(folder, filename);
+    return this;
+  }
+
+  /**
    * 生成数据文件到指定文件路径
+   * <p>
+   * 该方法会忽略{@link #name()}和{@link #folder(File)}/{@link #folder(String)}方法（假如在此之前调用过）
    *
    * @param filePath 文件路径
    */
@@ -89,6 +133,8 @@ public final class DataFileGenerator<T> {
 
   /**
    * 将数据到指定输出流中
+   * <p>
+   * 该方法会忽略{@link #name()}和{@link #folder(File)}/{@link #folder(String)}方法（假如在此之前调用过）
    *
    * @param outputStream 输出流
    */
@@ -98,11 +144,24 @@ public final class DataFileGenerator<T> {
 
   /**
    * 生成数据文件
+   * <p>
+   * 该方法会忽略{@link #name()}和{@link #folder(File)}/{@link #folder(String)}方法（假如在此之前调用过）
    *
    * @param file 文件
    */
   public void to(File file) {
     getWriter(format).write(definition, data, file);
+  }
+
+  /**
+   * 开始生成文件，文件输出位置由{@link #name()}和{@link #folder(File)}/{@link #folder(String)}方法指定。假如没有调用过，则会失败
+   */
+  public void to() {
+    if (file == null) {
+      throw new IllegalStateException("文件输出位置未指定，请先调用 name() 和 folder() 方法指定文件输出位置");
+    }
+
+    to(file);
   }
 
   /**

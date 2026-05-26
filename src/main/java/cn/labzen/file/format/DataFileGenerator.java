@@ -156,12 +156,13 @@ public final class DataFileGenerator<T> {
   /**
    * 开始生成文件，文件输出位置由{@link #name()}和{@link #folder(File)}/{@link #folder(String)}方法指定。假如没有调用过，则会失败
    */
-  public void to() {
+  public File to() {
     if (file == null) {
       throw new IllegalStateException("文件输出位置未指定，请先调用 name() 和 folder() 方法指定文件输出位置");
     }
 
     to(file);
+    return file;
   }
 
   /**

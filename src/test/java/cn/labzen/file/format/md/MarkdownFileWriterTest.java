@@ -65,13 +65,13 @@ class MarkdownFileWriterTest {
 //      .with(data)
 //      .as(FileFormat.MARKDOWN)
 //      .to(OUTPUT_FILE);
-    DataFileGenerator.by(Property.class)
+    File outputFile = DataFileGenerator.by(Property.class)
       .with(data)
       .as(FileFormat.MARKDOWN)
       .folder(OUTPUT_DIR)
       .to();
 
-    File outputFile = new File(OUTPUT_FILE);
+//    File outputFile = new File(OUTPUT_FILE);
     assertTrue(outputFile.exists(), "Markdown 文件应已创建");
 
     String mdContent = Files.readString(outputFile.toPath());

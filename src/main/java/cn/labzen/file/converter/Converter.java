@@ -36,6 +36,8 @@ public interface Converter<O> {
   int DESENSITIZE_PRIORITY = 400;
   String TRUNCATE_NAME = "truncate";
   int TRUNCATE_PRIORITY = 400;
+  String BOOL_NAME = "bool";
+  int BOOL_PRIORITY = 400;
 
   /**
    * 执行转换

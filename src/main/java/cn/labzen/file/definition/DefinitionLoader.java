@@ -101,6 +101,8 @@ public class DefinitionLoader {
    * 加载所有配置并注册到 Registry
    */
   public void load() {
+    logger.info("开始加载[数据导出schema定义文件]...");
+
     // 1. 加载全局配置
     GlobalDefinition globalDefinition = loadGlobalDefinition();
 
@@ -122,6 +124,8 @@ public class DefinitionLoader {
       // 注册配置
       DefinitionRegistry.register(key, mergedDefinition);
     });
+
+    logger.info("[数据导出schema定义文件]加载完成，共加载{}个配置文件", DefinitionRegistry.size());
   }
 
   /**
@@ -133,9 +137,10 @@ public class DefinitionLoader {
       Resource[] resources = resourcePatternResolver.getResources(globalLocation);
       if (resources.length > 1) {
         globalResource = resources[0];
-        logger.warn("存在多个全局数据导出配置，默认将使用：{}", globalResource.getURI().toString());
+        logger.warn("存在多个全局数据导出配置，默认将使用：{}", globalResource.getURI());
       } else if (resources.length == 1) {
         globalResource = resources[0];
+        logger.info("加载全局[数据导出schema定义文件]:{}", globalResource.getURI());
       } else {
         throw new DefinitionLoaderException("找不到全局数据导出配置文件，请检查路径 labzen.yml 中的 global-definition-name 配置");
       }

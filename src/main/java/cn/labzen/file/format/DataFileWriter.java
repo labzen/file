@@ -69,7 +69,6 @@ public interface DataFileWriter<T> {
    * 写入数据到指定输出流，支持国际化
    * <p>
    * 指定 locale 后，会先将 DataDefinition 中的 ${key} 占位符解析为对应语言的文本，再执行导出。
-   * locale 为 null 时，行为与 {@link #write(DataDefinition, List, OutputStream)} 一致。
    *
    * @param definition   数据定义配置（模板，含 ${key} 占位符）
    * @param data         数据集合

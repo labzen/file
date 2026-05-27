@@ -13,9 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * <p>
  * 提供通用的缓存机制，子类只需实现具体的转换逻辑
  *
- * @param <I> 输入类型
  * @param <O> 输出类型
- * @param <C> 配置参数类型
  * @author labzen
  */
 public abstract class CacheableConverter<O> implements Converter<O> {

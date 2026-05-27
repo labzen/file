@@ -13,7 +13,7 @@
 
   <artifactId>file</artifactId>
   <packaging>jar</packaging>
-  <version>1.0.2</version>
+  <version>1.1.0</version>
   <name>Labzen.File</name>
   <description>Labzen File - convert the data into file, support various types</description>
   <url>https://github.com/labzen/file</url>

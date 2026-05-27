@@ -43,7 +43,6 @@ public interface Converter<O> {
    * 执行转换
    *
    * @param input  输入值
-   * @param config 配置参数
    * @return 转换后的值
    * @throws DataConvertException 如果转换失败
    */

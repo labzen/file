@@ -1,0 +1,83 @@
+# $schema: ../schema/def-data-schema.json
+filename: property-i18n
+title: ${property-title}
+header-style:
+  background: "#e4e6e8"
+  font:
+    family: "Arial"
+    size: 11
+    color: "#d0204a"
+    bold: true
+    italic: true
+  wrapped: false
+column-style:
+  align: CENTER
+columns:
+  name:
+    header: "${basic-info}:-:${prop-name}"
+    width: 18
+    when-null: "${unnamed}"
+    prefix: "【"
+    suffix: "】"
+    style:
+      align: LEFT
+      font:
+        family: "simkai"
+        color: "#3552d4"
+  indexical:
+    header: "${basic-info}:-:${index}"
+    width: 10
+    when-null: "0"
+    prefix: "No."
+    style:
+      align: RIGHT
+  value:
+    header: "${basic-info}:-:${prop-value}"
+    width: 22
+    when-null: "${no-value}"
+    when-blank: "${blank-value}"
+    converter:
+      mapping:
+        "debug=true": "${debug-on}"
+        "debug=false": "${debug-off}"
+        "INFO": "${info-level}"
+    style:
+      align: CENTER
+  status:
+    header: "${status-info}:-:${status}"
+    width: 10
+    when-null: "${unknown}"
+    converter:
+      mapping:
+        "1": "${enabled}"
+        "2": "${disabled}"
+        "3": "${pending}"
+    style:
+      align: CENTER
+  category:
+    header: "${status-info}:-:${category}"
+    width: 10
+    when-null: "${uncategorized}"
+    converter:
+      mapping:
+        "A": "${system}"
+        "B": "${business}"
+        "C": "${other}"
+    style:
+      align: CENTER
+  phone:
+    header: "${contact-info}:-:${phone-number}"
+    width: 16
+    converter:
+      named: desensitize("(\\d{3})\\d{4}(\\d{4})", "$1****$2");
+  email:
+    header: "${contact-info}:-:${email-addr}"
+    width: 22
+    converter:
+      named: desensitize("(^.{2})(.*)(@.*)$", "$1****$3");
+  description:
+    header: "${desc}"
+    width: 25
+    when-null: "${no-desc}"
+    converter:
+      named: truncate(20);

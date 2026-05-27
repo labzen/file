@@ -6,7 +6,7 @@ import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.meta.FileConfiguration;
 import cn.labzen.meta.Labzens;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 import java.io.File;
 import java.io.OutputStream;
 import java.time.LocalDateTime;
@@ -51,6 +51,7 @@ public final class DataFileGenerator<T> {
   private FileFormat format;
   private String filename;
   private File file;
+  private String locale;
 
   private DataFileGenerator(Class<T> type) {
     String name = type.getSimpleName();
@@ -80,6 +81,16 @@ public final class DataFileGenerator<T> {
    */
   public DataFileGenerator<T> as(FileFormat format) {
     this.format = format;
+    return this;
+  }
+
+  /**
+   * 设置导出时的语言标签，用于国际化 ${key} 占位符的解析
+   *
+   * @param locale 语言标签，如 zh-CN、en-US
+   */
+  public DataFileGenerator<T> locale(String locale) {
+    this.locale = locale;
     return this;
   }
 
@@ -128,7 +139,7 @@ public final class DataFileGenerator<T> {
    * @param filePath 文件路径
    */
   public void to(String filePath) {
-    getWriter(format).write(definition, data, filePath);
+    getWriter(format).write(definition, data, filePath, locale);
   }
 
   /**
@@ -139,7 +150,7 @@ public final class DataFileGenerator<T> {
    * @param outputStream 输出流
    */
   public void to(OutputStream outputStream) {
-    getWriter(format).write(definition, data, outputStream);
+    getWriter(format).write(definition, data, outputStream, locale);
   }
 
   /**
@@ -150,7 +161,7 @@ public final class DataFileGenerator<T> {
    * @param file 文件
    */
   public void to(File file) {
-    getWriter(format).write(definition, data, file);
+    getWriter(format).write(definition, data, file, locale);
   }
 
   /**

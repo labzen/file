@@ -4,9 +4,13 @@ import cn.labzen.file.converter.ChainableConverterExecutor;
 import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.bean.column.TableColumn;
 import cn.labzen.file.exception.DataWriteException;
+import cn.labzen.file.i18n.I18nResolver;
+import cn.labzen.file.i18n.I18nStoreHolder;
+import cn.labzen.file.i18n.I18nStoreProvider;
+import jakarta.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.util.List;
@@ -33,43 +37,48 @@ public abstract class AbstractDataFileWriter<T> implements DataFileWriter<T> {
    *
    * @param definition 数据定义
    * @param data       数据集合
+   * @param executors  字段转换器映射，为 null 时使用全局缓存的转换器
    * @return 行数据列表
    */
-  private List<Map<String, Object>> extractRows(@Nonnull DataDefinition definition, @Nonnull List<T> data) {
-    return data.stream().map(item -> extractRow(definition, item)).collect(Collectors.toList());
+  private List<Map<String, Object>> extractRows(@Nonnull DataDefinition definition,
+                                                @Nonnull List<T> data,
+                                                @Nullable Map<String, ChainableConverterExecutor> executors) {
+    return data.stream().map(item -> extractRow(definition, item, executors)).collect(Collectors.toList());
   }
 
   /**
    * 将单个数据对象转换为行数据映射
-   *
-   * @param definition 数据定义
-   * @param item       单条数据
-   * @return 字段名到字段值的映射
    */
-  private Map<String, Object> extractRow(@Nonnull DataDefinition definition, @Nonnull T item) {
+  private Map<String, Object> extractRow(@Nonnull DataDefinition definition,
+                                         @Nonnull T item,
+                                         @Nullable Map<String, ChainableConverterExecutor> executors) {
     Map<String, TableColumn> columns = definition.getColumns();
     Map<String, Object> result = new java.util.HashMap<>();
     for (String fieldName : columns.keySet()) {
-      result.put(fieldName, extractFieldValue(definition.getDomainName(), fieldName, columns.get(fieldName), item));
+      result.put(fieldName, extractFieldValue(definition.getDomainName(), fieldName, executors, item));
     }
     return result;
   }
 
   /**
    * 提取字段值
-   *
-   * @param fieldName 字段名
-   * @param column    列定义
-   * @param item      数据对象
-   * @return 字段值
    */
-  private Object extractFieldValue(String domainName, String fieldName, TableColumn column, @Nonnull T item) {
+  private Object extractFieldValue(String domainName,
+                                   String fieldName,
+                                   @Nullable Map<String, ChainableConverterExecutor> executors,
+                                   @Nonnull T item) {
     try {
       Field field = item.getClass().getDeclaredField(fieldName);
       field.setAccessible(true);
       Object value = field.get(item);
 
-      ChainableConverterExecutor executor = ChainableConverterExecutor.get(domainName, fieldName);
+      ChainableConverterExecutor executor;
+      if (executors != null) {
+        executor = executors.get(fieldName);
+      } else {
+        executor = ChainableConverterExecutor.get(domainName, fieldName);
+      }
+
       if (executor != null) {
         return executor.execute(value);
       } else {
@@ -83,9 +92,6 @@ public abstract class AbstractDataFileWriter<T> implements DataFileWriter<T> {
 
   /**
    * 创建字节输出流
-   *
-   * @param file 输出文件
-   * @return 字节输出流
    */
   protected FileOutputStream createFileOutputStream(File file) throws FileNotFoundException {
     File parent = file.getParentFile();
@@ -98,55 +104,60 @@ public abstract class AbstractDataFileWriter<T> implements DataFileWriter<T> {
     return new FileOutputStream(file);
   }
 
-  /**
-   * 写入数据到输出流
-   * <p>
-   * 模板方法实现，调用 generateContent 生成具体格式内容
-   *
-   * @param definition   数据定义
-   * @param data         数据集合
-   * @param outputStream 输出流
-   */
+//  // ===== 无 locale 的写入方法（保持向后兼容） =====
+//
+//  @Override
+//  public void write(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream) {
+//    List<Map<String, Object>> rows = extractRows(definition, data, null);
+//    generateContent(definition, rows, outputStream);
+//  }
+//
+//  @Override
+//  public void write(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull File file) {
+//    if (file.isDirectory()) {
+//      throw new DataWriteException("输出文件不能是目录: {}", file.getAbsolutePath());
+//    }
+//
+//    try (OutputStream outputStream = createFileOutputStream(file)) {
+//      write(definition, data, outputStream);
+//    } catch (IOException e) {
+//      throw new DataWriteException(e, "写入文件失败: {}", file.getAbsolutePath());
+//    }
+//  }
+//
+//  @Override
+//  public void write(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull String filePath) {
+//    write(definition, data, new File(filePath));
+//  }
+//
+//  // ===== 支持 locale 的写入方法 =====
+
   @Override
-  public void write(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream) {
-    List<Map<String, Object>> rows = extractRows(definition, data);
-    generateContent(definition, rows, outputStream);
+  public void write(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream, @Nullable String locale) {
+    I18nStoreProvider store = I18nStoreHolder.get();
+    I18nResolver resolver = new I18nResolver(store);
+    DataDefinition resolved = resolver.resolve(definition, locale);
+    Map<String, ChainableConverterExecutor> executors = ChainableConverterExecutor.buildFor(resolved);
+    List<Map<String, Object>> rows = extractRows(resolved, data, executors);
+    generateContent(resolved, rows, outputStream);
   }
 
-  /**
-   * 写入数据到文件
-   * <p>
-   * 模板方法，定义通用的写入流程
-   *
-   * @param definition 数据定义
-   * @param data       数据集合
-   * @param file       输出文件
-   */
   @Override
-  public void write(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull File file) {
+  public void write(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull File file, @Nullable String locale) {
     if (file.isDirectory()) {
       throw new DataWriteException("输出文件不能是目录: {}", file.getAbsolutePath());
     }
 
     try (OutputStream outputStream = createFileOutputStream(file)) {
-      write(definition, data, outputStream);
+      write(definition, data, outputStream, locale);
     } catch (IOException e) {
       throw new DataWriteException(e, "写入文件失败: {}", file.getAbsolutePath());
     }
   }
 
-  /**
-   * 写入数据到文件路径
-   * <p>
-   * 模板方法，定义通用的写入流程
-   *
-   * @param definition 数据定义
-   * @param data       数据集合
-   * @param filePath   输出文件路径
-   */
   @Override
-  public void write(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull String filePath) {
-    write(definition, data, new File(filePath));
+  public void write(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull String filePath, @Nullable String locale) {
+    write(definition, data, new File(filePath), locale);
   }
 
   /**

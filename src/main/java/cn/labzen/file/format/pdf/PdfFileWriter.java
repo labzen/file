@@ -27,7 +27,7 @@ import com.itextpdf.layout.properties.VerticalAlignment;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;

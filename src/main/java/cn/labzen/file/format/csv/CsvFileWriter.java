@@ -9,7 +9,7 @@ import cn.labzen.file.meta.FileConfiguration;
 import cn.labzen.tool.util.Strings;
 import org.jspecify.annotations.NonNull;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;

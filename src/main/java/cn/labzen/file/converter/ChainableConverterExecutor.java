@@ -113,6 +113,22 @@ public class ChainableConverterExecutor {
     });
   }
 
+  /**
+   * 为指定的 DataDefinition 构建转换器执行器映射（非缓存）
+   * <p>
+   * 用于 i18n 解析后的定义，每次调用都创建新的执行器实例，不影响全局缓存
+   *
+   * @param definition 数据定义
+   * @return 字段名 → 转换器执行器 的映射
+   */
+  public static Map<String, ChainableConverterExecutor> buildFor(DataDefinition definition) {
+    Map<String, ChainableConverterExecutor> executors = new java.util.HashMap<>();
+    definition.getColumns().forEach((columnName, column) ->
+      executors.put(columnName, new ChainableConverterExecutor(column))
+    );
+    return executors;
+  }
+
   public static ChainableConverterExecutor get(String domainName, String columnName) {
     String key = cacheKey(domainName, columnName);
     return CHAIN_CACHE.get(key);

@@ -3,8 +3,9 @@ package cn.labzen.file.format;
 import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.meta.FileConfiguration;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
-import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.OutputStream;
 import java.util.List;
@@ -35,32 +36,65 @@ public interface DataFileWriter<T> {
    */
   void initialize(@Nonnull FileConfiguration configuration);
 
-  /**
-   * 写入数据到指定文件路径
-   *
-   * @param definition 数据定义配置
-   * @param data       数据集合
-   * @param filePath   输出文件路径
-   */
-  void write(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull String filePath);
+//  /**
+//   * 写入数据到指定文件路径
+//   *
+//   * @param definition 数据定义配置
+//   * @param data       数据集合
+//   * @param filePath   输出文件路径
+//   */
+//  void write(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull String filePath);
+//
+//  /**
+//   * 写入数据到指定输出流
+//   * <p>
+//   * 此方法主要用于支持 Web 下载等场景，不关闭输出流
+//   *
+//   * @param definition   数据定义配置
+//   * @param data         数据集合
+//   * @param outputStream 输出流
+//   */
+//  void write(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream);
+//
+//  /**
+//   * 写入数据到指定文件
+//   *
+//   * @param definition 数据定义配置
+//   * @param data       数据集合
+//   * @param file       输出文件
+//   */
+//  void write(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull File file);
 
   /**
-   * 写入数据到指定输出流
+   * 写入数据到指定输出流，支持国际化
    * <p>
-   * 此方法主要用于支持 Web 下载等场景，不关闭输出流
+   * 指定 locale 后，会先将 DataDefinition 中的 ${key} 占位符解析为对应语言的文本，再执行导出。
+   * locale 为 null 时，行为与 {@link #write(DataDefinition, List, OutputStream)} 一致。
    *
-   * @param definition   数据定义配置
+   * @param definition   数据定义配置（模板，含 ${key} 占位符）
    * @param data         数据集合
    * @param outputStream 输出流
+   * @param locale       语言标签，如 zh-CN、en-US；为 null 时不做国际化解析
    */
-  void write(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream);
+  void write(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream, @Nullable String locale);
 
   /**
-   * 写入数据到指定文件
+   * 写入数据到指定文件，支持国际化
    *
    * @param definition 数据定义配置
    * @param data       数据集合
    * @param file       输出文件
+   * @param locale     语言标签；为 null 时不做国际化解析
    */
-  void write(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull File file);
+  void write(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull File file, @Nullable String locale);
+
+  /**
+   * 写入数据到指定文件路径，支持国际化
+   *
+   * @param definition 数据定义配置
+   * @param data       数据集合
+   * @param filePath   输出文件路径
+   * @param locale     语言标签；为 null 时不做国际化解析
+   */
+  void write(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull String filePath, @Nullable String locale);
 }

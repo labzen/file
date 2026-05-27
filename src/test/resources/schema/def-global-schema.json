@@ -109,11 +109,11 @@
         },
         "when-null": {
           "type": "string",
-          "description": "当数据为 null 时使用的默认值"
+          "description": "当数据为 null 时使用的默认值。支持国际化：使用 ${key} 占位符"
         },
         "when-blank": {
           "type": "string",
-          "description": "当数据为空字符串时使用的默认值，仅适用于String类型"
+          "description": "当数据为空字符串时使用的默认值，仅适用于String类型。支持国际化：使用 ${key} 占位符"
         },
         "prefix": {
           "type": "string",

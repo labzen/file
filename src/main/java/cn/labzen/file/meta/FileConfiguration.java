@@ -65,4 +65,10 @@ public interface FileConfiguration {
    */
   @Item(path = "pdf.font-reduction-factor", required = false, defaultValue = "1.5")
   float pdfFontReductionFactor();
+
+  /**
+   * 国际化默认语言标签，当导出时指定的locale无法匹配到文案时，回退至此默认locale，默认 zh-CN
+   */
+  @Item(path = "i18n.default-locale", required = false, defaultValue = "zh-CN")
+  String defaultLocale();
 }

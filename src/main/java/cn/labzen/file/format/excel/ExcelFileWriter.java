@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.jspecify.annotations.NonNull;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;

@@ -4,7 +4,7 @@ import cn.labzen.file.converter.ChainableConverterExecutor;
 import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.bean.table.HeaderStructure;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;

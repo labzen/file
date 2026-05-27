@@ -28,8 +28,7 @@ public class HeaderBuilder {
 
     while (index < size) {
       TableColumn current = columns.get(index);
-      String[] headers = current.getHeader().split(HEADER_LEVEL_SEPARATOR);
-
+      String[] headers = current.getHeader() == null ? new String[]{""} : current.getHeader().split(HEADER_LEVEL_SEPARATOR);
       // 如果当前是单级表头，或者header集合中只有一个表头，则直接添加到第一行表头中
       if (isSingleHeader || headers.length == 1) {
         firstRowHeaderCells.add(new HeaderCell(headers[0], index, 1, defaultRowSpanWhenSingle));

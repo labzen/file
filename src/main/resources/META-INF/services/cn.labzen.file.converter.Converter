@@ -8,3 +8,4 @@ cn.labzen.file.converter.impl.SuffixConverter
 cn.labzen.file.converter.impl.TruncateConverter
 cn.labzen.file.converter.impl.WhenEmptyConverter
 cn.labzen.file.converter.impl.WhenNullConverter
+cn.labzen.file.converter.impl.BoolConverter

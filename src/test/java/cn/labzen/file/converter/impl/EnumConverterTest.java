@@ -1,5 +1,7 @@
 package cn.labzen.file.converter.impl;
 
+import cn.labzen.file.converter.exportable.ExportableConverter;
+import cn.labzen.file.converter.importable.ImportableConverter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -7,76 +9,109 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * EnumConverter 单元测试
- * <p>
- * 使用测试枚举 {@link TestStatusEnum} 验证枚举转换功能。
- *
- * @author labzen
- */
 @DisplayName("Enum 转换器测试")
 class EnumConverterTest {
 
   private final EnumConverter converter = new EnumConverter();
 
-  @Test
-  @DisplayName("支持字符串类型")
-  void testSupports() {
-    assertTrue(converter.supports(String.class));
-    assertFalse(converter.supports(Integer.class));
-  }
+  // ==================== 接口类型 ====================
 
   @Test
-  @DisplayName("通过枚举方法转换值为标签")
-  void testConvertValidEnum() {
-    // 使用当前测试类所在包下的测试枚举
+  @DisplayName("实现 ExportableConverter 和 ImportableConverter 双向接口")
+  void testInterfaceType() {
+    assertInstanceOf(ExportableConverter.class, converter);
+    assertInstanceOf(ImportableConverter.class, converter);
+  }
+
+  // ==================== supportsExport ====================
+
+  @Test
+  @DisplayName("导出方向仅支持 String 类型")
+  void testSupportsExport() {
+    assertTrue(converter.supportsExport(String.class));
+    assertFalse(converter.supportsExport(Integer.class));
+  }
+
+  // ==================== supportsImport ====================
+
+  @Test
+  @DisplayName("导入方向始终返回 true")
+  void testSupportsImport() {
+    assertTrue(converter.supportsImport(String.class));
+    assertTrue(converter.supportsImport(Integer.class));
+    assertTrue(converter.supportsImport(Object.class));
+  }
+
+  // ==================== doConvertForExport ====================
+
+  @Test
+  @DisplayName("导出：通过枚举方法转换值为标签")
+  void testExportValidEnum() {
     String enumRef = TestStatusEnum.class.getName() + "#getLabel";
-    String result = converter.convert("ACTIVE", List.of(enumRef));
+    String result = converter.doConvertForExport("ACTIVE", List.of(enumRef));
     assertEquals("启用", result);
   }
 
   @Test
-  @DisplayName("忽略大小写匹配枚举值")
-  void testConvertCaseInsensitive() {
+  @DisplayName("导出：忽略大小写匹配枚举值")
+  void testExportCaseInsensitive() {
     String enumRef = TestStatusEnum.class.getName() + "#getLabel";
-    String result = converter.convert("inactive", List.of(enumRef));
+    String result = converter.doConvertForExport("inactive", List.of(enumRef));
     assertEquals("禁用", result);
   }
 
   @Test
-  @DisplayName("枚举值不存在时返回失败标记")
-  void testConvertInvalidEnum() {
+  @DisplayName("导出：枚举值不存在时返回失败标记")
+  void testExportInvalidEnumValue() {
     String enumRef = TestStatusEnum.class.getName() + "#getLabel";
-    String result = converter.convert("UNKNOWN", List.of(enumRef));
+    String result = converter.doConvertForExport("UNKNOWN", List.of(enumRef));
     assertEquals("convert-enum-failed", result);
   }
 
   @Test
-  @DisplayName("输入为 null 时返回 null")
-  void testConvertNull() {
+  @DisplayName("导出：null 输入返回 null")
+  void testExportNull() {
     String enumRef = TestStatusEnum.class.getName() + "#getLabel";
-    String result = converter.convert(null, List.of(enumRef));
+    String result = converter.doConvertForExport(null, List.of(enumRef));
     assertNull(result);
   }
 
   @Test
-  @DisplayName("无效的枚举类引用返回失败标记")
-  void testInvalidEnumClass() {
-    String result = converter.convert("ACTIVE", List.of("com.nonexistent.Enum#getLabel"));
+  @DisplayName("导出：无效的枚举类引用返回失败标记")
+  void testExportInvalidEnumClass() {
+    String result = converter.doConvertForExport("ACTIVE",
+      List.of("com.nonexistent.Enum#getLabel"));
     assertEquals("convert-enum-failed", result);
   }
 
   @Test
-  @DisplayName("无效的方法名返回失败标记")
-  void testInvalidMethodName() {
+  @DisplayName("导出：无效的方法名返回失败标记")
+  void testExportInvalidMethodName() {
     String enumRef = TestStatusEnum.class.getName() + "#nonExistentMethod";
-    String result = converter.convert("ACTIVE", List.of(enumRef));
+    String result = converter.doConvertForExport("ACTIVE", List.of(enumRef));
     assertEquals("convert-enum-failed", result);
   }
 
-  /**
-   * 测试用枚举
-   */
+  // ==================== doConvertForImport ====================
+
+  @Test
+  @DisplayName("导入：标签值转换为枚举名称")
+  void testImportByLabel() {
+    String enumRef = TestStatusEnum.class.getName() + "#getLabel";
+    Object result = converter.doConvertForImport("启用", List.of(enumRef), TestStatusEnum.class);
+    assertEquals("ACTIVE", result);
+  }
+
+  @Test
+  @DisplayName("导入：枚举名称直接匹配")
+  void testImportByName() {
+    String enumRef = TestStatusEnum.class.getName() + "#getLabel";
+    Object result = converter.doConvertForImport("ACTIVE", List.of(enumRef), TestStatusEnum.class);
+    assertEquals("ACTIVE", result);
+  }
+
+  // ==================== 测试用枚举 ====================
+
   enum TestStatusEnum {
     ACTIVE("启用"),
     INACTIVE("禁用"),

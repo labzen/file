@@ -1,14 +1,14 @@
 package cn.labzen.file.format.pdf;
 
 import cn.labzen.file.definition.bean.DataDefinition;
-import cn.labzen.file.definition.bean.column.TableColumn;
+import cn.labzen.file.definition.bean.column.Column;
 import cn.labzen.file.definition.bean.style.Style;
 import cn.labzen.file.definition.bean.table.HeaderCell;
 import cn.labzen.file.definition.bean.table.HeaderStructure;
 import cn.labzen.file.definition.enums.Alignment;
 import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.exception.DataWriteException;
-import cn.labzen.file.format.AbstractDataFileWriter;
+import cn.labzen.file.format.core.writer.AbstractDataFileWriter;
 import cn.labzen.file.meta.FileConfiguration;
 import cn.labzen.tool.util.Strings;
 import com.itextpdf.kernel.colors.Color;
@@ -66,7 +66,7 @@ public final class PdfFileWriter<T> extends AbstractDataFileWriter<T> {
 
   @Override
   protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<Map<String, Object>> rows, @Nonnull OutputStream outputStream) {
-    Map<String, TableColumn> columns = definition.getColumns();
+    Map<String, Column> columns = definition.getColumns();
     int columnCount = columns.size();
 
     // 获取样式配置
@@ -97,7 +97,7 @@ public final class PdfFileWriter<T> extends AbstractDataFileWriter<T> {
       // 计算列宽
       float[] columnWidths = new float[columnCount];
       int idx = 0;
-      for (TableColumn column : columns.values()) {
+      for (Column column : columns.values()) {
         columnWidths[idx++] = column.getWidth();
       }
 
@@ -178,7 +178,7 @@ public final class PdfFileWriter<T> extends AbstractDataFileWriter<T> {
 
   private void createTableBody(@NonNull Table table,
                                @NonNull List<Map<String, Object>> rows,
-                               @Nonnull Map<String, TableColumn> columns,
+                               @Nonnull Map<String, Column> columns,
                                @Nonnull PdfFont font) {
     int index = 0;
     for (Map<String, Object> row : rows) {
@@ -188,12 +188,12 @@ public final class PdfFileWriter<T> extends AbstractDataFileWriter<T> {
 
   private void createTableBodyRow(@NonNull Table table,
                                   @Nonnull Map<String, Object> row,
-                                  @Nonnull Map<String, TableColumn> columns,
+                                  @Nonnull Map<String, Column> columns,
                                   @Nonnull PdfFont font,
                                   int rowIndex) {
-    for (Map.Entry<String, TableColumn> entry : columns.entrySet()) {
+    for (Map.Entry<String, Column> entry : columns.entrySet()) {
       String fieldName = entry.getKey();
-      TableColumn column = entry.getValue();
+      Column column = entry.getValue();
 
       Object value = row.get(fieldName);
       String text = Strings.value(value, "");
@@ -202,7 +202,7 @@ public final class PdfFileWriter<T> extends AbstractDataFileWriter<T> {
     }
   }
 
-  private Cell buildTableBodyCell(String text, TableColumn column, PdfFont font, int rowIndex) {
+  private Cell buildTableBodyCell(String text, Column column, PdfFont font, int rowIndex) {
     boolean highlight = rowIndex % 2 == 1;
     Alignment alignment = column.getStyle().getAlign();
 

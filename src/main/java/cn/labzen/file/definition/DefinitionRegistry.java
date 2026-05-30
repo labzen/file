@@ -1,8 +1,8 @@
 package cn.labzen.file.definition;
 
-import cn.labzen.file.converter.ChainableConverterExecutor;
+import cn.labzen.file.converter.exportable.ChainableExportConverterExecutor;
+import cn.labzen.file.converter.importable.ChainableImportConverterExecutor;
 import cn.labzen.file.definition.bean.DataDefinition;
-import cn.labzen.file.definition.bean.table.HeaderStructure;
 
 import jakarta.annotation.Nonnull;
 import java.util.Map;
@@ -13,19 +13,15 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * 配置注册中心
  * <p>
- * 存储所有加载并合并后的表数据导出配置实例。
- * 提供统一的配置访问入口
+ * 存储所有加载并合并后的数据配置实例。
+ * 提供统一的配置访问入口。
+ * 转换器链的构建和缓存由各自的 ChainableExecutor 独立管理。
  *
  * @author labzen
  * @see DataDefinition
  */
 public final class DefinitionRegistry {
 
-  /**
-   * 配置存储映射
-   * key: 配置名称（如 User -> user-export.yml）
-   * value: 合并后的配置对象
-   */
   private static final Map<String, DataDefinition> DEFINITION_MAP = new ConcurrentHashMap<>();
 
   private DefinitionRegistry() {
@@ -37,12 +33,15 @@ public final class DefinitionRegistry {
    * @param name       配置名称
    * @param definition 数据配置对象
    */
-  static void register(@Nonnull String name, @Nonnull DataDefinition definition/*, @Nonnull HeaderStructure headerStructure*/) {
+  static void register(@Nonnull String name, @Nonnull DataDefinition definition) {
     if (name.isBlank()) {
       throw new IllegalArgumentException("配置名称不能为空");
     }
 
-    ChainableConverterExecutor.build(definition);
+    // 构建导出和导入转换器链
+    ChainableExportConverterExecutor.build(definition);
+    ChainableImportConverterExecutor.build(definition);
+
     DEFINITION_MAP.put(name, definition);
   }
 
@@ -98,6 +97,7 @@ public final class DefinitionRegistry {
    */
   public static void clear() {
     DEFINITION_MAP.clear();
-    ChainableConverterExecutor.clear();
+    ChainableExportConverterExecutor.clear();
+    ChainableImportConverterExecutor.clear();
   }
 }

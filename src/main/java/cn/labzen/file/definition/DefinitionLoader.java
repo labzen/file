@@ -2,14 +2,19 @@ package cn.labzen.file.definition;
 
 import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.bean.GlobalDefinition;
-import cn.labzen.file.definition.bean.column.GlobalColumn;
-import cn.labzen.file.definition.bean.column.TableColumn;
+import cn.labzen.file.definition.bean.scoped.TableExporting;
+import cn.labzen.file.definition.bean.scoped.TableImporting;
+import cn.labzen.file.definition.bean.column.Column;
+import cn.labzen.file.definition.bean.column.Exporting;
+import cn.labzen.file.definition.bean.column.Importing;
+import cn.labzen.file.definition.bean.scoped.GlobalColumn;
 import cn.labzen.file.definition.bean.style.Font;
 import cn.labzen.file.definition.bean.style.Style;
 import cn.labzen.file.definition.bean.table.HeaderBuilder;
 import cn.labzen.file.definition.bean.table.HeaderStructure;
 import cn.labzen.file.exception.DefinitionLoaderException;
 import cn.labzen.tool.util.Strings;
+import jakarta.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
@@ -20,16 +25,14 @@ import org.yaml.snakeyaml.constructor.Constructor;
 import org.yaml.snakeyaml.introspector.Property;
 import org.yaml.snakeyaml.introspector.PropertyUtils;
 
-import jakarta.annotation.Nonnull;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
-
-import static cn.labzen.file.definition.bean.column.TableColumn.HEADER_LEVEL_SEPARATOR;
 
 /**
  * 数据导出定义配置加载器
@@ -117,7 +120,7 @@ public class DefinitionLoader {
       // 合并全局配置
       DataDefinition mergedDefinition = mergeDefinition(globalDefinition, value);
 
-      List<TableColumn> columns = mergedDefinition.getColumns().values().stream().toList();
+      List<Column> columns = mergedDefinition.getColumns().values().stream().toList();
       HeaderStructure headerStructure = HeaderBuilder.build(columns);
       mergedDefinition.setHeaders(headerStructure);
 
@@ -236,10 +239,12 @@ public class DefinitionLoader {
     }
 
     // 合并列定义
-    Map<String, TableColumn> columns = dataDefinition.getColumns();
+    Map<String, Column> columns = dataDefinition.getColumns();
     if (columns != null) {
-      for (TableColumn column : columns.values()) {
-        mergeColumnDefinition(globalColumn, fileScopedColumnStyle, column);
+      TableExporting fileScopedExporting = dataDefinition.getExporting();
+      TableImporting fileScopedImporting = dataDefinition.getImporting();
+      for (Column column : columns.values()) {
+        mergeColumnDefinition(globalColumn, fileScopedColumnStyle, fileScopedExporting, fileScopedImporting, column);
       }
     }
 
@@ -248,31 +253,15 @@ public class DefinitionLoader {
 
   /**
    * 合并列定义
+   * <p>
+   * 合并优先级（从低到高）：全局列默认 → 文件作用域导出/导入默认 → 列定义配置
    */
-  private void mergeColumnDefinition(GlobalColumn globalColumn, Style fileScopedColumnStyle, TableColumn column) {
+  private void mergeColumnDefinition(GlobalColumn globalColumn, Style fileScopedColumnStyle,
+                                      TableExporting fileScopedExporting, TableImporting fileScopedImporting,
+                                      Column column) {
     // 列宽
     if (column.getWidth() == null) {
       column.setWidth(globalColumn.getWidth());
-    }
-
-    // whenNull
-    if (column.getWhenNull() == null) {
-      column.setWhenNull(globalColumn.getWhenNull());
-    }
-
-    // whenBlank
-    if (column.getWhenBlank() == null) {
-      column.setWhenBlank(globalColumn.getWhenBlank());
-    }
-
-    // prefix
-    if (column.getPrefix() == null) {
-      column.setPrefix(globalColumn.getPrefix());
-    }
-
-    // suffix
-    if (column.getSuffix() == null) {
-      column.setSuffix(globalColumn.getSuffix());
     }
 
     // 列样式覆盖
@@ -280,6 +269,67 @@ public class DefinitionLoader {
       column.setStyle(cloneStyle(fileScopedColumnStyle));
     } else {
       mergeStyle(fileScopedColumnStyle, column.getStyle());
+    }
+
+    // 合并导出配置：文件作用域 exporting → 列级 exporting
+    Exporting columnExporting = column.getExporting();
+    if (fileScopedExporting != null) {
+      if (columnExporting == null) {
+        columnExporting = new Exporting();
+        column.setExporting(columnExporting);
+      }
+      mergeTableExporting(fileScopedExporting, columnExporting);
+    }
+
+    // 合并导入配置：文件作用域 importing → 列级 importing
+    Importing columnImporting = column.getImporting();
+    if (fileScopedImporting != null) {
+      if (columnImporting == null) {
+        columnImporting = new Importing();
+        column.setImporting(columnImporting);
+      }
+      mergeTableImporting(fileScopedImporting, columnImporting);
+    }
+  }
+
+  /**
+   * 合并文件作用域导出配置到列级导出配置
+   * <p>
+   * 列级配置优先级高于文件作用域配置。
+   * 仅合并 TableExporting 中存在的共享属性（whenNull、whenBlank），
+   * prefix/suffix/mapping/enumerable/converter 属于列级专属，不由文件作用域共享
+   */
+  private void mergeTableExporting(TableExporting source, Exporting target) {
+    if (source == null || target == null) {
+      return;
+    }
+
+    if (target.getWhenNull() == null) {
+      target.setWhenNull(source.getWhenNull());
+    }
+    if (target.getWhenBlank() == null) {
+      target.setWhenBlank(source.getWhenBlank());
+    }
+  }
+
+  /**
+   * 合并文件作用域导入配置到列级导入配置
+   * <p>
+   * 列级配置优先级高于文件作用域配置。
+   * 仅合并 TableImporting 中存在的共享属性（required、cleansing），
+   * minLength/maxLength/unique/dependsOn/min/max/mapping/enumerable/converter 属于列级专属，不由文件作用域共享
+   */
+  private void mergeTableImporting(TableImporting source, Importing target) {
+    if (source == null || target == null) {
+      return;
+    }
+
+    // required: 两者均默认为true，当文件作用域显式设为false时，作为列级默认值
+    if (!source.isRequired() && target.isRequired()) {
+      target.setRequired(false);
+    }
+    if (target.getCleansing() == null && source.getCleansing() != null) {
+      target.setCleansing(new ArrayList<>(source.getCleansing()));
     }
   }
 
@@ -382,16 +432,15 @@ public class DefinitionLoader {
     }
 
     // 校验列定义
-    for (Map.Entry<String, TableColumn> entry : definition.getColumns().entrySet()) {
+    for (Map.Entry<String, Column> entry : definition.getColumns().entrySet()) {
       String fieldName = entry.getKey();
-      TableColumn column = entry.getValue();
+      Column column = entry.getValue();
 
       if (Strings.isBlank(column.getHeader())) {
         throw new DefinitionLoaderException("{} 定义文件中的列 [{}] 的 header 不能为空", definition.getDomainName(), fieldName);
       }
-      int headerSeparatorTimes = Strings.times(column.getHeader(), HEADER_LEVEL_SEPARATOR);
-      if (headerSeparatorTimes > 1) {
-        throw new DefinitionLoaderException("{} 定义文件中的列 [{}] 的 header 暂时只能支持最多2级表头", definition.getDomainName(), fieldName);
+      if (!HeaderBuilder.isValidHeaderLevel(column.getHeader())) {
+        throw new DefinitionLoaderException("{} 定义文件中的列 [{}] 的 header 暂时无法支持定义的多级表头", definition.getDomainName(), fieldName);
       }
     }
   }
@@ -402,29 +451,29 @@ public class DefinitionLoader {
   private void validateGlobalDefinition(GlobalDefinition config) {
     // 全局配置校验相对宽松，仅校验基本格式
   }
-
-  /**
-   * 将 kebab-case 转换为 camelCase
-   */
-  private String convertKebabToCamel(String kebab) {
-    if (kebab == null || !kebab.contains("-")) {
-      return kebab;
-    }
-
-    StringBuilder result = new StringBuilder();
-    boolean capitalizeNext = false;
-
-    for (char c : kebab.toCharArray()) {
-      if (c == '-') {
-        capitalizeNext = true;
-      } else if (capitalizeNext) {
-        result.append(Character.toUpperCase(c));
-        capitalizeNext = false;
-      } else {
-        result.append(c);
-      }
-    }
-
-    return result.toString();
-  }
+//
+//  /**
+//   * 将 kebab-case 转换为 camelCase
+//   */
+//  private String convertKebabToCamel(String kebab) {
+//    if (kebab == null || !kebab.contains("-")) {
+//      return kebab;
+//    }
+//
+//    StringBuilder result = new StringBuilder();
+//    boolean capitalizeNext = false;
+//
+//    for (char c : kebab.toCharArray()) {
+//      if (c == '-') {
+//        capitalizeNext = true;
+//      } else if (capitalizeNext) {
+//        result.append(Character.toUpperCase(c));
+//        capitalizeNext = false;
+//      } else {
+//        result.append(c);
+//      }
+//    }
+//
+//    return result.toString();
+//  }
 }

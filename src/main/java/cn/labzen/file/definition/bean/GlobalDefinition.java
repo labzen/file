@@ -1,6 +1,6 @@
 package cn.labzen.file.definition.bean;
 
-import cn.labzen.file.definition.bean.column.GlobalColumn;
+import cn.labzen.file.definition.bean.scoped.GlobalColumn;
 import cn.labzen.file.definition.bean.style.Style;
 import lombok.AllArgsConstructor;
 import lombok.Data;

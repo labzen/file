@@ -1,10 +1,10 @@
 package cn.labzen.file.format.csv;
 
 import cn.labzen.file.definition.bean.DataDefinition;
-import cn.labzen.file.definition.bean.column.TableColumn;
+import cn.labzen.file.definition.bean.column.Column;
 import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.exception.DataWriteException;
-import cn.labzen.file.format.AbstractDataFileWriter;
+import cn.labzen.file.format.core.writer.AbstractDataFileWriter;
 import cn.labzen.file.meta.FileConfiguration;
 import cn.labzen.tool.util.Strings;
 import org.jspecify.annotations.NonNull;
@@ -52,7 +52,7 @@ public final class CsvFileWriter<T> extends AbstractDataFileWriter<T> {
   @SuppressWarnings("DuplicatedCode")
   @Override
   protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<Map<String, Object>> rows, @Nonnull OutputStream outputStream) {
-    LinkedHashMap<String, TableColumn> columns = new LinkedHashMap<>(definition.getColumns());
+    LinkedHashMap<String, Column> columns = new LinkedHashMap<>(definition.getColumns());
     List<String> headers = definition.getHeaders().getLeafLevelHeaders();
 
     try (Writer writer = new BufferedWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8))) {
@@ -91,7 +91,7 @@ public final class CsvFileWriter<T> extends AbstractDataFileWriter<T> {
    * @param columns 列定义映射
    * @return 数据行字符串
    */
-  private String buildDataLine(Map<String, Object> row, Map<String, TableColumn> columns) {
+  private String buildDataLine(Map<String, Object> row, Map<String, Column> columns) {
     return columns.keySet().stream()
       .map(key -> {
         Object value = row.get(key);

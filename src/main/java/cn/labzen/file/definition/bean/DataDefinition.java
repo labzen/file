@@ -1,6 +1,8 @@
 package cn.labzen.file.definition.bean;
 
-import cn.labzen.file.definition.bean.column.TableColumn;
+import cn.labzen.file.definition.bean.column.Column;
+import cn.labzen.file.definition.bean.scoped.TableExporting;
+import cn.labzen.file.definition.bean.scoped.TableImporting;
 import cn.labzen.file.definition.bean.style.Style;
 import cn.labzen.file.definition.bean.table.HeaderStructure;
 import lombok.AllArgsConstructor;
@@ -8,49 +10,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
- * 数据导出配置根对象
- * <p>
- * 定义一个表的数据导出时的完整配置，包括文件名、标题、全局样式和列定义。
- * 对应 YAML 配置文件中的根节点结构
- *
- * <p>配置示例：
- * <pre>
- * filename: user-export
- * title: 用户信息导出
- * global-style:
- *   header:
- *     align: CENTER
- *     background: "#000000"
- *     font:
- *       family: "Arial"
- *       size: 11
- *       color: "#ffffff"
- *       bold: true
- *       italic: true
- *     border:
- *       color: "#ffffff"
- *       width: MEDIUM
- *     wrapped: false
- *   body:
- *     align: CENTER
- * columns:
- *   username:
- *     header: "基本信息:-:用户名"
- *     index: 0
- *     width: 100
- *     when-null: "匿名"
- *     converter:
- *       mapping:
- *         "1": "男"
- *         "2": "女"
- * </pre>
+ * 数据定义根对象
  *
  * @author labzen
- * @see TableColumn
- * @see Style
  */
 @Data
 @AllArgsConstructor
@@ -58,7 +24,7 @@ import java.util.Map;
 public class DataDefinition {
 
   /**
-   * 表映射类名
+   * 域名（对应YAML文件名，也对应Java Bean类名）
    */
   private String domainName;
 
@@ -68,35 +34,42 @@ public class DataDefinition {
   private String filename;
 
   /**
-   * 数据标题
-   * <p>
-   * 用于显示在表头上方：
-   * <ul>
-   *   <li>Excel - 作为 sheet 名</li>
-   *   <li>CSV - 忽略</li>
-   *   <li>其他文件格式 - 作为数据表格上方的标题</li>
-   * </ul>
+   * 数据标题（Excel sheet名/PDF标题等）
    */
   private String title;
 
   /**
-   * 单表数据的通用表头样式定义
+   * 单表通用表头样式
    */
   private Style headerStyle;
 
   /**
-   * 单表数据的通用单元格样式定义
+   * 单表通用单元格样式
    */
   private Style columnStyle;
 
   /**
-   * 列定义集合
-   * <p>
-   * key 为表字段名映射的类属性名，value 为列配置
-   * <p>
-   * 例如：表字段名为 parent_code，映射的属性名为 parentCode，使用 parentCode 作为 key
+   * 列定义（LinkedHashMap保持顺序，key=字段名）
    */
-  private Map<String, TableColumn> columns = new LinkedHashMap<>();
+  private Map<String, Column> columns = new LinkedHashMap<>();
 
+  /**
+   * 列导出方向全局配置
+   */
+  private TableExporting exporting;
+
+  /**
+   * 列导入方向全局配置
+   */
+  private TableImporting importing;
+
+  /**
+   * 在运行时对数据定义构建后的计算出的表头结构
+   */
   private HeaderStructure headers;
+
+  /**
+   * Mock数据（来自同名.mock.json文件，可能为null）
+   */
+  private List<Map<String, String>> mockData;
 }

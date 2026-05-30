@@ -1,8 +1,9 @@
 package cn.labzen.file.i18n;
 
 import cn.labzen.file.definition.bean.DataDefinition;
-import cn.labzen.file.definition.bean.column.TableColumn;
-import cn.labzen.file.definition.bean.converter.Converter;
+import cn.labzen.file.definition.bean.column.Column;
+import cn.labzen.file.definition.bean.column.Exporting;
+import cn.labzen.file.definition.bean.column.Importing;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -245,82 +246,110 @@ class I18nMechanismTest {
     }
 
     @Test
-    @DisplayName("解析 whenNull 中的占位符")
+    @DisplayName("解析导出配置 whenNull 中的占位符")
     void testResolveWhenNull() {
       DataDefinition template = createTemplate();
-      addColumn(template, "username", "用户名", "${null-text}", null, null, null);
+      Exporting exporting = new Exporting();
+      exporting.setWhenNull("${null-text}");
+      addColumn(template, "username", "用户名", exporting, null, null, null);
 
       DataDefinition resolved = resolver.resolve(template, "zh-CN");
-      assertEquals("未知", getColumn(resolved, "username").getWhenNull());
+      assertEquals("未知", getColumn(resolved, "username").getExporting().getWhenNull());
 
       resolved = resolver.resolve(template, "en-US");
-      assertEquals("Unknown", getColumn(resolved, "username").getWhenNull());
+      assertEquals("Unknown", getColumn(resolved, "username").getExporting().getWhenNull());
     }
 
     @Test
-    @DisplayName("解析 whenBlank 中的占位符")
+    @DisplayName("解析导出配置 whenBlank 中的占位符")
     void testResolveWhenBlank() {
       DataDefinition template = createTemplate();
-      addColumn(template, "username", "用户名", null, "${blank-text}", null, null);
+      Exporting exporting = new Exporting();
+      exporting.setWhenBlank("${blank-text}");
+      addColumn(template, "username", "用户名", exporting, null, null, null);
 
       DataDefinition resolved = resolver.resolve(template, "zh-CN");
-      assertEquals("空", getColumn(resolved, "username").getWhenBlank());
+      assertEquals("空", getColumn(resolved, "username").getExporting().getWhenBlank());
 
       resolved = resolver.resolve(template, "en-US");
-      assertEquals("Empty", getColumn(resolved, "username").getWhenBlank());
+      assertEquals("Empty", getColumn(resolved, "username").getExporting().getWhenBlank());
     }
 
     @Test
-    @DisplayName("解析 named 转换器中的占位符")
-    void testResolveNamedConverter() {
+    @DisplayName("解析导出配置 converter 中的占位符")
+    void testResolveExportingConverter() {
       DataDefinition template = createTemplate();
-      Converter converter = new Converter();
-      converter.setNamed("bool(${bool-true}, ${bool-false})");
-      addColumn(template, "active", "是否激活", null, null, converter, null);
+      Exporting exporting = new Exporting();
+      exporting.setConverter("bool(${bool-true}, ${bool-false})");
+      addColumn(template, "active", "是否激活", exporting, null, null, null);
 
       DataDefinition resolved = resolver.resolve(template, "zh-CN");
-      assertEquals("bool(是, 否)", getColumn(resolved, "active").getConverter().getNamed());
+      assertEquals("bool(是, 否)", getColumn(resolved, "active").getExporting().getConverter());
 
       resolved = resolver.resolve(template, "en-US");
-      assertEquals("bool(Yes, No)", getColumn(resolved, "active").getConverter().getNamed());
+      assertEquals("bool(Yes, No)", getColumn(resolved, "active").getExporting().getConverter());
     }
 
     @Test
-    @DisplayName("解析 mapping 转换器 value 中的占位符")
-    void testResolveMappingConverter() {
+    @DisplayName("解析共享 mapping value 中的占位符")
+    void testResolveSharedMapping() {
       DataDefinition template = createTemplate();
-      Converter converter = new Converter();
       Map<String, String> mapping = new LinkedHashMap<>();
       mapping.put("1", "${male}");
       mapping.put("2", "${female}");
-      converter.setMapping(mapping);
-      addColumn(template, "gender", "${gender-header}", null, null, converter, null);
+      addColumn(template, "gender", "${gender-header}", null, null, mapping, null);
 
       DataDefinition resolved = resolver.resolve(template, "zh-CN");
-      Map<String, String> zhMapping = getColumn(resolved, "gender").getConverter().getMapping();
-      assertEquals("男", zhMapping.get("1"));
-      assertEquals("女", zhMapping.get("2"));
+      assertEquals("男", getColumn(resolved, "gender").getMapping().get("1"));
+      assertEquals("女", getColumn(resolved, "gender").getMapping().get("2"));
 
       resolved = resolver.resolve(template, "en-US");
-      Map<String, String> enMapping = getColumn(resolved, "gender").getConverter().getMapping();
-      assertEquals("Male", enMapping.get("1"));
-      assertEquals("Female", enMapping.get("2"));
+      assertEquals("Male", getColumn(resolved, "gender").getMapping().get("1"));
+      assertEquals("Female", getColumn(resolved, "gender").getMapping().get("2"));
     }
 
     @Test
-    @DisplayName("mapping 转换器的 key 不被替换")
-    void testMappingConverterKeyNotReplaced() {
+    @DisplayName("解析导出专属 mapping value 中的占位符")
+    void testResolveExportingMapping() {
       DataDefinition template = createTemplate();
-      Converter converter = new Converter();
       Map<String, String> mapping = new LinkedHashMap<>();
-      mapping.put("${some-key}", "值");
-      converter.setMapping(mapping);
-      addColumn(template, "test", "测试", null, null, converter, null);
+      mapping.put("1", "${male}");
+      mapping.put("2", "${female}");
+      Exporting exporting = new Exporting();
+      exporting.setMapping(mapping);
+      addColumn(template, "gender", "${gender-header}", exporting, null, null, null);
 
       DataDefinition resolved = resolver.resolve(template, "zh-CN");
-      Map<String, String> resolvedMapping = getColumn(resolved, "test").getConverter().getMapping();
+      assertEquals("男", getColumn(resolved, "gender").getExporting().getMapping().get("1"));
+      assertEquals("女", getColumn(resolved, "gender").getExporting().getMapping().get("2"));
+    }
+
+    @Test
+    @DisplayName("mapping 的 key 不被替换")
+    void testMappingKeyNotReplaced() {
+      DataDefinition template = createTemplate();
+      Map<String, String> mapping = new LinkedHashMap<>();
+      mapping.put("${some-key}", "值");
+      addColumn(template, "test", "测试", null, null, mapping, null);
+
+      DataDefinition resolved = resolver.resolve(template, "zh-CN");
       // key 保持原样（不被替换）
-      assertTrue(resolvedMapping.containsKey("${some-key}"));
+      assertTrue(resolved.getColumns().get("test").getMapping().containsKey("${some-key}"));
+    }
+
+    @Test
+    @DisplayName("解析导入配置 converter 中的占位符")
+    void testResolveImportingConverter() {
+      DataDefinition template = createTemplate();
+      Importing importing = new Importing();
+      importing.setConverter("uppercase(${bool-true})");
+      addColumn(template, "code", "编码", null, importing, null, null);
+
+      DataDefinition resolved = resolver.resolve(template, "zh-CN");
+      assertEquals("uppercase(是)", getColumn(resolved, "code").getImporting().getConverter());
+
+      resolved = resolver.resolve(template, "en-US");
+      assertEquals("uppercase(Yes)", getColumn(resolved, "code").getImporting().getConverter());
     }
 
     @Test
@@ -346,12 +375,14 @@ class I18nMechanismTest {
     void testPlainTextUnchanged() {
       DataDefinition template = createTemplate();
       template.setTitle("固定标题");
-      addColumn(template, "username", "用户名", "无", null, null, null);
+      Exporting exporting = new Exporting();
+      exporting.setWhenNull("无");
+      addColumn(template, "username", "用户名", exporting, null, null, null);
 
       DataDefinition resolved = resolver.resolve(template, "zh-CN");
       assertEquals("固定标题", resolved.getTitle());
       assertEquals("用户名", getColumn(resolved, "username").getHeader());
-      assertEquals("无", getColumn(resolved, "username").getWhenNull());
+      assertEquals("无", getColumn(resolved, "username").getExporting().getWhenNull());
     }
 
     @Test
@@ -415,16 +446,19 @@ class I18nMechanismTest {
       DataDefinition template = createTemplate();
       template.setTitle("${user-title}");
 
-      Converter genderConverter = new Converter();
+      // gender 列：共享 mapping + 导出 whenNull
       Map<String, String> genderMapping = new LinkedHashMap<>();
       genderMapping.put("1", "${male}");
       genderMapping.put("2", "${female}");
-      genderConverter.setMapping(genderMapping);
-      addColumn(template, "gender", "${gender-header}", "${null-text}", null, genderConverter, null);
+      Exporting genderExporting = new Exporting();
+      genderExporting.setWhenNull("${null-text}");
+      addColumn(template, "gender", "${gender-header}", genderExporting, null, genderMapping, null);
 
-      Converter activeConverter = new Converter();
-      activeConverter.setNamed("bool(${bool-true}, ${bool-false})");
-      addColumn(template, "active", "${active-header}", null, "${blank-text}", activeConverter, null);
+      // active 列：导出 converter + 导出 whenBlank
+      Exporting activeExporting = new Exporting();
+      activeExporting.setWhenBlank("${blank-text}");
+      activeExporting.setConverter("bool(${bool-true}, ${bool-false})");
+      addColumn(template, "active", "${active-header}", activeExporting, null, null, null);
 
       // 补充 active-header
       store.put("zh-CN", "active-header", "是否激活");
@@ -434,23 +468,23 @@ class I18nMechanismTest {
       DataDefinition zhResolved = resolver.resolve(template, "zh-CN");
       assertEquals("用户信息导出", zhResolved.getTitle());
       assertEquals("性别", getColumn(zhResolved, "gender").getHeader());
-      assertEquals("未知", getColumn(zhResolved, "gender").getWhenNull());
-      assertEquals("男", getColumn(zhResolved, "gender").getConverter().getMapping().get("1"));
-      assertEquals("女", getColumn(zhResolved, "gender").getConverter().getMapping().get("2"));
+      assertEquals("未知", getColumn(zhResolved, "gender").getExporting().getWhenNull());
+      assertEquals("男", getColumn(zhResolved, "gender").getMapping().get("1"));
+      assertEquals("女", getColumn(zhResolved, "gender").getMapping().get("2"));
       assertEquals("是否激活", getColumn(zhResolved, "active").getHeader());
-      assertEquals("空", getColumn(zhResolved, "active").getWhenBlank());
-      assertEquals("bool(是, 否)", getColumn(zhResolved, "active").getConverter().getNamed());
+      assertEquals("空", getColumn(zhResolved, "active").getExporting().getWhenBlank());
+      assertEquals("bool(是, 否)", getColumn(zhResolved, "active").getExporting().getConverter());
 
       // 英文解析
       DataDefinition enResolved = resolver.resolve(template, "en-US");
       assertEquals("User Info Export", enResolved.getTitle());
       assertEquals("Gender", getColumn(enResolved, "gender").getHeader());
-      assertEquals("Unknown", getColumn(enResolved, "gender").getWhenNull());
-      assertEquals("Male", getColumn(enResolved, "gender").getConverter().getMapping().get("1"));
-      assertEquals("Female", getColumn(enResolved, "gender").getConverter().getMapping().get("2"));
+      assertEquals("Unknown", getColumn(enResolved, "gender").getExporting().getWhenNull());
+      assertEquals("Male", getColumn(enResolved, "gender").getMapping().get("1"));
+      assertEquals("Female", getColumn(enResolved, "gender").getMapping().get("2"));
       assertEquals("Active", getColumn(enResolved, "active").getHeader());
-      assertEquals("Empty", getColumn(enResolved, "active").getWhenBlank());
-      assertEquals("bool(Yes, No)", getColumn(enResolved, "active").getConverter().getNamed());
+      assertEquals("Empty", getColumn(enResolved, "active").getExporting().getWhenBlank());
+      assertEquals("bool(Yes, No)", getColumn(enResolved, "active").getExporting().getConverter());
     }
 
     // ===== 辅助方法 =====
@@ -464,23 +498,29 @@ class I18nMechanismTest {
     }
 
     private void addColumn(DataDefinition definition, String name, String header,
-                           String whenNull, String whenBlank,
-                           Converter converter, Map<String, String> mapping) {
-      TableColumn column = new TableColumn();
+                           Exporting exporting, Importing importing,
+                           Map<String, String> mapping, Map<String, String> importingMapping) {
+      Column column = new Column();
       column.setHeader(header);
-      column.setWhenNull(whenNull);
-      column.setWhenBlank(whenBlank);
-      if (converter != null) {
-        column.setConverter(converter);
-      } else if (mapping != null) {
-        Converter c = new Converter();
-        c.setMapping(mapping);
-        column.setConverter(c);
+      if (exporting != null) {
+        column.setExporting(exporting);
+      }
+      if (importing != null) {
+        column.setImporting(importing);
+      }
+      if (mapping != null) {
+        column.setMapping(mapping);
+      }
+      if (importingMapping != null) {
+        if (column.getImporting() == null) {
+          column.setImporting(new Importing());
+        }
+        column.getImporting().setMapping(importingMapping);
       }
       definition.getColumns().put(name, column);
     }
 
-    private TableColumn getColumn(DataDefinition definition, String name) {
+    private Column getColumn(DataDefinition definition, String name) {
       return definition.getColumns().get(name);
     }
   }

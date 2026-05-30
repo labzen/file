@@ -3,7 +3,7 @@ package cn.labzen.file.format.xml;
 import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.exception.DataWriteException;
-import cn.labzen.file.format.AbstractDataFileWriter;
+import cn.labzen.file.format.core.writer.AbstractDataFileWriter;
 import cn.labzen.file.meta.FileConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;

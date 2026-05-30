@@ -20,6 +20,17 @@ public class DataConvertException extends LabzenRuntimeException {
     super(message);
   }
 
+
+  /**
+   * 构造器
+   *
+   * @param message 占位符消息
+   * @param args    参数
+   */
+  public DataConvertException(String message, Object... args) {
+    super(message, args);
+  }
+
   /**
    * 构造器
    *

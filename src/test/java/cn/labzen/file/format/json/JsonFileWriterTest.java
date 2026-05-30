@@ -4,7 +4,7 @@ import cn.labzen.file.bean.Property;
 import cn.labzen.file.definition.DefinitionLoader;
 import cn.labzen.file.definition.DefinitionRegistry;
 import cn.labzen.file.definition.enums.FileFormat;
-import cn.labzen.file.format.DataFileGenerator;
+import cn.labzen.file.format.DataFileExporter;
 import cn.labzen.file.format.MockData;
 import cn.labzen.meta.LabzenMetaInitializer;
 import org.junit.jupiter.api.AfterEach;
@@ -61,7 +61,7 @@ class JsonFileWriterTest {
   void testDataFileGenerator() throws IOException {
     var data = MockData.createMockData();
 
-    DataFileGenerator.by(Property.class)
+    DataFileExporter.by(Property.class)
       .with(data)
       .as(FileFormat.JSON)
       .to(OUTPUT_FILE);

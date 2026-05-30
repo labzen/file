@@ -1,58 +1,55 @@
 package cn.labzen.file.converter;
 
-import cn.labzen.file.exception.DataConvertException;
-
-import java.util.List;
+import cn.labzen.file.converter.exportable.ExportableConverter;
+import cn.labzen.file.converter.importable.ImportableConverter;
 
 /**
- * 转换器接口
+ * 转换器标记接口 — 所有转换器的父类型
  * <p>
- * 定义数据转换的统一接口，支持泛型指定输入和输出类型。
- * 所有转换器实现类都应实现此接口。
+ * 定义内置转换器的名称和优先级常量。
+ * 具体的转换方向由 {@link ExportableConverter} 和 {@link ImportableConverter} 分别定义。
  *
- * @param <O> 输出类型
  * @author labzen
  */
-public interface Converter<O> {
+public interface Converter {
 
+  // ── 导出+导入 双向转换器 ──
   String WHEN_NULL_NAME = "innate#when-null";
   int WHEN_NULL_PRIORITY = 100;
   String WHEN_EMPTY_NAME = "innate#when-empty";
   int WHEN_EMPTY_PRIORITY = 110;
-  String DATE_NAME = "innate#date";
-  int DATE_PRIORITY = 200;
   String NUMBER_NAME = "innate#number";
   int NUMBER_PRIORITY = 210;
   String MAPPING_NAME = "innate#mapping";
   int MAPPING_PRIORITY = 300;
-  String ENUM_NAME = "innate#mapping";
+  String ENUM_NAME = "innate#enum";
   int ENUM_PRIORITY = 310;
+  String BOOL_NAME = "bool";
+  int BOOL_PRIORITY = 400;
+
+  // ── 仅导出转换器 ──
+  String DATE_NAME = "innate#date";
+  int DATE_PRIORITY = 200;
+  String DESENSITIZE_NAME = "desensitize";
+  int DESENSITIZE_PRIORITY = 400;
+  String TRUNCATE_NAME = "truncate";
+  int TRUNCATE_PRIORITY = 400;
   String PREFIX_NAME = "innate#prefix";
   int PREFIX_PRIORITY = 900;
   String SUFFIX_NAME = "innate#suffix";
   int SUFFIX_PRIORITY = 910;
 
-  String DESENSITIZE_NAME = "desensitize";
-  int DESENSITIZE_PRIORITY = 400;
-  String TRUNCATE_NAME = "truncate";
-  int TRUNCATE_PRIORITY = 400;
-  String BOOL_NAME = "bool";
-  int BOOL_PRIORITY = 400;
-
-  /**
-   * 执行转换
-   *
-   * @param input  输入值
-   * @return 转换后的值
-   * @throws DataConvertException 如果转换失败
-   */
-  O convert(Object input, List<Object> argument) throws DataConvertException;
-
-  /**
-   * 检查是否支持指定的数据类型
-   *
-   * @param type 数据类型
-   * @return 是否支持
-   */
-  boolean supports(Class<?> type);
+  // ── 仅导入转换器 ──
+  String UPPERCASE_NAME = "uppercase";
+  int UPPERCASE_PRIORITY = 500;
+  String LOWERCASE_NAME = "lowercase";
+  int LOWERCASE_PRIORITY = 510;
+//  String DATE_NAME = "date";
+//  int DATE_PRIORITY = 520;
+//  String LOCAL_DATE_NAME = "local_date";
+//  int LOCAL_DATE_PRIORITY = 520;
+//  String LOCAL_TIME_NAME = "local_time";
+//  int LOCAL_TIME_PRIORITY = 520;
+//  String LOCAL_DATETIME_NAME = "local_datetime";
+//  int LOCAL_DATETIME_PRIORITY = 520;
 }

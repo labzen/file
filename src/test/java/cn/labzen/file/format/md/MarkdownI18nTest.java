@@ -4,7 +4,7 @@ import cn.labzen.file.bean.PropertyI18n;
 import cn.labzen.file.definition.DefinitionLoader;
 import cn.labzen.file.definition.DefinitionRegistry;
 import cn.labzen.file.definition.enums.FileFormat;
-import cn.labzen.file.format.DataFileGenerator;
+import cn.labzen.file.format.DataFileExporter;
 import cn.labzen.file.i18n.I18nStoreHolder;
 import cn.labzen.file.i18n.ManualI18NStoreProvider;
 import cn.labzen.meta.LabzenMetaInitializer;
@@ -77,7 +77,7 @@ class MarkdownI18nTest {
   @DisplayName("中文 locale 导出 - 验证占位符替换为中文")
   void testChineseLocaleExport() throws IOException {
     List<PropertyI18n> data = createSimpleData();
-    File outputFile = DataFileGenerator.by(PropertyI18n.class)
+    File outputFile = DataFileExporter.by(PropertyI18n.class)
       .with(data)
       .as(FileFormat.MARKDOWN)
       .locale("zh-CN")
@@ -112,7 +112,7 @@ class MarkdownI18nTest {
   @DisplayName("英文 locale 导出 - 验证占位符替换为英文")
   void testEnglishLocaleExport() throws IOException {
     List<PropertyI18n> data = createSimpleData();
-    File outputFile = DataFileGenerator.by(PropertyI18n.class)
+    File outputFile = DataFileExporter.by(PropertyI18n.class)
       .with(data)
       .as(FileFormat.MARKDOWN)
       .locale("en-US")
@@ -147,7 +147,7 @@ class MarkdownI18nTest {
   @DisplayName("日文 locale 回退至默认中文 locale")
   void testLocaleFallback() throws IOException {
     List<PropertyI18n> data = createSimpleData();
-    File outputFile = DataFileGenerator.by(PropertyI18n.class)
+    File outputFile = DataFileExporter.by(PropertyI18n.class)
       .with(data)
       .as(FileFormat.MARKDOWN)
       .locale("ja-JP")
@@ -170,14 +170,14 @@ class MarkdownI18nTest {
     String enPath = OUTPUT_DIR + "/property-i18n-en.md";
 
     // 中文导出
-    DataFileGenerator.by(PropertyI18n.class)
+    DataFileExporter.by(PropertyI18n.class)
       .with(data)
       .as(FileFormat.MARKDOWN)
       .locale("zh-CN")
       .to(zhPath);
 
     // 英文导出
-    DataFileGenerator.by(PropertyI18n.class)
+    DataFileExporter.by(PropertyI18n.class)
       .with(data)
       .as(FileFormat.MARKDOWN)
       .locale("en-US")
@@ -199,7 +199,7 @@ class MarkdownI18nTest {
     List<PropertyI18n> data = createSimpleData();
 
     // 第一次中文导出
-    File file1 = DataFileGenerator.by(PropertyI18n.class)
+    File file1 = DataFileExporter.by(PropertyI18n.class)
       .with(data)
       .as(FileFormat.MARKDOWN)
       .locale("zh-CN")
@@ -212,7 +212,7 @@ class MarkdownI18nTest {
     store.put("zh-CN", "property-title", "属性列表（已更新）");
 
     // 第二次中文导出
-    File file2 = DataFileGenerator.by(PropertyI18n.class)
+    File file2 = DataFileExporter.by(PropertyI18n.class)
       .with(data)
       .as(FileFormat.MARKDOWN)
       .locale("zh-CN")

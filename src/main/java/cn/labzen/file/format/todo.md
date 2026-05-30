@@ -1,9 +1,0 @@
-- [x] txt
-- [x] csv
-- [x] json
-- [x] xml
-- [x] yaml
-- [x] markdown
-- [x] html
-- [x] pdf
-- [ ] excel

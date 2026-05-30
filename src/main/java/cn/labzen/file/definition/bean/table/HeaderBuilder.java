@@ -1,6 +1,6 @@
 package cn.labzen.file.definition.bean.table;
 
-import cn.labzen.file.definition.bean.column.TableColumn;
+import cn.labzen.file.definition.bean.column.Column;
 import cn.labzen.tool.util.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -8,13 +8,19 @@ import com.google.common.collect.Lists;
 import java.util.List;
 import java.util.Objects;
 
-import static cn.labzen.file.definition.bean.column.TableColumn.HEADER_LEVEL_SEPARATOR;
-
 public class HeaderBuilder {
 
+  /**
+   * 多级表头分隔符
+   */
+  private static final String HEADER_LEVEL_SEPARATOR = ":-:";
   private static final int SUPPORT_MAX_HEADER_LEVEL = 2;
 
-  public static HeaderStructure build(List<TableColumn> columns) {
+  public static boolean isValidHeaderLevel(String headerString) {
+    return Strings.times(headerString, HEADER_LEVEL_SEPARATOR) <= SUPPORT_MAX_HEADER_LEVEL;
+  }
+
+  public static HeaderStructure build(List<Column> columns) {
     int size = columns.size();
     int index = 0;
 
@@ -27,7 +33,7 @@ public class HeaderBuilder {
     List<HeaderCell> secondRowHeaderCells = Lists.newArrayList();
 
     while (index < size) {
-      TableColumn current = columns.get(index);
+      Column current = columns.get(index);
       String[] headers = current.getHeader() == null ? new String[]{""} : current.getHeader().split(HEADER_LEVEL_SEPARATOR);
       // 如果当前是单级表头，或者header集合中只有一个表头，则直接添加到第一行表头中
       if (isSingleHeader || headers.length == 1) {
@@ -41,7 +47,7 @@ public class HeaderBuilder {
       int start = index;
       int colSpan = 0;
       while (index < size) {
-        TableColumn next = columns.get(index);
+        Column next = columns.get(index);
         String[] nextHeaders = next.getHeader().split(HEADER_LEVEL_SEPARATOR);
         // 如果当前列的header集合中只有一级表头，则跳出循环
         if (nextHeaders.length == 1) {
@@ -61,7 +67,7 @@ public class HeaderBuilder {
 
       // 添加第二行表头
       for (int i = start; i < start + colSpan; i++) {
-        TableColumn column = columns.get(i);
+        Column column = columns.get(i);
         String[] columnHeaders = column.getHeader().split(HEADER_LEVEL_SEPARATOR);
         // 通过前面的逻辑，这里能保证columnHeaders的长度是2
         secondRowHeaderCells.add(new HeaderCell(columnHeaders[1], i, 1, 1));

@@ -1,11 +1,11 @@
 package cn.labzen.file.format.md;
 
 import cn.labzen.file.definition.bean.DataDefinition;
-import cn.labzen.file.definition.bean.column.TableColumn;
+import cn.labzen.file.definition.bean.column.Column;
 import cn.labzen.file.definition.enums.Alignment;
 import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.exception.DataWriteException;
-import cn.labzen.file.format.AbstractDataFileWriter;
+import cn.labzen.file.format.core.writer.AbstractDataFileWriter;
 import cn.labzen.file.meta.FileConfiguration;
 import cn.labzen.tool.util.Strings;
 import lombok.extern.slf4j.Slf4j;
@@ -77,7 +77,7 @@ public final class MarkdownFileWriter<T> extends AbstractDataFileWriter<T> {
   @Override
   protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<Map<String, Object>> rows, @Nonnull OutputStream outputStream) {
     List<String> headers = definition.getHeaders().getLeafLevelHeaders();
-    Map<String, TableColumn> columns = definition.getColumns();
+    Map<String, Column> columns = definition.getColumns();
     String title = definition.getTitle();
 
     try (OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)) {
@@ -124,7 +124,7 @@ public final class MarkdownFileWriter<T> extends AbstractDataFileWriter<T> {
    * @param columns 列定义映射
    * @return 表格分隔行字符串（如 |:---|:---:|
    */
-  private String buildSeparatorLine(Map<String, TableColumn> columns) {
+  private String buildSeparatorLine(Map<String, Column> columns) {
     String separators = columns.values().stream()
       .map(this::getAlignmentSeparator)
       .collect(Collectors.joining(TABLE_SEPARATOR));
@@ -138,7 +138,7 @@ public final class MarkdownFileWriter<T> extends AbstractDataFileWriter<T> {
    * @param column 列定义
    * @return 分隔符（:---、---:、:---:）
    */
-  private String getAlignmentSeparator(TableColumn column) {
+  private String getAlignmentSeparator(Column column) {
     if ( column.getStyle() == null || column.getStyle().getAlign() == null) {
       return ":---:"; // 默认居中对齐
     }
@@ -160,7 +160,7 @@ public final class MarkdownFileWriter<T> extends AbstractDataFileWriter<T> {
    * @param columns 列定义映射
    * @return 数据行字符串
    */
-  private String buildDataLine(Map<String, Object> row, Map<String, TableColumn> columns) {
+  private String buildDataLine(Map<String, Object> row, Map<String, Column> columns) {
     String values = columns.keySet().stream()
       .map(key -> {
         Object value = row.get(key);

@@ -1,17 +1,19 @@
 package cn.labzen.file.i18n;
 
 import cn.labzen.file.definition.bean.DataDefinition;
-import cn.labzen.file.definition.bean.column.TableColumn;
-import cn.labzen.file.definition.bean.converter.Converter;
+import cn.labzen.file.definition.bean.column.Column;
+import cn.labzen.file.definition.bean.column.Exporting;
+import cn.labzen.file.definition.bean.column.Importing;
+import cn.labzen.file.definition.bean.column.Pattern;
 import cn.labzen.file.definition.bean.style.Font;
 import cn.labzen.file.definition.bean.style.Style;
 import cn.labzen.file.definition.bean.table.HeaderBuilder;
 import cn.labzen.file.definition.bean.table.HeaderStructure;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * 国际化占位符解析器
@@ -23,7 +25,8 @@ import java.util.regex.Pattern;
  */
 public class I18nResolver {
 
-  private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\$\\{([^}]+)}");
+  private static final java.util.regex.Pattern PLACEHOLDER_PATTERN =
+    java.util.regex.Pattern.compile("\\$\\{([^}]+)}");
 
   private final I18nStoreProvider i18NStoreProvider;
 
@@ -50,7 +53,7 @@ public class I18nResolver {
 
     // 解析列定义
     if (definition.getColumns() != null) {
-      for (TableColumn column : definition.getColumns().values()) {
+      for (Column column : definition.getColumns().values()) {
         resolveColumn(column, locale);
       }
     }
@@ -64,34 +67,60 @@ public class I18nResolver {
     }
   }
 
-  private void resolveColumn(TableColumn column, String locale) {
+  private void resolveColumn(Column column, String locale) {
     // header
     column.setHeader(resolveText(column.getHeader(), locale));
 
-    // whenNull / whenBlank (继承自 GlobalColumn)
-    column.setWhenNull(resolveText(column.getWhenNull(), locale));
-    column.setWhenBlank(resolveText(column.getWhenBlank(), locale));
+    // 共享 mapping 中的 ${key}（只替换 value）
+    resolveMapping(column.getMapping(), locale);
 
-    // converter
-    if (column.getConverter() != null) {
-      resolveConverter(column.getConverter(), locale);
+    // 共享 enumerable（不包含 ${key}，但保持一致性仍解析）
+    column.setEnumerable(resolveText(column.getEnumerable(), locale));
+
+    // 导出配置
+    if (column.getExporting() != null) {
+      resolveExporting(column.getExporting(), locale);
+    }
+
+    // 导入配置
+    if (column.getImporting() != null) {
+      resolveImporting(column.getImporting(), locale);
     }
   }
 
-  private void resolveConverter(Converter converter, String locale) {
-    // named 转换器中的 ${key}
-    if (converter.getNamed() != null) {
-      converter.setNamed(resolveText(converter.getNamed(), locale));
-    }
+  private void resolveExporting(Exporting exporting, String locale) {
+    // 继承自 TableExporting 的共享属性
+    exporting.setWhenNull(resolveText(exporting.getWhenNull(), locale));
+    exporting.setWhenBlank(resolveText(exporting.getWhenBlank(), locale));
 
-    // mapping 中的 ${key}（只替换 value）
-    if (converter.getMapping() != null) {
-      Map<String, String> resolvedMapping = new LinkedHashMap<>();
-      for (Map.Entry<String, String> entry : converter.getMapping().entrySet()) {
-        resolvedMapping.put(entry.getKey(), resolveText(entry.getValue(), locale));
-      }
-      converter.setMapping(resolvedMapping);
+    // 列级专属属性
+    exporting.setPrefix(resolveText(exporting.getPrefix(), locale));
+    exporting.setSuffix(resolveText(exporting.getSuffix(), locale));
+    resolveMapping(exporting.getMapping(), locale);
+    exporting.setEnumerable(resolveText(exporting.getEnumerable(), locale));
+    exporting.setConverter(resolveText(exporting.getConverter(), locale));
+  }
+
+  private void resolveImporting(Importing importing, String locale) {
+    // 列级专属属性（含 ${key} 的文本字段）
+    resolveMapping(importing.getMapping(), locale);
+    importing.setEnumerable(resolveText(importing.getEnumerable(), locale));
+    importing.setConverter(resolveText(importing.getConverter(), locale));
+  }
+
+  /**
+   * 解析映射表中的 ${key} 占位符（只替换 value）
+   */
+  private void resolveMapping(Map<String, String> mapping, String locale) {
+    if (mapping == null) {
+      return;
     }
+    Map<String, String> resolved = new LinkedHashMap<>();
+    for (Map.Entry<String, String> entry : mapping.entrySet()) {
+      resolved.put(entry.getKey(), resolveText(entry.getValue(), locale));
+    }
+    mapping.clear();
+    mapping.putAll(resolved);
   }
 
   /**
@@ -127,27 +156,105 @@ public class I18nResolver {
     copy.setHeaderStyle(copyStyle(source.getHeaderStyle()));
     copy.setColumnStyle(copyStyle(source.getColumnStyle()));
     copy.setHeaders(source.getHeaders());
+    copy.setExporting(copyTableExporting(source.getExporting()));
+    copy.setImporting(copyTableImporting(source.getImporting()));
 
     if (source.getColumns() != null) {
-      Map<String, TableColumn> columnsCopy = new LinkedHashMap<>();
-      source.getColumns().forEach((name, col) -> columnsCopy.put(name, copyTableColumn(col)));
+      Map<String, Column> columnsCopy = new LinkedHashMap<>();
+      source.getColumns().forEach((name, col) -> columnsCopy.put(name, copyColumn(col)));
       copy.setColumns(columnsCopy);
     }
 
     return copy;
   }
 
-  private TableColumn copyTableColumn(TableColumn source) {
-    TableColumn copy = new TableColumn();
+  private Column copyColumn(Column source) {
+    Column copy = new Column();
     copy.setHeader(source.getHeader());
     copy.setWidth(source.getWidth());
+    copy.setStyle(copyStyle(source.getStyle()));
+    copy.setPattern(copyPattern(source.getPattern()));
+
+    // 共享 mapping
+    if (source.getMapping() != null) {
+      copy.setMapping(new LinkedHashMap<>(source.getMapping()));
+    }
+
+    // 共享 enumerable
+    copy.setEnumerable(source.getEnumerable());
+
+    // 导出/导入配置
+    copy.setExporting(copyExporting(source.getExporting()));
+    copy.setImporting(copyImporting(source.getImporting()));
+
+    return copy;
+  }
+
+  private Exporting copyExporting(Exporting source) {
+    if (source == null) {
+      return null;
+    }
+    Exporting copy = new Exporting();
     copy.setWhenNull(source.getWhenNull());
     copy.setWhenBlank(source.getWhenBlank());
     copy.setPrefix(source.getPrefix());
     copy.setSuffix(source.getSuffix());
-    copy.setStyle(copyStyle(source.getStyle()));
-    copy.setPattern(copyPattern(source.getPattern()));
-    copy.setConverter(copyConverter(source.getConverter()));
+    if (source.getMapping() != null) {
+      copy.setMapping(new LinkedHashMap<>(source.getMapping()));
+    }
+    copy.setEnumerable(source.getEnumerable());
+    copy.setConverter(source.getConverter());
+    return copy;
+  }
+
+  private Importing copyImporting(Importing source) {
+    if (source == null) {
+      return null;
+    }
+    Importing copy = new Importing();
+    copy.setRequired(source.isRequired());
+    if (source.getCleansing() != null) {
+      copy.setCleansing(new ArrayList<>(source.getCleansing()));
+    }
+    copy.setMinLength(source.getMinLength());
+    copy.setMaxLength(source.getMaxLength());
+    copy.setUnique(source.getUnique());
+    if (source.getDependsOn() != null) {
+      copy.setDependsOn(new ArrayList<>(source.getDependsOn()));
+    }
+    copy.setMin(source.getMin());
+    copy.setMax(source.getMax());
+    if (source.getMapping() != null) {
+      copy.setMapping(new LinkedHashMap<>(source.getMapping()));
+    }
+    copy.setEnumerable(source.getEnumerable());
+    copy.setConverter(source.getConverter());
+    return copy;
+  }
+
+  private cn.labzen.file.definition.bean.scoped.TableExporting copyTableExporting(
+    cn.labzen.file.definition.bean.scoped.TableExporting source) {
+    if (source == null) {
+      return null;
+    }
+    cn.labzen.file.definition.bean.scoped.TableExporting copy =
+      new cn.labzen.file.definition.bean.scoped.TableExporting();
+    copy.setWhenNull(source.getWhenNull());
+    copy.setWhenBlank(source.getWhenBlank());
+    return copy;
+  }
+
+  private cn.labzen.file.definition.bean.scoped.TableImporting copyTableImporting(
+    cn.labzen.file.definition.bean.scoped.TableImporting source) {
+    if (source == null) {
+      return null;
+    }
+    cn.labzen.file.definition.bean.scoped.TableImporting copy =
+      new cn.labzen.file.definition.bean.scoped.TableImporting();
+    copy.setRequired(source.isRequired());
+    if (source.getCleansing() != null) {
+      copy.setCleansing(new ArrayList<>(source.getCleansing()));
+    }
     return copy;
   }
 
@@ -176,27 +283,13 @@ public class I18nResolver {
     return copy;
   }
 
-  private cn.labzen.file.definition.bean.converter.Pattern copyPattern(
-    cn.labzen.file.definition.bean.converter.Pattern source) {
+  private Pattern copyPattern(Pattern source) {
     if (source == null) {
       return null;
     }
-    cn.labzen.file.definition.bean.converter.Pattern copy = new cn.labzen.file.definition.bean.converter.Pattern();
+    Pattern copy = new Pattern();
     copy.setDate(source.getDate());
     copy.setNumber(source.getNumber());
-    return copy;
-  }
-
-  private Converter copyConverter(Converter source) {
-    if (source == null) {
-      return null;
-    }
-    Converter copy = new Converter();
-    copy.setEnumerable(source.getEnumerable());
-    copy.setNamed(source.getNamed());
-    if (source.getMapping() != null) {
-      copy.setMapping(new LinkedHashMap<>(source.getMapping()));
-    }
     return copy;
   }
 }

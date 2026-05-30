@@ -1,7 +1,7 @@
 package cn.labzen.file.definition;
 
 import cn.labzen.file.definition.bean.DataDefinition;
-import cn.labzen.file.definition.bean.column.TableColumn;
+import cn.labzen.file.definition.bean.column.Column;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -99,14 +99,14 @@ class DefinitionLoaderTest {
     assertTrue(configOpt.isPresent());
 
     DataDefinition config = configOpt.get();
-    TableColumn nameColumn = config.getColumns().get("name");
+    Column nameColumn = config.getColumns().get("name");
 
     assertNotNull(nameColumn);
 
     // Property.yml 中 name 列定义了 when-null="未命名"
     // 如果配置中没有定义，会使用全局配置的 "-"
     // 这里应该使用 Property.yml 中的值
-    assertEquals("未命名", nameColumn.getWhenNull());
+    assertEquals("未命名", nameColumn.getExporting().getWhenNull());
   }
 
   @Test
@@ -119,7 +119,7 @@ class DefinitionLoaderTest {
     assertTrue(configOpt.isPresent());
 
     DataDefinition config = configOpt.get();
-    TableColumn nameColumn = config.getColumns().get("name");
+    Column nameColumn = config.getColumns().get("name");
 
     assertNotNull(nameColumn);
     // Property.yml 中 name 列 style.align = LEFT

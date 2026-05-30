@@ -1,8 +1,10 @@
 package cn.labzen.file.converter.impl;
 
 import cn.labzen.file.annotation.DataConverter;
-import cn.labzen.file.converter.CacheableConverter;
 import cn.labzen.file.converter.Converter;
+import cn.labzen.file.converter.exportable.ExportableConverter;
+import cn.labzen.file.converter.importable.ImportableConverter;
+import cn.labzen.file.exception.DataConvertException;
 import cn.labzen.tool.util.Strings;
 import lombok.extern.slf4j.Slf4j;
 
@@ -14,36 +16,102 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * 枚举转换器
+ * 枚举转换器（导出+导入双向）
  * <p>
- * 将枚举值转换为字符串表示
+ * 格式：枚举类全限定名#方法名，如 com.example.StatusEnum#getLabel
  * <ul>
- *   <li>输入支持: String</li>
- *   <li>输出: String</li>
+ *   <li>导出：枚举名称 → 方法返回值（正向）</li>
+ *   <li>导入：方法返回值/枚举名称 → 枚举名称（反向）</li>
  * </ul>
  *
  * @author labzen
  */
 @Slf4j
 @DataConverter(name = Converter.ENUM_NAME, priority = Converter.ENUM_PRIORITY)
-public class EnumConverter extends CacheableConverter<String> {
+public class EnumConverter implements ExportableConverter<String>, ImportableConverter {
 
   private static final Map<String, EnumInfo> ENUM_CACHE = new ConcurrentHashMap<>();
-  private static final Pattern PATTERN = Pattern.compile("^(([a-zA-Z_][a-zA-Z0-9_]*\\.)*([A-Z_$][a-zA-Z0-9_$]*))#([a-zA-Z_$][a-zA-Z0-9_$]*)$");
+  private static final Pattern PATTERN = Pattern.compile(
+    "^(([a-zA-Z_][a-zA-Z0-9_]*\\.)*([A-Z_$][a-zA-Z0-9_$]*))#([a-zA-Z_$][a-zA-Z0-9_$]*)$"
+  );
+
+  // ── 导出 ──
 
   @Override
-  public boolean supports(Class<?> type) {
-    return String.class.isAssignableFrom(type);
+  public boolean supportsExport(Class<?> sourceType) {
+    return String.class.isAssignableFrom(sourceType);
   }
 
   @Override
-  protected String doConvert(Object input, List<Object> arguments) {
+  public String doConvertForExport(Object input, List<Object> arguments) {
     if (input == null) {
       return null;
     }
 
+    EnumInfo enumInfo = resolveEnumInfo(arguments);
+    if (enumInfo == EnumInfo.EMPTY) {
+      return "convert-enum-failed";
+    }
+
+    Enum<?> enumConstant = findEnumConstant(enumInfo.type(), input.toString());
+    if (enumConstant == null) {
+      return "convert-enum-failed";
+    }
+
+    try {
+      Object result = enumInfo.method().invoke(enumConstant);
+      return result != null ? result.toString() : "";
+    } catch (Exception e) {
+      return "convert-enum-failed";
+    }
+  }
+
+  // ── 导入 ──
+
+  @Override
+  public boolean supportsImport(Class<?> targetType) {
+    return true;
+  }
+
+  @Override
+  public Object doConvertForImport(Object input, List<Object> arguments, Class<?> targetType) {
+    if (input == null) {
+      return null;
+    }
+
+    EnumInfo enumInfo = resolveEnumInfo(List.of(targetType));
+    if (enumInfo == EnumInfo.EMPTY) {
+      throw new DataConvertException("枚举转换失败：枚举配置无效");
+    }
+
+    String value = input.toString();
+
+    // 先尝试按枚举名称匹配（支持忽略大小写）
+    Enum<?> enumConstant = findEnumConstant(enumInfo.type(), value);
+    if (enumConstant != null) {
+      return enumConstant.name();
+    }
+
+    // 再尝试按方法返回值匹配（反向：label → 枚举名称）
+    for (Enum<?> constant : enumInfo.type().getEnumConstants()) {
+      try {
+        Object result = enumInfo.method().invoke(constant);
+        if (result != null && result.toString().equals(value)) {
+          return constant.name();
+        }
+      } catch (Exception e) {
+        // ignore
+      }
+    }
+
+    throw new DataConvertException("枚举转换失败：值[{}]在枚举[{}]中不存在", value, enumInfo.type().getName());
+  }
+
+  // ── 公共方法 ──
+
+  private EnumInfo resolveEnumInfo(List<Object> arguments) {
     String enumClassAndMethodName = Strings.value(arguments.getFirst(), "");
-    EnumInfo enumInfo = ENUM_CACHE.computeIfAbsent(enumClassAndMethodName, k -> {
+    return ENUM_CACHE.computeIfAbsent(enumClassAndMethodName, k -> {
       Matcher matcher = PATTERN.matcher(enumClassAndMethodName);
       if (!matcher.matches()) {
         return EnumInfo.EMPTY;
@@ -68,34 +136,15 @@ public class EnumConverter extends CacheableConverter<String> {
         return EnumInfo.EMPTY;
       }
     });
-
-    if (enumInfo == EnumInfo.EMPTY) {
-      return "convert-enum-failed";
-    }
-
-    // 忽略大小写查找枚举实例
-    Enum<?> enumConstant = findEnumConstant(enumInfo.type(), input.toString());
-    if (enumConstant == null) {
-      return "convert-enum-failed";
-    }
-
-    try {
-      Object result = enumInfo.method().invoke(enumConstant);
-      return result != null ? result.toString() : "";
-    } catch (Exception e) {
-      return "convert-enum-failed";
-    }
   }
 
   private Enum<?> findEnumConstant(Class<? extends Enum<?>> enumType, String input) {
-    // 先尝试大写匹配
     String upperInput = input.toUpperCase();
     for (Enum<?> constant : enumType.getEnumConstants()) {
       if (constant.name().equals(upperInput)) {
         return constant;
       }
     }
-    // 再尝试忽略大小写匹配
     for (Enum<?> constant : enumType.getEnumConstants()) {
       if (constant.name().equalsIgnoreCase(input)) {
         return constant;
@@ -105,7 +154,6 @@ public class EnumConverter extends CacheableConverter<String> {
   }
 
   private record EnumInfo(Class<? extends Enum<?>> type, Method method) {
-
     static final EnumInfo EMPTY = new EnumInfo(null, null);
   }
 }

@@ -1,8 +1,8 @@
 package cn.labzen.file.converter.impl;
 
 import cn.labzen.file.annotation.DataConverter;
-import cn.labzen.file.converter.CacheableConverter;
 import cn.labzen.file.converter.Converter;
+import cn.labzen.file.converter.exportable.ExportableConverter;
 import cn.labzen.file.exception.DataConvertException;
 import cn.labzen.tool.util.Strings;
 
@@ -12,28 +12,22 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 /**
- * 脱敏转换器
- * <p>
- * 对输入值进行脱敏处理
- * <ul>
- *   <li>输入支持: 任意类型（会调用toString()）</li>
- *   <li>输出: String</li>
- * </ul>
+ * 脱敏转换器（仅导出）
  *
  * @author labzen
  */
 @DataConverter(name = Converter.DESENSITIZE_NAME, priority = Converter.DESENSITIZE_PRIORITY)
-public class DesensitizeConverter extends CacheableConverter<String> {
+public class DesensitizeConverter implements ExportableConverter<String> {
 
   private static final Map<String, Pattern> PATTERN_CACHE = new ConcurrentHashMap<>();
 
   @Override
-  public boolean supports(Class<?> type) {
-    return String.class.isAssignableFrom(type);
+  public boolean supportsExport(Class<?> sourceType) {
+    return String.class.isAssignableFrom(sourceType);
   }
 
   @Override
-  protected String doConvert(Object input, List<Object> arguments) {
+  public String doConvertForExport(Object input, List<Object> arguments) throws DataConvertException {
     if (input == null) {
       return null;
     }

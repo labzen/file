@@ -1,7 +1,7 @@
 package cn.labzen.file.format.html;
 
 import cn.labzen.file.definition.bean.DataDefinition;
-import cn.labzen.file.definition.bean.column.TableColumn;
+import cn.labzen.file.definition.bean.column.Column;
 import cn.labzen.file.definition.bean.style.Font;
 import cn.labzen.file.definition.bean.style.Style;
 import cn.labzen.file.definition.bean.table.HeaderCell;
@@ -9,7 +9,7 @@ import cn.labzen.file.definition.bean.table.HeaderStructure;
 import cn.labzen.file.definition.enums.Alignment;
 import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.exception.DataWriteException;
-import cn.labzen.file.format.AbstractDataFileWriter;
+import cn.labzen.file.format.core.writer.AbstractDataFileWriter;
 import cn.labzen.file.meta.FileConfiguration;
 import cn.labzen.tool.util.Strings;
 import lombok.extern.slf4j.Slf4j;
@@ -93,7 +93,7 @@ public final class HtmlFileWriter<T> extends AbstractDataFileWriter<T> {
 
   @Override
   protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<Map<String, Object>> rows, @Nonnull OutputStream outputStream) {
-    Map<String, TableColumn> columns = definition.getColumns();
+    Map<String, Column> columns = definition.getColumns();
     HeaderStructure headers = definition.getHeaders();
     String title = escapeHtml(definition.getTitle());
     Style headerStyle = definition.getHeaderStyle();
@@ -117,7 +117,7 @@ public final class HtmlFileWriter<T> extends AbstractDataFileWriter<T> {
     }
   }
 
-  private String buildStyles(Style headerStyle, Style contentStyle, Map<String, TableColumn> columns) {
+  private String buildStyles(Style headerStyle, Style contentStyle, Map<String, Column> columns) {
     // 表格头公共样式
     String headerFontStyle = safeConvertFontStyle(headerStyle.getFont());
     String cssOfHeader = CSS_TABLE_HEADER_TEMPLATE.formatted(
@@ -130,7 +130,7 @@ public final class HtmlFileWriter<T> extends AbstractDataFileWriter<T> {
     String bodyFontStyle = safeConvertFontStyle(contentStyle.getFont());
     String cssOfBody = CSS_TABLE_BODY_TEMPLATE.formatted(bodyTextWrap, bodyFontStyle);
 
-    int allColumnsWidth = columns.values().stream().mapToInt(TableColumn::getWidth).sum();
+    int allColumnsWidth = columns.values().stream().mapToInt(Column::getWidth).sum();
 
     // 表格各列样式（头和内容）
     StringBuilder cssOfColumns = new StringBuilder();
@@ -201,7 +201,7 @@ public final class HtmlFileWriter<T> extends AbstractDataFileWriter<T> {
     return headerTags.toString();
   }
 
-  private String buildBodyTags(List<Map<String, Object>> rows, Map<String, TableColumn> columns) {
+  private String buildBodyTags(List<Map<String, Object>> rows, Map<String, Column> columns) {
     StringBuilder bodyTags = new StringBuilder();
     for (Map<String, Object> row : rows) {
       bodyTags.append("<tr>\n");

@@ -1,0 +1,8 @@
+cn.labzen.file.cleanser.impl.TrimCleanser
+cn.labzen.file.cleanser.impl.StripInvisibleCleanser
+cn.labzen.file.cleanser.impl.NormalizeWhitespaceCleanser
+cn.labzen.file.cleanser.impl.NormalizeLineEndingCleanser
+cn.labzen.file.cleanser.impl.StripHtmlCleanser
+cn.labzen.file.cleanser.impl.NormalizeQuotesCleanser
+cn.labzen.file.cleanser.impl.CollapseDigitsCleanser
+cn.labzen.file.cleanser.impl.CollapseLettersCleanser

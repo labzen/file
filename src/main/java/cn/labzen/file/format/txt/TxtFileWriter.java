@@ -1,10 +1,10 @@
 package cn.labzen.file.format.txt;
 
 import cn.labzen.file.definition.bean.DataDefinition;
-import cn.labzen.file.definition.bean.column.TableColumn;
+import cn.labzen.file.definition.bean.column.Column;
 import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.exception.DataWriteException;
-import cn.labzen.file.format.AbstractDataFileWriter;
+import cn.labzen.file.format.core.writer.AbstractDataFileWriter;
 import cn.labzen.file.meta.FileConfiguration;
 import cn.labzen.tool.util.Strings;
 import lombok.extern.slf4j.Slf4j;
@@ -58,7 +58,7 @@ public final class TxtFileWriter<T> extends AbstractDataFileWriter<T> {
   @Override
   protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<Map<String, Object>> rows, @Nonnull OutputStream outputStream) {
     List<String> headers = definition.getHeaders().getLeafLevelHeaders();
-    Map<String, TableColumn> columns = definition.getColumns();
+    Map<String, Column> columns = definition.getColumns();
 
     try (OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)) {
       // 第一行：标题行（使用 header 内容）
@@ -101,7 +101,7 @@ public final class TxtFileWriter<T> extends AbstractDataFileWriter<T> {
    * @param columns 列定义映射
    * @return 数据行字符串
    */
-  private String buildDataLine(Map<String, Object> row, Map<String, TableColumn> columns) {
+  private String buildDataLine(Map<String, Object> row, Map<String, Column> columns) {
     return columns.keySet().stream()
       .map(key -> {
         Object value = row.get(key);

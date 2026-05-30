@@ -4,7 +4,7 @@ import cn.labzen.file.bean.Property;
 import cn.labzen.file.definition.DefinitionLoader;
 import cn.labzen.file.definition.DefinitionRegistry;
 import cn.labzen.file.definition.enums.FileFormat;
-import cn.labzen.file.format.DataFileGenerator;
+import cn.labzen.file.format.DataFileExporter;
 import cn.labzen.file.format.MockData;
 import cn.labzen.meta.LabzenMetaInitializer;
 import org.junit.jupiter.api.AfterEach;
@@ -65,7 +65,7 @@ class MarkdownFileWriterTest {
 //      .with(data)
 //      .as(FileFormat.MARKDOWN)
 //      .to(OUTPUT_FILE);
-    File outputFile = DataFileGenerator.by(Property.class)
+    File outputFile = DataFileExporter.by(Property.class)
       .with(data)
       .as(FileFormat.MARKDOWN)
       .folder(OUTPUT_DIR)

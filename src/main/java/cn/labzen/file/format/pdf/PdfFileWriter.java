@@ -24,10 +24,10 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 import com.itextpdf.layout.properties.VerticalAlignment;
+import jakarta.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 
-import jakarta.annotation.Nonnull;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
@@ -70,8 +70,8 @@ public final class PdfFileWriter<T> extends AbstractDataFileWriter<T> {
     int columnCount = columns.size();
 
     // 获取样式配置
-    Style headerStyle = definition.getHeaderStyle();
-    Style dataStyle = definition.getColumnStyle();
+    Style headerStyle = definition.getExportingHeaderStyle();
+    Style dataStyle = definition.getExportingColumnStyle();
     HeaderStructure headers = definition.getHeaders();
 
     PdfWriter pdfWriter = null;
@@ -98,7 +98,7 @@ public final class PdfFileWriter<T> extends AbstractDataFileWriter<T> {
       float[] columnWidths = new float[columnCount];
       int idx = 0;
       for (Column column : columns.values()) {
-        columnWidths[idx++] = column.getWidth();
+        columnWidths[idx++] = column.getExporting().getWidth();
       }
 
       // 创建表格
@@ -204,13 +204,13 @@ public final class PdfFileWriter<T> extends AbstractDataFileWriter<T> {
 
   private Cell buildTableBodyCell(String text, Column column, PdfFont font, int rowIndex) {
     boolean highlight = rowIndex % 2 == 1;
-    Alignment alignment = column.getStyle().getAlign();
+    Alignment alignment = column.getExporting().getStyle().getAlign();
 
     Cell cell = new Cell();
     Paragraph paragraph = new Paragraph(text);
     paragraph.setFont(font);
-    paragraph.setFontSize(column.getStyle().getFont().getSize() / reductionFactor);
-    paragraph.setFontColor(parseColor(column.getStyle().getFont().getColor()));
+    paragraph.setFontSize(column.getExporting().getStyle().getFont().getSize() / reductionFactor);
+    paragraph.setFontColor(parseColor(column.getExporting().getStyle().getFont().getColor()));
     cell.add(paragraph);
     cell.setBackgroundColor(highlight ? DATA_ROW_HIGHLIGHT_BACKGROUND : DATA_ROW_DEFAULT_BACKGROUND);
     cell.setTextAlignment(safeConvertTextAlignment(alignment));

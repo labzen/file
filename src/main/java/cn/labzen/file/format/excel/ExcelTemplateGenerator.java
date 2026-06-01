@@ -159,7 +159,7 @@ public class ExcelTemplateGenerator {
 
     Importing importing = column.getImporting();
     if (importing != null) {
-      if (importing.isRequired()) sb.append("必填：是\n");
+      if (importing.getRequired()) sb.append("必填：是\n");
       if (importing.getMaxLength() != null) sb.append("最大长度：").append(importing.getMaxLength()).append("字\n");
       if (importing.getMin() != null || importing.getMax() != null) {
         sb.append("范围：").append(importing.getMin() != null ? importing.getMin() : "-")
@@ -181,7 +181,7 @@ public class ExcelTemplateGenerator {
     if (importing == null) return;
 
     List<String> hints = new ArrayList<>();
-    if (importing.isRequired()) hints.add("*必填");
+    if (importing.getRequired()) hints.add("*必填");
     else hints.add("选填");
     if (importing.getMaxLength() != null) hints.add("≤" + importing.getMaxLength() + "字");
     if (importing.getMin() != null || importing.getMax() != null) {

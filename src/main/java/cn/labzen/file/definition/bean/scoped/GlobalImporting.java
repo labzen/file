@@ -10,12 +10,12 @@ import java.util.List;
  * @author labzen
  */
 @Data
-public class TableImporting {
+public class GlobalImporting {
 
   /**
    * 必填
    */
-  private boolean required = true;
+  private Boolean required = false;
 
   /**
    * 清理器列表

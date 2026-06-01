@@ -53,10 +53,10 @@ public final class ExcelFileWriter<T> extends AbstractDataFileWriter<T> {
       ExcelWorkbookContext context = new ExcelWorkbookContext(workbook, resolveSheetName(definition), definition.getColumns());
 
       // 渲染表头
-      int headerRowCount = context.createHeaderRenderer().render(definition.getHeaders(), definition.getHeaderStyle());
+      int headerRowCount = context.createHeaderRenderer().render(definition.getHeaders(), definition.getExportingHeaderStyle());
 
       // 渲染数据行
-      context.createDataRenderer().render(rows, headerRowCount, definition.getColumnStyle());
+      context.createDataRenderer().render(rows, headerRowCount, definition.getExportingColumnStyle());
 
       // 写入输出流
       workbook.write(outputStream);

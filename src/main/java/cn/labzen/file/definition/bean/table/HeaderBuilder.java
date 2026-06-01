@@ -1,11 +1,13 @@
 package cn.labzen.file.definition.bean.table;
 
+import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.bean.column.Column;
 import cn.labzen.tool.util.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class HeaderBuilder {
@@ -20,7 +22,9 @@ public class HeaderBuilder {
     return Strings.times(headerString, HEADER_LEVEL_SEPARATOR) <= SUPPORT_MAX_HEADER_LEVEL;
   }
 
-  public static HeaderStructure build(List<Column> columns) {
+  public static HeaderStructure build(DataDefinition definition) {
+    Map<String, Column> columnMap = definition.getColumns();
+    List<Column> columns = List.copyOf(columnMap.values());
     int size = columns.size();
     int index = 0;
 
@@ -28,6 +32,18 @@ public class HeaderBuilder {
     boolean isSingleHeader = columns.stream().allMatch(column -> Strings.times(column.getHeader(), HEADER_LEVEL_SEPARATOR) == 0);
     // 默认的合并行数
     int defaultRowSpanWhenSingle = isSingleHeader ? 1 : SUPPORT_MAX_HEADER_LEVEL;
+
+//    return build(definition.getColumns());
+//  }
+//
+//  public static HeaderStructure build(List<Column> columns) {
+//    int size = columns.size();
+//    int index = 0;
+//
+//    // 判断当前是否配置的是单级表头（所有的header集合中都是一个表头）
+//    boolean isSingleHeader = columns.stream().allMatch(column -> Strings.times(column.getHeader(), HEADER_LEVEL_SEPARATOR) == 0);
+//    // 默认的合并行数
+//    int defaultRowSpanWhenSingle = isSingleHeader ? 1 : SUPPORT_MAX_HEADER_LEVEL;
 
     List<HeaderCell> firstRowHeaderCells = Lists.newArrayList();
     List<HeaderCell> secondRowHeaderCells = Lists.newArrayList();

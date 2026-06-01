@@ -1,7 +1,8 @@
-package cn.labzen.file.converter.importable;
+package cn.labzen.file.converter.executor;
 
 import cn.labzen.file.annotation.DataConverter;
 import cn.labzen.file.converter.Converter;
+import cn.labzen.file.converter.ImportableConverter;
 import cn.labzen.file.converter.util.NamedConverterParser;
 import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.bean.column.Column;
@@ -112,13 +113,11 @@ public class ChainableImportConverterExecutor {
     }
 
     // pattern (共享)
-    if (column.getPattern() != null) {
-      if (column.getPattern().getDate() != null) {
-        createConfigured(Converter.DATE_NAME, column.getPattern().getDate());
-      }
-      if (column.getPattern().getNumber() != null) {
-        createConfigured(Converter.NUMBER_NAME, column.getPattern().getNumber());
-      }
+    if (column.getPatternDate() != null) {
+      createConfigured(Converter.DATE_NAME, column.getPatternDate());
+    }
+    if (column.getPatternNumber() != null) {
+      createConfigured(Converter.NUMBER_NAME, column.getPatternNumber());
     }
 
     // importing.converter (方向专属)

@@ -9,13 +9,21 @@
     "column"
   ],
   "properties": {
-    "header": {
+    "exporting-header-style": {
       "$ref": "#/definitions/Style",
       "description": "全局表头样式定义"
     },
-    "column": {
-      "$ref": "#/definitions/Column",
-      "description": "全局数据单元格样式定义"
+    "exporting-column-style": {
+      "$ref": "#/definitions/Style",
+      "description": "全局单元格样式定义"
+    },
+    "exporting": {
+      "$ref": "#/definitions/Exporting",
+      "description": "导出方向全局定义"
+    },
+    "importing": {
+      "$ref": "#/definitions/Importing",
+      "description": "导入方向全局定义"
     }
   },
   "definitions": {
@@ -77,17 +85,40 @@
         }
       }
     },
-    "Column": {
+    "Exporting": {
       "type": "object",
+      "required": [
+        "width"
+      ],
       "properties": {
         "width": {
           "type": "integer",
           "minimum": 1,
           "description": "全局默认列宽"
         },
-        "style": {
-          "$ref": "#/definitions/Style",
-          "description": "此列的覆盖样式"
+        "when-null": {
+          "type": "string",
+          "description": "当数据为 null 时使用的默认值。支持国际化：使用 ${key} 占位符"
+        },
+        "when-blank": {
+          "type": "string",
+          "description": "当数据为空字符串时使用的默认值，仅适用于String类型。支持国际化：使用 ${key} 占位符"
+        }
+      }
+    },
+    "Importing": {
+      "type": "object",
+      "required": [
+        "cleansing"
+      ],
+      "properties": {
+        "cleansing": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          },
+          "description": "全局默认清理器列表"
         }
       }
     }

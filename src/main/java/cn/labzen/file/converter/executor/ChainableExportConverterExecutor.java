@@ -1,7 +1,7 @@
-package cn.labzen.file.converter.exportable;
+package cn.labzen.file.converter.executor;
 
-import cn.labzen.file.annotation.DataConverter;
 import cn.labzen.file.converter.Converter;
+import cn.labzen.file.converter.ExportableConverter;
 import cn.labzen.file.converter.util.NamedConverterParser;
 import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.bean.column.Column;
@@ -22,54 +22,54 @@ import java.util.*;
 @Slf4j
 public class ChainableExportConverterExecutor {
 
-  /**
-   * 所有导出转换器实例，key: 转换器名称，value: 转换器实例
-   */
-  private static final Map<String, ExportableConverter<?>> EXPORT_CONVERTER_INSTANCES = Maps.newHashMap();
+//  /**
+//   * 所有导出转换器实例，key: 转换器名称，value: 转换器实例
+//   */
+//  private static final Map<String, ExportableConverter<?>> EXPORT_CONVERTER_INSTANCES = Maps.newHashMap();
   /**
    * 所有针对列的导出转换器链执行器，key: domain名+@@+列名称，value: 转换器链执行器
    */
   private static final Map<String, ChainableExportConverterExecutor> EXPORT_CHAIN_CACHE = Maps.newHashMap();
 
-  private static void loadConverterInstances() {
-    // 通过 SPI 机制加载所有 Converter 实现
-    ServiceLoader.load(Converter.class).forEach(converter -> {
-      Class<?> type = converter.getClass();
-      if (!type.isAnnotationPresent(DataConverter.class)) {
-        return;
-      }
-      DataConverter annotation = type.getAnnotation(DataConverter.class);
-      if (converter instanceof ExportableConverter<?> ec) {
-        EXPORT_CONVERTER_INSTANCES.put(annotation.name(), ec);
-      }
-    });
-  }
+//  private static void loadConverterInstances() {
+//    // 通过 SPI 机制加载所有 Converter 实现
+//    ServiceLoader.load(Converter.class).forEach(converter -> {
+//      Class<?> type = converter.getClass();
+//      if (!type.isAnnotationPresent(DataConverter.class)) {
+//        return;
+//      }
+//      DataConverter annotation = type.getAnnotation(DataConverter.class);
+//      if (converter instanceof ExportableConverter<?> ec) {
+//        EXPORT_CONVERTER_INSTANCES.put(annotation.name(), ec);
+//      }
+//    });
+//  }
 
-  private static void clearConverterInstances() {
-    EXPORT_CONVERTER_INSTANCES.clear();
-  }
+//  private static void clearConverterInstances() {
+//    EXPORT_CONVERTER_INSTANCES.clear();
+//  }
 
   public static synchronized void build(DataDefinition definition) {
-    loadConverterInstances();
+//    loadConverterInstances();
 
-    String domainName = definition.getDomainName();
+//    String domainName = definition.getDomainName();
     definition.getColumns().forEach((columnName, column) -> {
-      String key = cacheKey(domainName, columnName);
+      String key = cacheKey(definition, columnName);
       EXPORT_CHAIN_CACHE.put(key, new ChainableExportConverterExecutor(column));
     });
 
-    clearConverterInstances();
+//    clearConverterInstances();
   }
 
-  private static String cacheKey(String domainName, String columnName) {
-    return domainName + "@@" + columnName;
+  private static String cacheKey(DataDefinition definition, String columnName) {
+    return definition.getDomainName() + "#" + definition.getLocale() + "@@" + columnName;
   }
 
   public static void clear() {
     EXPORT_CHAIN_CACHE.clear();
   }
 
-  private final List<ConfiguredExportConverter> converters = Lists.newArrayList();
+  private final List<ConfiguredConverter<ExportableConverter<?>>> converters = Lists.newArrayList();
 
   ChainableExportConverterExecutor(Column column) {
     configExportConverter(column);
@@ -77,25 +77,27 @@ public class ChainableExportConverterExecutor {
   }
 
   private void sortConverter() {
-    converters.sort(Comparator.comparingInt(ConfiguredExportConverter::priority));
+    converters.sort(Comparator.comparingInt(value -> value.instance().priority()));
   }
 
+  @SuppressWarnings("unchecked")
   private void createConfigured(String converterName, Object... args) {
-    ExportableConverter<?> converter = EXPORT_CONVERTER_INSTANCES.get(converterName);
-    if (converter == null) {
-      logger.error("不存在的导出转换器: {}", converterName);
+    ConverterInstance<ExportableConverter<?>> converterInstance = ConverterInstanceSupplier.get(converterName);
+    if (converterInstance == null) {
       return;
     }
 
-    DataConverter annotation = converter.getClass().getAnnotation(DataConverter.class);
-    ConfiguredExportConverter cec;
+//    DataConverter annotation = converter.getClass().getAnnotation(DataConverter.class);
+//    ConfiguredExportConverter cec;
     if (args.length == 1 && args[0] instanceof List<?> list) {
-      //noinspection unchecked
-      cec = new ConfiguredExportConverter(annotation.priority(), converter, (List<Object>) list);
+//      cec = new ConfiguredExportConverter(converterInstance.priority(), converterInstance.converter(), (List<Object>) list);
+//      ConfiguredConverter<ExportableConverter<?>> tConfiguredConverter =
+      converters.add(new ConfiguredConverter<>(converterInstance, (List<Object>) list));
     } else {
-      cec = new ConfiguredExportConverter(annotation.priority(), converter, Arrays.stream(args).toList());
+//      cec = new ConfiguredExportConverter(converterInstance.priority(), converterInstance.converter(), Arrays.stream(args).toList());
+      converters.add(new ConfiguredConverter<>(converterInstance, Arrays.stream(args).toList()));
     }
-    converters.add(cec);
+//    converters.add(cec);
   }
 
   private void configExportConverter(Column column) {
@@ -116,13 +118,11 @@ public class ChainableExportConverterExecutor {
     }
 
     // pattern (共享)
-    if (column.getPattern() != null) {
-      if (column.getPattern().getDate() != null) {
-        createConfigured(Converter.DATE_NAME, column.getPattern().getDate());
-      }
-      if (column.getPattern().getNumber() != null) {
-        createConfigured(Converter.NUMBER_NAME, column.getPattern().getNumber());
-      }
+    if (column.getPatternDate() != null) {
+      createConfigured(Converter.DATE_NAME, column.getPatternDate());
+    }
+    if (column.getPatternNumber() != null) {
+      createConfigured(Converter.NUMBER_NAME, column.getPatternNumber());
     }
 
     // mapping：exporting 专属 > 共享
@@ -161,35 +161,35 @@ public class ChainableExportConverterExecutor {
 
   public Object execute(Object input) {
     Object latestValue = input;
-    for (ConfiguredExportConverter cec : converters) {
-      ExportableConverter<?> converter = cec.converter();
+    for (ConfiguredConverter<ExportableConverter<?>> cc : converters) {
+      ExportableConverter<?> converter = cc.instance().converter();
       Class<?> sourceType = latestValue != null ? latestValue.getClass() : Object.class;
       if (converter.supportsExport(sourceType)) {
-        latestValue = converter.convertForExport(latestValue, cec.arguments());
+        latestValue = converter.convertForExport(latestValue, cc.arguments());
       }
     }
     return latestValue;
   }
 
-  /**
-   * todo ???:???
-   */
-  public static Map<String, ChainableExportConverterExecutor> buildFor(DataDefinition definition) {
-    Map<String, ChainableExportConverterExecutor> executors = new HashMap<>();
-    definition.getColumns().forEach((columnName, column) ->
-      executors.put(columnName, new ChainableExportConverterExecutor(column))
-    );
-    return executors;
-  }
+//  /**
+//   * todo ???:???
+//   */
+//  public static Map<String, ChainableExportConverterExecutor> buildFor(DataDefinition definition) {
+//    Map<String, ChainableExportConverterExecutor> executors = new HashMap<>();
+//    definition.getColumns().forEach((columnName, column) ->
+//      executors.put(columnName, new ChainableExportConverterExecutor(column))
+//    );
+//    return executors;
+//  }
 
-  public static ChainableExportConverterExecutor get(String domainName, String columnName) {
-    return EXPORT_CHAIN_CACHE.get(cacheKey(domainName, columnName));
+  public static ChainableExportConverterExecutor get(DataDefinition definition, String columnName) {
+    return EXPORT_CHAIN_CACHE.get(cacheKey(definition, columnName));
   }
 
 //  public static Set<String> availableConverterNames() {
 //    return EXPORT_CONVERTER_INSTANCES.keySet();
 //  }
 
-  record ConfiguredExportConverter(int priority, ExportableConverter<?> converter, List<Object> arguments) {
-  }
+//  record ConfiguredExportConverter(int priority, ExportableConverter<?> converter, List<Object> arguments) {
+//  }
 }

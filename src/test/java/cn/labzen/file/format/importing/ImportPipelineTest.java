@@ -1,7 +1,7 @@
 package cn.labzen.file.format.importing;
 
 import cn.labzen.file.definition.bean.DataDefinition;
-import cn.labzen.file.definition.bean.scoped.TableImporting;
+import cn.labzen.file.definition.bean.scoped.GlobalImporting;
 import cn.labzen.file.definition.bean.column.Importing;
 import cn.labzen.file.definition.bean.column.Column;
 import cn.labzen.file.format.core.reader.ImportFailure;
@@ -71,7 +71,7 @@ class ImportPipelineTest {
 
     definition.setColumns(columns);
 
-    TableImporting importingDef = new TableImporting();
+    GlobalImporting importingDef = new GlobalImporting();
     importingDef.setCleansing(List.of("trim"));
     definition.setImporting(importingDef);
   }

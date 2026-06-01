@@ -1,8 +1,7 @@
 package cn.labzen.file.converter.impl;
 
-import cn.labzen.file.converter.exportable.ExportableConverter;
-import cn.labzen.file.converter.importable.ImportableConverter;
-import cn.labzen.file.exception.DataConvertException;
+import cn.labzen.file.converter.ExportableConverter;
+import cn.labzen.file.converter.ImportableConverter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -131,24 +130,24 @@ class BoolConverterTest {
   }
 
   @Test
-  @DisplayName("导入：默认文本 true 转换为 Boolean.TRUE")
+  @DisplayName("导入：未提供参数时原样返回字符串")
   void testImportDefaultTrue() {
     Object result = converter.doConvertForImport("true", List.of(), Boolean.class);
-    assertEquals(true, result);
+    assertEquals("true", result);
   }
 
   @Test
-  @DisplayName("导入：默认文本 false 转换为 Boolean.FALSE")
+  @DisplayName("导入：未提供参数时原样返回字符串")
   void testImportDefaultFalse() {
     Object result = converter.doConvertForImport("false", List.of(), Boolean.class);
-    assertEquals(false, result);
+    assertEquals("false", result);
   }
 
   @Test
-  @DisplayName("导入：无效文本抛出 DataConvertException")
+  @DisplayName("导入：未提供参数时无效文本原样返回，不抛异常")
   void testImportInvalidText() {
-    assertThrows(DataConvertException.class,
-      () -> converter.doConvertForImport("maybe", List.of(), Boolean.class));
+    Object result = converter.doConvertForImport("maybe", List.of(), Boolean.class);
+    assertEquals("maybe", result);
   }
 
   @Test

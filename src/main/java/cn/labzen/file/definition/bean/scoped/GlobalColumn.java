@@ -8,15 +8,8 @@ import lombok.Data;
  *
  * @author labzen
  */
+@Deprecated
 @Data
 public class GlobalColumn {
 
-  /**
-   * 列宽
-   */
-  private Integer width = 10;
-  /**
-   * 导出文件样式
-   */
-  private Style style;
 }

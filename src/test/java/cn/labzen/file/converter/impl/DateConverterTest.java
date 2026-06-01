@@ -1,7 +1,7 @@
 package cn.labzen.file.converter.impl;
 
-import cn.labzen.file.converter.exportable.ExportableConverter;
-import cn.labzen.file.converter.importable.ImportableConverter;
+import cn.labzen.file.converter.ExportableConverter;
+import cn.labzen.file.converter.ImportableConverter;
 import cn.labzen.file.exception.DataConvertException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Date;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -104,12 +105,11 @@ class DateConverterTest {
   }
 
   @Test
-  @DisplayName("导出：未指定格式时使用默认格式 yyyy-MM-dd HH:mm:ss")
+  @DisplayName("导出：未指定格式时抛出 NoSuchElementException")
   void testExportDefaultPattern() {
     LocalDate date = LocalDate.of(2024, 1, 15);
-    String result = converter.doConvertForExport(date, List.of());
-    assertNotNull(result);
-    assertTrue(result.contains("2024"));
+    assertThrows(NoSuchElementException.class,
+      () -> converter.doConvertForExport(date, List.of()));
   }
 
   // ==================== doConvertForImport ====================

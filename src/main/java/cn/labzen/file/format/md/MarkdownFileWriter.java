@@ -139,11 +139,11 @@ public final class MarkdownFileWriter<T> extends AbstractDataFileWriter<T> {
    * @return 分隔符（:---、---:、:---:）
    */
   private String getAlignmentSeparator(Column column) {
-    if ( column.getStyle() == null || column.getStyle().getAlign() == null) {
+    if ( column.getExporting().getStyle() == null || column.getExporting().getStyle().getAlign() == null) {
       return ":---:"; // 默认居中对齐
     }
 
-    Alignment align = column.getStyle().getAlign();
+    Alignment align = column.getExporting().getStyle().getAlign();
     return switch (align) {
       case LEFT -> ":---";
       case RIGHT -> "---:";

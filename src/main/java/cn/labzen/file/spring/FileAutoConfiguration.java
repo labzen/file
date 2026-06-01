@@ -1,13 +1,15 @@
 package cn.labzen.file.spring;
 
 import cn.labzen.file.definition.DefinitionLoader;
+import cn.labzen.file.definition.DefinitionRegistry;
 import cn.labzen.file.i18n.I18nStoreHolder;
 import cn.labzen.file.i18n.I18nStoreProvider;
-import cn.labzen.file.i18n.ManualI18NStoreProvider;
+import cn.labzen.file.i18n.ManualI18nStoreProvider;
 import cn.labzen.file.meta.FileConfiguration;
 import cn.labzen.meta.Labzens;
 import jakarta.annotation.Nonnull;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -22,7 +24,7 @@ import org.springframework.context.ApplicationContextAware;
  */
 @AutoConfiguration
 @ConditionalOnClass(DefinitionLoader.class)
-public class FileAutoConfiguration implements SmartInitializingSingleton, ApplicationContextAware {
+public class FileAutoConfiguration implements SmartInitializingSingleton, DisposableBean, ApplicationContextAware {
 
   private ApplicationContext applicationContext;
 
@@ -36,6 +38,11 @@ public class FileAutoConfiguration implements SmartInitializingSingleton, Applic
     FileConfiguration configuration = Labzens.configurationWith(FileConfiguration.class);
     loadDefinition(configuration);
     initI18nStore(configuration);
+  }
+
+  @Override
+  public void destroy() {
+    DefinitionRegistry.clear();
   }
 
   /**
@@ -53,11 +60,11 @@ public class FileAutoConfiguration implements SmartInitializingSingleton, Applic
    * 注册 I18nStore
    * <p>
    * 优先从 Spring 容器中获取开发者提供的 {@link I18nStoreProvider} 实现；
-   * 若未提供，则使用 {@link ManualI18NStoreProvider}（基于内存的默认实现）。
+   * 若未提供，则使用 {@link ManualI18nStoreProvider}（基于内存的默认实现）。
    */
   private void initI18nStore(FileConfiguration configuration) {
     I18nStoreProvider storeProvider = applicationContext.getBeanProvider(I18nStoreProvider.class)
-      .getIfAvailable(ManualI18NStoreProvider::new);
+      .getIfAvailable(ManualI18nStoreProvider::new);
     storeProvider.setDefaultLocale(configuration.defaultLocale());
     I18nStoreHolder.register(storeProvider);
   }

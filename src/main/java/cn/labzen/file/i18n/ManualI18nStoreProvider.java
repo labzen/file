@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author labzen
  */
-public class ManualI18NStoreProvider implements I18nStoreProvider {
+public class ManualI18nStoreProvider implements I18nStoreProvider {
 
   /**
    * locale → (key → text)

@@ -12,10 +12,10 @@ import cn.labzen.file.exception.DataWriteException;
 import cn.labzen.file.format.core.writer.AbstractDataFileWriter;
 import cn.labzen.file.meta.FileConfiguration;
 import cn.labzen.tool.util.Strings;
+import jakarta.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 
-import jakarta.annotation.Nonnull;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -96,8 +96,8 @@ public final class HtmlFileWriter<T> extends AbstractDataFileWriter<T> {
     Map<String, Column> columns = definition.getColumns();
     HeaderStructure headers = definition.getHeaders();
     String title = escapeHtml(definition.getTitle());
-    Style headerStyle = definition.getHeaderStyle();
-    Style contentStyle = definition.getColumnStyle();
+    Style headerStyle = definition.getExportingHeaderStyle();
+    Style contentStyle = definition.getExportingColumnStyle();
 
     try (OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)) {
       // 生成 CSS 样式
@@ -130,14 +130,14 @@ public final class HtmlFileWriter<T> extends AbstractDataFileWriter<T> {
     String bodyFontStyle = safeConvertFontStyle(contentStyle.getFont());
     String cssOfBody = CSS_TABLE_BODY_TEMPLATE.formatted(bodyTextWrap, bodyFontStyle);
 
-    int allColumnsWidth = columns.values().stream().mapToInt(Column::getWidth).sum();
+    int allColumnsWidth = columns.values().stream().mapToInt(value -> value.getExporting().getWidth()).sum();
 
     // 表格各列样式（头和内容）
     StringBuilder cssOfColumns = new StringBuilder();
     columns.forEach((columnName, column) -> {
-      String columnTextAlign = safeConvertAlignmentStyle(column.getStyle().getAlign());
-      String columnFontStyle = safeConvertFontStyle(column.getStyle().getFont());
-      String width = String.format("%.1f%%", (column.getWidth() + 0.0) / allColumnsWidth * 100);
+      String columnTextAlign = safeConvertAlignmentStyle(column.getExporting().getStyle().getAlign());
+      String columnFontStyle = safeConvertFontStyle(column.getExporting().getStyle().getFont());
+      String width = String.format("%.1f%%", (column.getExporting().getWidth() + 0.0) / allColumnsWidth * 100);
       String cssOfHeaderColumn = CSS_TABLE_HEADER_COLUMN_TEMPLATE.formatted(columnName, columnTextAlign, columnFontStyle);
       String cssOfBodyColumn = CSS_TABLE_BODY_COLUMN_TEMPLATE.formatted(columnName, columnTextAlign, width, columnFontStyle);
       cssOfColumns.append(cssOfHeaderColumn).append(cssOfBodyColumn);

@@ -1,5 +1,5 @@
 # $schema: ../schema/def-global-schema.json
-header:
+exporting-header-style:
   align: CENTER
   background: "#000000"
   font:
@@ -12,16 +12,15 @@ header:
     color: "#d0204a"
     width: MEDIUM
   wrapped: false
-
-column:
+exporting-column-style:
+  align: RIGHT
+  background: "#ffffff"
+  font:
+    size: 12
+  wrapped: true
+exporting:
   width: 100
   when-null: "-"
   when-blank: "-"
-  prefix: ""
-  suffix: ""
-  style:
-    align: RIGHT
-    background: "#ffffff"
-    font:
-      size: 12
-    wrapped: true
+importing:
+  cleansing: [ "trim", "strip-html" ]

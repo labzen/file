@@ -1,6 +1,6 @@
 package cn.labzen.file.definition.bean.column;
 
-import cn.labzen.file.definition.bean.scoped.TableImporting;
+import cn.labzen.file.definition.bean.scoped.GlobalImporting;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -16,7 +16,7 @@ import java.util.Map;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class Importing extends TableImporting {
+public class Importing extends GlobalImporting {
 
   /**
    * 最小长度

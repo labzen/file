@@ -1,17 +1,16 @@
 package cn.labzen.file.definition;
 
+import cn.labzen.file.converter.executor.ConverterInstanceSupplier;
 import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.bean.GlobalDefinition;
-import cn.labzen.file.definition.bean.scoped.TableExporting;
-import cn.labzen.file.definition.bean.scoped.TableImporting;
 import cn.labzen.file.definition.bean.column.Column;
 import cn.labzen.file.definition.bean.column.Exporting;
 import cn.labzen.file.definition.bean.column.Importing;
-import cn.labzen.file.definition.bean.scoped.GlobalColumn;
+import cn.labzen.file.definition.bean.scoped.GlobalExporting;
+import cn.labzen.file.definition.bean.scoped.GlobalImporting;
 import cn.labzen.file.definition.bean.style.Font;
 import cn.labzen.file.definition.bean.style.Style;
 import cn.labzen.file.definition.bean.table.HeaderBuilder;
-import cn.labzen.file.definition.bean.table.HeaderStructure;
 import cn.labzen.file.exception.DefinitionLoaderException;
 import cn.labzen.tool.util.Strings;
 import jakarta.annotation.Nonnull;
@@ -27,9 +26,7 @@ import org.yaml.snakeyaml.introspector.PropertyUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -106,6 +103,8 @@ public class DefinitionLoader {
   public void load() {
     logger.info("开始加载[数据导出schema定义文件]...");
 
+    ConverterInstanceSupplier.init();
+
     // 1. 加载全局配置
     GlobalDefinition globalDefinition = loadGlobalDefinition();
 
@@ -118,14 +117,10 @@ public class DefinitionLoader {
     // 3. 合并、校验、排序并注册
     dataDefinitionMap.forEach((key, value) -> {
       // 合并全局配置
-      DataDefinition mergedDefinition = mergeDefinition(globalDefinition, value);
-
-      List<Column> columns = mergedDefinition.getColumns().values().stream().toList();
-      HeaderStructure headerStructure = HeaderBuilder.build(columns);
-      mergedDefinition.setHeaders(headerStructure);
+      DataDefinition definition = mergeDefinition(globalDefinition, value);
 
       // 注册配置
-      DefinitionRegistry.register(key, mergedDefinition);
+      DefinitionRegistry.register(key, definition);
     });
 
     logger.info("[数据导出schema定义文件]加载完成，共加载{}个配置文件", DefinitionRegistry.size());
@@ -219,32 +214,48 @@ public class DefinitionLoader {
       return dataDefinition;
     }
 
-    // 合并全局表头样式
-    if (dataDefinition.getHeaderStyle() == null && globalDefinition.getHeader() != null) {
-      dataDefinition.setHeaderStyle(cloneStyle(globalDefinition.getHeader()));
-    } else if (globalDefinition.getHeader() != null) {
-      mergeStyle(globalDefinition.getHeader(), dataDefinition.getHeaderStyle());
-    }
-
-    // 合并全局列样式（body -> columnStyle）
-    Style fileScopedColumnStyle = dataDefinition.getColumnStyle();
-    GlobalColumn globalColumn = globalDefinition.getColumn();
-    if (globalColumn != null && globalColumn.getStyle() != null) {
-      if (fileScopedColumnStyle == null) {
-        dataDefinition.setColumnStyle(cloneStyle(globalColumn.getStyle()));
-        fileScopedColumnStyle = dataDefinition.getColumnStyle();
+    // 合并全局表头样式 -> 文件作用域表头样式
+    if (globalDefinition.getExportingHeaderStyle() != null) {
+      if (dataDefinition.getExportingHeaderStyle() == null) {
+        dataDefinition.setExportingHeaderStyle(cloneStyle(globalDefinition.getExportingHeaderStyle()));
       } else {
-        mergeStyle(globalColumn.getStyle(), fileScopedColumnStyle);
+        mergeStyle(globalDefinition.getExportingHeaderStyle(), dataDefinition.getExportingHeaderStyle());
+      }
+    }
+    // 合并全局单元格样式 -> 文件作用域单元格样式
+    if (globalDefinition.getExportingColumnStyle() != null) {
+      if (dataDefinition.getExportingColumnStyle() == null) {
+        dataDefinition.setExportingColumnStyle(cloneStyle(globalDefinition.getExportingColumnStyle()));
+      } else {
+        mergeStyle(globalDefinition.getExportingColumnStyle(), dataDefinition.getExportingColumnStyle());
       }
     }
 
-    // 合并列定义
+    // 合并全局导出配置 -> 文件作用域导出配置
+    if (globalDefinition.getExporting() != null) {
+      if (dataDefinition.getExporting() == null) {
+        dataDefinition.setExporting(cloneGlobalExporting(globalDefinition.getExporting()));
+      } else {
+        mergeGlobalExporting(globalDefinition.getExporting(), dataDefinition.getExporting());
+      }
+    }
+    // 合并全局导入配置 -> 文件作用域导入配置
+    if (globalDefinition.getImporting() != null) {
+      if (dataDefinition.getImporting() == null) {
+        dataDefinition.setImporting(cloneGlobalImporting(globalDefinition.getImporting()));
+      } else {
+        mergeGlobalImporting(globalDefinition.getImporting(), dataDefinition.getImporting());
+      }
+    }
+
+    // 合并文件作用域表头样式 -> 列作用域样式
     Map<String, Column> columns = dataDefinition.getColumns();
     if (columns != null) {
-      TableExporting fileScopedExporting = dataDefinition.getExporting();
-      TableImporting fileScopedImporting = dataDefinition.getImporting();
+//      GlobalExporting fileScopedExporting = dataDefinition.getExporting();
+//      GlobalImporting fileScopedImporting = dataDefinition.getImporting();
       for (Column column : columns.values()) {
-        mergeColumnDefinition(globalColumn, fileScopedColumnStyle, fileScopedExporting, fileScopedImporting, column);
+//        mergeColumnDefinition(globalColumn, fileScopedColumnStyle, fileScopedExporting, fileScopedImporting, column);
+        mergeColumnDefinition(dataDefinition, column);
       }
     }
 
@@ -256,54 +267,125 @@ public class DefinitionLoader {
    * <p>
    * 合并优先级（从低到高）：全局列默认 → 文件作用域导出/导入默认 → 列定义配置
    */
-  private void mergeColumnDefinition(GlobalColumn globalColumn, Style fileScopedColumnStyle,
-                                      TableExporting fileScopedExporting, TableImporting fileScopedImporting,
-                                      Column column) {
-    // 列宽
-    if (column.getWidth() == null) {
-      column.setWidth(globalColumn.getWidth());
+  private void mergeColumnDefinition(DataDefinition dataDefinition, Column column) {
+    // 导出配置覆盖
+    if (dataDefinition.getExporting() != null) {
+      if (column.getExporting() == null) {
+        column.setExporting(new Exporting());
+      }
+      mergeGlobalExporting(dataDefinition.getExporting(), column.getExporting());
+    }
+    if (column.getExporting() == null) {
+      column.setExporting(new Exporting());
+    }
+
+    // 导入配置覆盖
+    if (dataDefinition.getImporting() != null) {
+      if (column.getImporting() == null) {
+        column.setImporting(new Importing());
+      }
+      mergeGlobalImporting(dataDefinition.getImporting(), column.getImporting());
+    }
+    if (column.getImporting() == null) {
+      column.setImporting(new Importing());
     }
 
     // 列样式覆盖
-    if (column.getStyle() == null) {
-      column.setStyle(cloneStyle(fileScopedColumnStyle));
-    } else {
-      mergeStyle(fileScopedColumnStyle, column.getStyle());
+    if (dataDefinition.getExportingColumnStyle() != null) {
+      if (column.getExporting().getStyle() == null) {
+        column.getExporting().setStyle(cloneStyle(dataDefinition.getExportingColumnStyle()));
+      } else {
+        mergeStyle(dataDefinition.getExportingColumnStyle(), column.getExporting().getStyle());
+      }
+    }
+    if (column.getExporting().getStyle() == null) {
+      column.getExporting().setStyle(new Style());
     }
 
-    // 合并导出配置：文件作用域 exporting → 列级 exporting
-    Exporting columnExporting = column.getExporting();
-    if (fileScopedExporting != null) {
-      if (columnExporting == null) {
-        columnExporting = new Exporting();
-        column.setExporting(columnExporting);
-      }
-      mergeTableExporting(fileScopedExporting, columnExporting);
+    // mapping映射覆盖
+    if (column.getExporting().getMapping() == null) {
+      column.getExporting().setMapping(column.getMapping());
+    }
+    if (column.getImporting().getMapping() == null) {
+      column.getImporting().setMapping(column.getMapping());
     }
 
-    // 合并导入配置：文件作用域 importing → 列级 importing
-    Importing columnImporting = column.getImporting();
-    if (fileScopedImporting != null) {
-      if (columnImporting == null) {
-        columnImporting = new Importing();
-        column.setImporting(columnImporting);
-      }
-      mergeTableImporting(fileScopedImporting, columnImporting);
+    // enumerable枚举覆盖
+    if (column.getExporting().getEnumerable() == null) {
+      column.getExporting().setEnumerable(column.getEnumerable());
+    }
+    if (column.getImporting().getEnumerable() == null) {
+      column.getImporting().setEnumerable(column.getEnumerable());
     }
   }
 
+//  /**
+//   * 合并列定义
+//   * <p>
+//   * 合并优先级（从低到高）：全局列默认 → 文件作用域导出/导入默认 → 列定义配置
+//   */
+//  private void mergeColumnDefinition(GlobalColumn globalColumn, Style fileScopedColumnStyle,
+//                                     GlobalExporting fileScopedExporting, GlobalImporting fileScopedImporting,
+//                                     Column column) {
+//    // 列宽
+//    if (column.getExporting().getWidth() == null) {
+//      column.setWidth(globalcolumn.getExporting().getWidth());
+//    }
+
+//    // 列样式覆盖
+//    if (column.getExporting().getStyle() == null) {
+//      column.setStyle(cloneStyle(fileScopedColumnStyle));
+//    } else {
+//      mergeStyle(fileScopedColumnStyle, column.getExporting().getStyle());
+//    }
+
+  // 合并导出配置：文件作用域 exporting → 列级 exporting
+//    Exporting columnExporting = column.getExporting();
+//    if (fileScopedExporting != null) {
+//      if (columnExporting == null) {
+//        columnExporting = new Exporting();
+//        column.setExporting(columnExporting);
+//      }
+//      mergeExporting(fileScopedExporting, columnExporting);
+//    }
+
+//    // 合并导入配置：文件作用域 importing → 列级 importing
+//    Importing columnImporting = column.getImporting();
+//    if (fileScopedImporting != null) {
+//      if (columnImporting == null) {
+//        columnImporting = new Importing();
+//        column.setImporting(columnImporting);
+//      }
+//      mergeImporting(fileScopedImporting, columnImporting);
+//    }
+//  }
+
   /**
-   * 合并文件作用域导出配置到列级导出配置
-   * <p>
-   * 列级配置优先级高于文件作用域配置。
-   * 仅合并 TableExporting 中存在的共享属性（whenNull、whenBlank），
-   * prefix/suffix/mapping/enumerable/converter 属于列级专属，不由文件作用域共享
+   * 深度拷贝全局导出
    */
-  private void mergeTableExporting(TableExporting source, Exporting target) {
+  private GlobalExporting cloneGlobalExporting(GlobalExporting source) {
+    if (source == null) {
+      return new GlobalExporting();
+    }
+
+    GlobalExporting clone = new GlobalExporting();
+    clone.setWidth(source.getWidth());
+    clone.setWhenNull(source.getWhenNull());
+    clone.setWhenBlank(source.getWhenBlank());
+    return clone;
+  }
+
+  /**
+   * 合并全局导出
+   */
+  private void mergeGlobalExporting(GlobalExporting source, GlobalExporting target) {
     if (source == null || target == null) {
       return;
     }
 
+    if (target.getWidth() == null) {
+      target.setWidth(source.getWidth());
+    }
     if (target.getWhenNull() == null) {
       target.setWhenNull(source.getWhenNull());
     }
@@ -313,25 +395,77 @@ public class DefinitionLoader {
   }
 
   /**
-   * 合并文件作用域导入配置到列级导入配置
-   * <p>
-   * 列级配置优先级高于文件作用域配置。
-   * 仅合并 TableImporting 中存在的共享属性（required、cleansing），
-   * minLength/maxLength/unique/dependsOn/min/max/mapping/enumerable/converter 属于列级专属，不由文件作用域共享
+   * 深度拷贝全局导入
    */
-  private void mergeTableImporting(TableImporting source, Importing target) {
+  private GlobalImporting cloneGlobalImporting(GlobalImporting source) {
+    if (source == null) {
+      return new GlobalImporting();
+    }
+
+    GlobalImporting clone = new GlobalImporting();
+    clone.setRequired(source.getRequired());
+    clone.setCleansing(source.getCleansing());
+    return clone;
+  }
+
+  /**
+   * 合并全局导入
+   */
+  private void mergeGlobalImporting(GlobalImporting source, GlobalImporting target) {
     if (source == null || target == null) {
       return;
     }
 
-    // required: 两者均默认为true，当文件作用域显式设为false时，作为列级默认值
-    if (!source.isRequired() && target.isRequired()) {
-      target.setRequired(false);
+    if (target.getRequired() == null) {
+      target.setRequired(source.getRequired());
     }
-    if (target.getCleansing() == null && source.getCleansing() != null) {
-      target.setCleansing(new ArrayList<>(source.getCleansing()));
+    if (target.getCleansing() == null) {
+      target.setCleansing(source.getCleansing());
     }
   }
+
+//  /**
+//   * 从全局深度拷贝导出配置
+//   */
+//  private Exporting cloneExporting(GlobalExporting source) {
+//    if (source == null) {
+//      return new Exporting();
+//    }
+//
+//    Exporting clone = new Exporting();
+//    clone.setWidth(source.getWidth());
+//    clone.setWhenNull(source.getWhenNull());
+//    clone.setWhenBlank(source.getWhenBlank());
+//    return clone;
+//  }
+
+//  /**
+//   * 合并文件作用域导出配置到列级导出配置
+//   */
+//  private void mergeExporting(GlobalExporting source, Exporting target) {
+//    mergeGlobalExporting(source, target);
+//  }
+
+//  /**
+//   * 合并文件作用域导入配置到列级导入配置
+//   * <p>
+//   * 列级配置优先级高于文件作用域配置。
+//   * 仅合并 TableImporting 中存在的共享属性（required、cleansing），
+//   * minLength/maxLength/unique/dependsOn/min/max/mapping/enumerable/converter 属于列级专属，不由文件作用域共享
+//   */
+//  private void mergeImporting(GlobalImporting source, Importing target) {
+//    if (source == null || target == null) {
+//      return;
+//    }
+//
+//    // required: 两者均默认为true，当文件作用域显式设为false时，作为列级默认值
+//    if (!source.isRequired() && target.isRequired()) {
+//      target.setRequired(false);
+//    }
+//    if (target.getCleansing() == null && source.getCleansing() != null) {
+//      target.setCleansing(new ArrayList<>(source.getCleansing()));
+//    }
+//  }
 
   /**
    * 合并样式

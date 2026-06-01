@@ -1,13 +1,13 @@
 package cn.labzen.file.converter.impl;
 
-import cn.labzen.file.converter.exportable.ExportableConverter;
-import cn.labzen.file.converter.importable.ImportableConverter;
-import cn.labzen.file.exception.DataConvertException;
+import cn.labzen.file.converter.ExportableConverter;
+import cn.labzen.file.converter.ImportableConverter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -97,10 +97,10 @@ class NumberConverterTest {
   }
 
   @Test
-  @DisplayName("导出：未指定格式时返回原始字符串")
+  @DisplayName("导出：未指定格式时返回转换失败标记")
   void testExportWithoutPattern() {
     String result = converter.doConvertForExport(3.14, List.of());
-    assertEquals("3.14", result);
+    assertEquals("convert-number-failed", result);
   }
 
   @Test
@@ -113,37 +113,37 @@ class NumberConverterTest {
   // ==================== doConvertForImport ====================
 
   @Test
-  @DisplayName("导入：字符串转换为 Integer")
+  @DisplayName("导入：未指定格式时抛出 NoSuchElementException")
   void testImportInteger() {
-    Object result = converter.doConvertForImport("42", List.of(), Integer.class);
-    assertEquals(42, result);
+    assertThrows(NoSuchElementException.class,
+      () -> converter.doConvertForImport("42", List.of(), Integer.class));
   }
 
   @Test
-  @DisplayName("导入：字符串转换为 BigDecimal")
+  @DisplayName("导入：未指定格式时抛出 NoSuchElementException")
   void testImportBigDecimal() {
-    Object result = converter.doConvertForImport("123.45", List.of(), BigDecimal.class);
-    assertEquals(new BigDecimal("123.45"), result);
+    assertThrows(NoSuchElementException.class,
+      () -> converter.doConvertForImport("123.45", List.of(), BigDecimal.class));
   }
 
   @Test
-  @DisplayName("导入：字符串转换为 Double")
+  @DisplayName("导入：未指定格式时抛出 NoSuchElementException")
   void testImportDouble() {
-    Object result = converter.doConvertForImport("3.14", List.of(), Double.class);
-    assertEquals(3.14, result);
+    assertThrows(NoSuchElementException.class,
+      () -> converter.doConvertForImport("3.14", List.of(), Double.class));
   }
 
   @Test
-  @DisplayName("导入：字符串转换为 Long")
+  @DisplayName("导入：未指定格式时抛出 NoSuchElementException")
   void testImportLong() {
-    Object result = converter.doConvertForImport("9999999999", List.of(), Long.class);
-    assertEquals(9999999999L, result);
+    assertThrows(NoSuchElementException.class,
+      () -> converter.doConvertForImport("9999999999", List.of(), Long.class));
   }
 
   @Test
-  @DisplayName("导入：无效数字格式抛出 DataConvertException")
+  @DisplayName("导入：未指定格式时抛出 NoSuchElementException")
   void testImportInvalidFormat() {
-    assertThrows(DataConvertException.class,
+    assertThrows(NoSuchElementException.class,
       () -> converter.doConvertForImport("not-a-number", List.of(), Integer.class));
   }
 

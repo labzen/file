@@ -75,7 +75,7 @@ public interface DataFileWriter<T> {
    * @param outputStream 输出流
    * @param locale       语言标签，如 zh-CN、en-US；为 null 时不做国际化解析
    */
-  void write(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream, @Nullable String locale);
+  void write(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream);
 
   /**
    * 写入数据到指定文件，支持国际化
@@ -85,7 +85,7 @@ public interface DataFileWriter<T> {
    * @param file       输出文件
    * @param locale     语言标签；为 null 时不做国际化解析
    */
-  void write(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull File file, @Nullable String locale);
+  void write(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull File file);
 
   /**
    * 写入数据到指定文件路径，支持国际化
@@ -95,5 +95,5 @@ public interface DataFileWriter<T> {
    * @param filePath   输出文件路径
    * @param locale     语言标签；为 null 时不做国际化解析
    */
-  void write(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull String filePath, @Nullable String locale);
+  void write(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull String filePath);
 }

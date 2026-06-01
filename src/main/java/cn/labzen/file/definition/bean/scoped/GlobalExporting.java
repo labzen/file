@@ -8,7 +8,12 @@ import lombok.Data;
  * @author labzen
  */
 @Data
-public class TableExporting {
+public class GlobalExporting {
+
+  /**
+   * 列宽
+   */
+  private Integer width = 10;
 
   /**
    * null时默认值

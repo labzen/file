@@ -3,124 +3,95 @@ package cn.labzen.file.i18n;
 import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.bean.column.Column;
 import cn.labzen.file.definition.bean.column.Exporting;
-import cn.labzen.file.definition.bean.column.Importing;
-import cn.labzen.file.definition.bean.column.Pattern;
-import cn.labzen.file.definition.bean.style.Font;
-import cn.labzen.file.definition.bean.style.Style;
-import cn.labzen.file.definition.bean.table.HeaderBuilder;
-import cn.labzen.file.definition.bean.table.HeaderStructure;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-/**
- * 国际化占位符解析器
- * <p>
- * 将 {@link DataDefinition} 中所有 ${key} 占位符替换为 {@link I18nStoreProvider} 中对应 locale 的文本。
- * 解析过程会深拷贝原始定义，不影响注册中心中的模板定义。
- *
- * @author labzen
- */
-public class I18nResolver {
+public final class I18nResolver {
 
-  private static final java.util.regex.Pattern PLACEHOLDER_PATTERN =
-    java.util.regex.Pattern.compile("\\$\\{([^}]+)}");
+  private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\$\\{([^}]+)}");
+  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-  private final I18nStoreProvider i18NStoreProvider;
+  private final DataDefinition definition;
+  private final String locale;
+  private final I18nStoreProvider i18NStore;
 
-  public I18nResolver(I18nStoreProvider i18NStoreProvider) {
-    this.i18NStoreProvider = i18NStoreProvider;
+  public I18nResolver(DataDefinition definition, String locale) {
+    this.definition = copy(definition);
+    this.definition.setLocale(locale);
+    this.locale = locale;
+    this.i18NStore = I18nStoreHolder.get();
   }
 
-  /**
-   * 解析 DataDefinition 中的所有 ${key} 占位符
-   *
-   * @param template 模板定义（含 ${key} 占位符）
-   * @param locale   目标语言标签
-   * @return 解析后的新 DataDefinition 实例
-   */
-  public DataDefinition resolve(DataDefinition template, String locale) {
-    DataDefinition resolved = copyDefinition(template);
-    resolveDefinition(resolved, locale);
-    return resolved;
+  private DataDefinition copy(DataDefinition definition) {
+    return OBJECT_MAPPER.convertValue(definition, DataDefinition.class);
   }
 
-  private void resolveDefinition(DataDefinition definition, String locale) {
-    // 解析 title
-    definition.setTitle(resolveText(definition.getTitle(), locale));
+  public DataDefinition resolve() {
+    definition.setTitle(resolveText(definition.getTitle()));
 
     // 解析列定义
     if (definition.getColumns() != null) {
       for (Column column : definition.getColumns().values()) {
-        resolveColumn(column, locale);
+        resolveColumn(column);
       }
     }
 
-    // 重建 HeaderStructure（header 文本可能已变更）
-    if (definition.getColumns() != null) {
-      HeaderStructure headerStructure = HeaderBuilder.build(
-        definition.getColumns().values().stream().toList()
-      );
-      definition.setHeaders(headerStructure);
-    }
+    return definition;
   }
 
-  private void resolveColumn(Column column, String locale) {
+  private void resolveColumn(Column column) {
     // header
-    column.setHeader(resolveText(column.getHeader(), locale));
-
-    // 共享 mapping 中的 ${key}（只替换 value）
-    resolveMapping(column.getMapping(), locale);
+    column.setHeader(resolveText(column.getHeader()));
+    // pattern - date
+    column.setPatternDate(resolveText(column.getPatternDate()));
+    // pattern - number
+    column.setPatternNumber(resolveText(column.getPatternNumber()));
 
     // 共享 enumerable（不包含 ${key}，但保持一致性仍解析）
-    column.setEnumerable(resolveText(column.getEnumerable(), locale));
+    column.setEnumerable(resolveText(column.getEnumerable()));
+    // 共享 mapping 中的 ${key}（只替换 value）
+//    resolveMapping(column.getMapping());
 
     // 导出配置
     if (column.getExporting() != null) {
-      resolveExporting(column.getExporting(), locale);
+      resolveExporting(column.getExporting());
     }
 
-    // 导入配置
-    if (column.getImporting() != null) {
-      resolveImporting(column.getImporting(), locale);
-    }
-  }
-
-  private void resolveExporting(Exporting exporting, String locale) {
-    // 继承自 TableExporting 的共享属性
-    exporting.setWhenNull(resolveText(exporting.getWhenNull(), locale));
-    exporting.setWhenBlank(resolveText(exporting.getWhenBlank(), locale));
-
-    // 列级专属属性
-    exporting.setPrefix(resolveText(exporting.getPrefix(), locale));
-    exporting.setSuffix(resolveText(exporting.getSuffix(), locale));
-    resolveMapping(exporting.getMapping(), locale);
-    exporting.setEnumerable(resolveText(exporting.getEnumerable(), locale));
-    exporting.setConverter(resolveText(exporting.getConverter(), locale));
-  }
-
-  private void resolveImporting(Importing importing, String locale) {
-    // 列级专属属性（含 ${key} 的文本字段）
-    resolveMapping(importing.getMapping(), locale);
-    importing.setEnumerable(resolveText(importing.getEnumerable(), locale));
-    importing.setConverter(resolveText(importing.getConverter(), locale));
+    // 导入时，不需要处理国际化
   }
 
   /**
    * 解析映射表中的 ${key} 占位符（只替换 value）
    */
-  private void resolveMapping(Map<String, String> mapping, String locale) {
+  private void resolveMapping(Map<String, String> mapping) {
     if (mapping == null) {
       return;
     }
+
     Map<String, String> resolved = new LinkedHashMap<>();
     for (Map.Entry<String, String> entry : mapping.entrySet()) {
-      resolved.put(entry.getKey(), resolveText(entry.getValue(), locale));
+      resolved.put(entry.getKey(), resolveText(entry.getValue()));
     }
     mapping.clear();
     mapping.putAll(resolved);
+  }
+
+
+  private void resolveExporting(Exporting exporting) {
+    // 继承自 TableExporting 的共享属性
+    exporting.setWhenNull(resolveText(exporting.getWhenNull()));
+    exporting.setWhenBlank(resolveText(exporting.getWhenBlank()));
+
+    // 列级专属属性
+    exporting.setPrefix(resolveText(exporting.getPrefix()));
+    exporting.setSuffix(resolveText(exporting.getSuffix()));
+    resolveMapping(exporting.getMapping());
+    exporting.setEnumerable(resolveText(exporting.getEnumerable()));
+    exporting.setConverter(resolveText(exporting.getConverter()));
   }
 
   /**
@@ -130,7 +101,7 @@ public class I18nResolver {
    * @param locale 目标语言标签
    * @return 替换后的文本
    */
-  private String resolveText(String text, String locale) {
+  private String resolveText(String text) {
     if (text == null || !text.contains("${")) {
       return text;
     }
@@ -139,157 +110,10 @@ public class I18nResolver {
     StringBuilder result = new StringBuilder();
     while (matcher.find()) {
       String key = matcher.group(1);
-      String replacement = i18NStoreProvider.getText(locale, key);
+      String replacement = i18NStore.getText(locale, key);
       matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
     }
     matcher.appendTail(result);
     return result.toString();
-  }
-
-  // ===== 深拷贝方法 =====
-
-  private DataDefinition copyDefinition(DataDefinition source) {
-    DataDefinition copy = new DataDefinition();
-    copy.setDomainName(source.getDomainName());
-    copy.setFilename(source.getFilename());
-    copy.setTitle(source.getTitle());
-    copy.setHeaderStyle(copyStyle(source.getHeaderStyle()));
-    copy.setColumnStyle(copyStyle(source.getColumnStyle()));
-    copy.setHeaders(source.getHeaders());
-    copy.setExporting(copyTableExporting(source.getExporting()));
-    copy.setImporting(copyTableImporting(source.getImporting()));
-
-    if (source.getColumns() != null) {
-      Map<String, Column> columnsCopy = new LinkedHashMap<>();
-      source.getColumns().forEach((name, col) -> columnsCopy.put(name, copyColumn(col)));
-      copy.setColumns(columnsCopy);
-    }
-
-    return copy;
-  }
-
-  private Column copyColumn(Column source) {
-    Column copy = new Column();
-    copy.setHeader(source.getHeader());
-    copy.setWidth(source.getWidth());
-    copy.setStyle(copyStyle(source.getStyle()));
-    copy.setPattern(copyPattern(source.getPattern()));
-
-    // 共享 mapping
-    if (source.getMapping() != null) {
-      copy.setMapping(new LinkedHashMap<>(source.getMapping()));
-    }
-
-    // 共享 enumerable
-    copy.setEnumerable(source.getEnumerable());
-
-    // 导出/导入配置
-    copy.setExporting(copyExporting(source.getExporting()));
-    copy.setImporting(copyImporting(source.getImporting()));
-
-    return copy;
-  }
-
-  private Exporting copyExporting(Exporting source) {
-    if (source == null) {
-      return null;
-    }
-    Exporting copy = new Exporting();
-    copy.setWhenNull(source.getWhenNull());
-    copy.setWhenBlank(source.getWhenBlank());
-    copy.setPrefix(source.getPrefix());
-    copy.setSuffix(source.getSuffix());
-    if (source.getMapping() != null) {
-      copy.setMapping(new LinkedHashMap<>(source.getMapping()));
-    }
-    copy.setEnumerable(source.getEnumerable());
-    copy.setConverter(source.getConverter());
-    return copy;
-  }
-
-  private Importing copyImporting(Importing source) {
-    if (source == null) {
-      return null;
-    }
-    Importing copy = new Importing();
-    copy.setRequired(source.isRequired());
-    if (source.getCleansing() != null) {
-      copy.setCleansing(new ArrayList<>(source.getCleansing()));
-    }
-    copy.setMinLength(source.getMinLength());
-    copy.setMaxLength(source.getMaxLength());
-    copy.setUnique(source.getUnique());
-    if (source.getDependsOn() != null) {
-      copy.setDependsOn(new ArrayList<>(source.getDependsOn()));
-    }
-    copy.setMin(source.getMin());
-    copy.setMax(source.getMax());
-    if (source.getMapping() != null) {
-      copy.setMapping(new LinkedHashMap<>(source.getMapping()));
-    }
-    copy.setEnumerable(source.getEnumerable());
-    copy.setConverter(source.getConverter());
-    return copy;
-  }
-
-  private cn.labzen.file.definition.bean.scoped.TableExporting copyTableExporting(
-    cn.labzen.file.definition.bean.scoped.TableExporting source) {
-    if (source == null) {
-      return null;
-    }
-    cn.labzen.file.definition.bean.scoped.TableExporting copy =
-      new cn.labzen.file.definition.bean.scoped.TableExporting();
-    copy.setWhenNull(source.getWhenNull());
-    copy.setWhenBlank(source.getWhenBlank());
-    return copy;
-  }
-
-  private cn.labzen.file.definition.bean.scoped.TableImporting copyTableImporting(
-    cn.labzen.file.definition.bean.scoped.TableImporting source) {
-    if (source == null) {
-      return null;
-    }
-    cn.labzen.file.definition.bean.scoped.TableImporting copy =
-      new cn.labzen.file.definition.bean.scoped.TableImporting();
-    copy.setRequired(source.isRequired());
-    if (source.getCleansing() != null) {
-      copy.setCleansing(new ArrayList<>(source.getCleansing()));
-    }
-    return copy;
-  }
-
-  private Style copyStyle(Style source) {
-    if (source == null) {
-      return null;
-    }
-    Style copy = new Style();
-    copy.setAlign(source.getAlign());
-    copy.setBackground(source.getBackground());
-    copy.setWrapped(source.getWrapped());
-    copy.setFont(copyFont(source.getFont()));
-    return copy;
-  }
-
-  private Font copyFont(Font source) {
-    if (source == null) {
-      return null;
-    }
-    Font copy = new Font();
-    copy.setFamily(source.getFamily());
-    copy.setSize(source.getSize());
-    copy.setColor(source.getColor());
-    copy.setBold(source.getBold());
-    copy.setItalic(source.getItalic());
-    return copy;
-  }
-
-  private Pattern copyPattern(Pattern source) {
-    if (source == null) {
-      return null;
-    }
-    Pattern copy = new Pattern();
-    copy.setDate(source.getDate());
-    copy.setNumber(source.getNumber());
-    return copy;
   }
 }

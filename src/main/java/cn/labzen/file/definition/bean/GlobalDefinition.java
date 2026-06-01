@@ -1,6 +1,7 @@
 package cn.labzen.file.definition.bean;
 
-import cn.labzen.file.definition.bean.scoped.GlobalColumn;
+import cn.labzen.file.definition.bean.scoped.GlobalExporting;
+import cn.labzen.file.definition.bean.scoped.GlobalImporting;
 import cn.labzen.file.definition.bean.style.Style;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -49,10 +50,20 @@ public class GlobalDefinition {
   /**
    * 全局表头样式定义
    */
-  private Style header;
+  private Style exportingHeaderStyle;
 
   /**
-   * 全局列（数据单元格）默认值定义
+   * 全局单元格样式定义
    */
-  private GlobalColumn column;
+  private Style exportingColumnStyle;
+
+  /**
+   * 全局导出默认配置
+   */
+  private GlobalExporting exporting;
+
+  /**
+   * 全局导入默认配置
+   */
+  private GlobalImporting importing;
 }

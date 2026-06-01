@@ -80,12 +80,12 @@ class DefinitionLoaderTest {
     assertTrue(configOpt.isPresent());
 
     DataDefinition config = configOpt.get();
-    assertNotNull(config.getHeaderStyle());
+    assertNotNull(config.getExportingHeaderStyle());
 
     // Property.yml 中定义了 header-style，应该覆盖全局配置的 header
     // 验证合并后的样式
-    assertNotNull(config.getHeaderStyle().getAlign());
-    assertNotNull(config.getHeaderStyle().getBackground());
+    assertNotNull(config.getExportingHeaderStyle().getAlign());
+    assertNotNull(config.getExportingHeaderStyle().getBackground());
   }
 
   @Test
@@ -124,7 +124,7 @@ class DefinitionLoaderTest {
     assertNotNull(nameColumn);
     // Property.yml 中 name 列 style.align = LEFT
     // 此时应该能正确解析 style 对象（包含默认值）
-    assertNotNull(nameColumn.getStyle(), "列样式不应为 null");
-    assertEquals("LEFT", nameColumn.getStyle().getAlign().name(), "align 应该为 LEFT");
+    assertNotNull(nameColumn.getExporting().getStyle(), "列样式不应为 null");
+    assertEquals("LEFT", nameColumn.getExporting().getStyle().getAlign().name(), "align 应该为 LEFT");
   }
 }

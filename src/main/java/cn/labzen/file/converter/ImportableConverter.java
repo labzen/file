@@ -1,6 +1,5 @@
-package cn.labzen.file.converter.importable;
+package cn.labzen.file.converter;
 
-import cn.labzen.file.converter.Converter;
 import cn.labzen.file.converter.util.ConvertResultCache;
 import cn.labzen.file.exception.DataConvertException;
 

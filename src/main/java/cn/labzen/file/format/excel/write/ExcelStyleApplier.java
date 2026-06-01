@@ -20,7 +20,7 @@ import java.util.Map;
  * <p>
  * 样式优先级（数据单元格）：
  * <ol>
- *   <li>列定义中的样式（column.getStyle()）</li>
+ *   <li>列定义中的样式（column.getExporting().getStyle()）</li>
  *   <li>全局默认列样式（defaultColumnStyle）</li>
  *   <li>系统默认值</li>
  * </ol>
@@ -194,7 +194,7 @@ public final class ExcelStyleApplier {
   /**
    * 按优先级解析数据单元格的最终样式
    * <p>
-   * 优先级：column.getStyle() > defaultColumnStyle > 系统默认值
+   * 优先级：column.getExporting().getStyle() > defaultColumnStyle > 系统默认值
    */
   private Style resolveDataStyle(Column column, Style defaultColumnStyle) {
     Style style = new Style();
@@ -216,8 +216,8 @@ public final class ExcelStyleApplier {
 
   private String resolveBackground(Column column, Style defaultColumnStyle) {
     String background = null;
-    if (column.getStyle() != null) {
-      background = column.getStyle().getBackground();
+    if (column.getExporting().getStyle() != null) {
+      background = column.getExporting().getStyle().getBackground();
     }
     if (background == null || background.isEmpty()) {
       background = defaultColumnStyle != null ? defaultColumnStyle.getBackground() : null;
@@ -230,10 +230,10 @@ public final class ExcelStyleApplier {
 
   private Font resolveFont(Column column, Style defaultColumnStyle) {
     Font font = null;
-    if (column.getStyle() != null && column.getStyle().getFont() != null
-      && column.getStyle().getFont().getColor() != null
-      && !column.getStyle().getFont().getColor().isEmpty()) {
-      font = column.getStyle().getFont();
+    if (column.getExporting().getStyle() != null && column.getExporting().getStyle().getFont() != null
+      && column.getExporting().getStyle().getFont().getColor() != null
+      && !column.getExporting().getStyle().getFont().getColor().isEmpty()) {
+      font = column.getExporting().getStyle().getFont();
     } else if (defaultColumnStyle != null && defaultColumnStyle.getFont() != null) {
       font = defaultColumnStyle.getFont();
     }
@@ -245,8 +245,8 @@ public final class ExcelStyleApplier {
 
   private boolean resolveWrapped(Column column, Style defaultColumnStyle) {
     Boolean wrapped = null;
-    if (column.getStyle() != null && column.getStyle().getWrapped() != null) {
-      wrapped = column.getStyle().getWrapped();
+    if (column.getExporting().getStyle() != null && column.getExporting().getStyle().getWrapped() != null) {
+      wrapped = column.getExporting().getStyle().getWrapped();
     } else if (defaultColumnStyle != null) {
       wrapped = defaultColumnStyle.getWrapped();
     }
@@ -255,8 +255,8 @@ public final class ExcelStyleApplier {
 
   private Alignment resolveAlignment(Column column, Style defaultColumnStyle) {
     Alignment align = null;
-    if (column.getStyle() != null) {
-      align = column.getStyle().getAlign();
+    if (column.getExporting().getStyle() != null) {
+      align = column.getExporting().getStyle().getAlign();
     }
     if (align == null) {
       align = defaultColumnStyle != null ? defaultColumnStyle.getAlign() : null;

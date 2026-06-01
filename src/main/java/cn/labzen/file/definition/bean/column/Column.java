@@ -12,8 +12,7 @@ import java.util.Map;
  * @author labzen
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
-public class Column extends GlobalColumn {
+public class Column {
 
   /**
    * 表头标题（支持二级，如 "成绩:-:语文"）
@@ -21,9 +20,13 @@ public class Column extends GlobalColumn {
   private String header;
 
   /**
-   * 数据格式化模式（日期/数值），导出和导入共享
+   * 日期格式 pattern，如 yyyy-MM-dd HH:mm:ss。 仅适用于日期时间类型（java.util.Date, java.time.LocalDateTime 等）
    */
-  private Pattern pattern;
+  private String patternDate;
+  /**
+   * 数值格式 pattern，如 #,##0.00。 仅适用于浮点类型或整数类型
+   */
+  private String patternNumber;
 
   /**
    * 共享映射（导入导出均可使用）

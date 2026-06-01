@@ -2,7 +2,7 @@ package cn.labzen.file.converter.impl;
 
 import cn.labzen.file.annotation.DataConverter;
 import cn.labzen.file.converter.Converter;
-import cn.labzen.file.converter.importable.ImportableConverter;
+import cn.labzen.file.converter.ImportableConverter;
 
 import java.util.List;
 

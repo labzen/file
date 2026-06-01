@@ -1,7 +1,7 @@
-# $schema: ../schema/def-data-schema.json
+# $schema: https://labzen-schema.oss-cn-beijing.aliyuncs.com/file-export/labzen-file-export-data-schema.json
 filename: property
-title: 系统属性
-header-style:
+title: ${property-title}
+exporing-header-style:
   background: "#e4e6e8"
   font:
     family: "Arial"
@@ -10,108 +10,112 @@ header-style:
     bold: true
     italic: true
   wrapped: false
-column-style:
+exporting-column-style:
   align: CENTER
 columns:
   name:
-    header: "基本信息:-:属性名称"
-    width: 18
-    when-null: "未命名"
-    prefix: "【"
-    suffix: "】"
-    style:
-      align: LEFT
-      font:
-        family: "simkai"
-        color: "#3552d4"
+    header: "${basic-info}:-:${prop-name}"
+    exporting:
+      width: 18
+      when-null: "${unnamed}"
+      prefix: "【"
+      suffix: "】"
+      style:
+        align: LEFT
+        font:
+          family: "simkai"
+          color: "#3552d4"
   indexical:
-    header: "基本信息:-:索引"
-    width: 10
-    when-null: "0"
-    prefix: "No."
-    style:
-      align: RIGHT
+    header: "${basic-info}:-:${index}"
+    exporting:
+      width: 10
+      when-null: "0"
+      prefix: "No."
+      style:
+        align: RIGHT
   value:
-    header: "基本信息:-:属性值"
-    width: 22
-    when-null: "无值"
-    when-blank: "空值"
-    converter:
-      mapping:
-        "debug=true": "调试开启"
-        "debug=false": "调试关闭"
-        "INFO": "信息级别"
-    style:
-      align: CENTER
+    header: "${basic-info}:-:${prop-value}"
+    mapping:
+      "debug=true": "${debug-on}"
+      "debug=false": "${debug-off}"
+      "INFO": "${info-level}"
+    exporting:
+      width: 22
+      when-null: "${no-value}"
+      when-blank: "${blank-value}"
+      style:
+        align: CENTER
   status:
-    header: "状态信息:-:状态"
-    width: 10
-    when-null: "未知"
-    converter:
-      mapping:
-        "1": "启用"
-        "2": "禁用"
-        "3": "待审核"
-    style:
-      align: CENTER
+    header: "${status-info}:-:${status}"
+    mapping:
+      "1": "${enabled}"
+      "2": "${disabled}"
+      "3": "${pending}"
+    exporting:
+      width: 10
+      when-null: "${unknown}"
   category:
-    header: "状态信息:-:分类"
-    width: 10
-    when-null: "未分类"
-    converter:
-      mapping:
-        "A": "系统"
-        "B": "业务"
-        "C": "其他"
-    style:
-      align: CENTER
+    header: "${status-info}:-:${category}"
+    mapping:
+      "A": "${system}"
+      "B": "${business}"
+      "C": "${other}"
+    exporting:
+      width: 10
+      when-null: "${uncategorized}"
   phone:
-    header: "联系方式:-:手机号码"
-    width: 16
-    converter:
-      named: desensitize("(\\d{3})\\d{4}(\\d{4})", "$1****$2");
+    header: "${contact-info}:-:${phone-number}"
+    exporting:
+      width: 16
+      converter: desensitize("(\\d{3})\\d{4}(\\d{4})", "$1****$2");
   email:
-    header: "联系方式:-:电子邮箱"
-    width: 22
-    converter:
-      named: desensitize("(^.{2})(.*)(@.*)$", "$1****$3");
+    header: "${contact-info}:-:${email-addr}"
+    exporting:
+      width: 22
+      converter: desensitize("(^.{2})(.*)(@.*)$", "$1****$3");
   description:
-    header: "内容描述"
-    width: 25
-    when-null: "暂无描述"
-    converter:
-      named: truncate(20);
+    header: "${desc}"
+    exporting:
+      width: 25
+      when-null: "${no-desc}"
+      converter: truncate(20);
   size:
     header: "数值:-:大小"
-    width: 12
-    when-null: "0"
-    suffix: " MB"
     pattern:
       number: "#,##0.00"
+    exporting:
+      width: 12
+      when-null: "0"
+      suffix: " MB"
   amount:
     header: "数值:-:金额"
-    width: 14
-    when-null: "0.00"
-    prefix: "￥"
     pattern:
       number: "#,##0.00"
+    exporting:
+      width: 14
+      when-null: "0.00"
+      prefix: "￥"
   createTime:
     header: "时间:-:创建时间"
-    width: 18
     pattern:
       date: "yyyy-MM-dd HH:mm:ss"
+    exporting:
+      width: 18
   effectiveDate:
     header: "时间:-:生效日期"
-    width: 14
     pattern:
       date: "yyyy-MM-dd"
+    exporting:
+      width: 14
   lastModified:
     header: "时间:-:最后修改"
-    width: 18
     pattern:
       date: "yyyy/MM/dd HH:mm"
+    exporting:
+      width: 18
   remindTime:
     header: "时间:-:提醒时间"
-    width: 12
     pattern:
       date: "HH:mm"
+    exporting:
+      width: 12

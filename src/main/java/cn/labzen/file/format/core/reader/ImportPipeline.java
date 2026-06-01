@@ -1,13 +1,12 @@
 package cn.labzen.file.format.core.reader;
 
 import cn.labzen.file.cleanser.ChainableCleanserExecutor;
-import cn.labzen.file.converter.importable.ChainableImportConverterExecutor;
+import cn.labzen.file.converter.executor.ChainableImportConverterExecutor;
 import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.bean.column.Column;
 import cn.labzen.file.definition.bean.column.Importing;
 import cn.labzen.file.exception.DataConvertException;
 import cn.labzen.file.exception.DataReadException;
-import cn.labzen.file.i18n.I18nResolver;
 import cn.labzen.file.i18n.I18nStoreHolder;
 import cn.labzen.file.i18n.I18nStoreProvider;
 import cn.labzen.file.validator.ChainableValidatorExecutor;
@@ -53,15 +52,15 @@ public class ImportPipeline<T> {
     this.locale = locale;
 
     // i18n 解析
-    I18nStoreProvider store = I18nStoreHolder.get();
-    I18nResolver resolver = new I18nResolver(store);
-    DataDefinition resolved = resolver.resolve(definition, locale);
+//    I18nStoreProvider store = I18nStoreHolder.get();
+//    I18nResolverTmp resolver = new I18nResolverTmp(store);
+//    DataDefinition resolved = resolver.resolve(definition, locale);
 
     // 构建各阶段处理器
-    this.cleansers = buildCleansers(resolved);
-    this.preValidators = buildPreValidators(resolved);
-    this.converters = ChainableImportConverterExecutor.buildFor(resolved);
-    this.postValidators = buildPostValidators(resolved);
+    this.cleansers = buildCleansers(definition);
+    this.preValidators = buildPreValidators(definition);
+    this.converters = ChainableImportConverterExecutor.buildFor(definition);
+    this.postValidators = buildPostValidators(definition);
   }
 
   /**
@@ -267,7 +266,7 @@ public class ImportPipeline<T> {
       ChainableValidatorExecutor executor = new ChainableValidatorExecutor();
       boolean hasValidator = false;
 
-      if (importing.isRequired()) {
+      if (importing.getRequired()) {
         executor.addValidator("required", List.of());
         hasValidator = true;
       }

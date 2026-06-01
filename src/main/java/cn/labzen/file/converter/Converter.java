@@ -1,8 +1,5 @@
 package cn.labzen.file.converter;
 
-import cn.labzen.file.converter.exportable.ExportableConverter;
-import cn.labzen.file.converter.importable.ImportableConverter;
-
 /**
  * 转换器标记接口 — 所有转换器的父类型
  * <p>
@@ -44,12 +41,4 @@ public interface Converter {
   int UPPERCASE_PRIORITY = 500;
   String LOWERCASE_NAME = "lowercase";
   int LOWERCASE_PRIORITY = 510;
-//  String DATE_NAME = "date";
-//  int DATE_PRIORITY = 520;
-//  String LOCAL_DATE_NAME = "local_date";
-//  int LOCAL_DATE_PRIORITY = 520;
-//  String LOCAL_TIME_NAME = "local_time";
-//  int LOCAL_TIME_PRIORITY = 520;
-//  String LOCAL_DATETIME_NAME = "local_datetime";
-//  int LOCAL_DATETIME_PRIORITY = 520;
 }

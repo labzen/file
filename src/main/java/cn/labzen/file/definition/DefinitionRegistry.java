@@ -1,10 +1,13 @@
 package cn.labzen.file.definition;
 
-import cn.labzen.file.converter.exportable.ChainableExportConverterExecutor;
-import cn.labzen.file.converter.importable.ChainableImportConverterExecutor;
+import cn.labzen.file.converter.executor.ChainableExportConverterExecutor;
+import cn.labzen.file.converter.executor.ChainableImportConverterExecutor;
 import cn.labzen.file.definition.bean.DataDefinition;
-
+import cn.labzen.file.definition.bean.table.HeaderBuilder;
+import cn.labzen.file.definition.bean.table.HeaderStructure;
+import cn.labzen.file.i18n.I18nResolver;
 import jakarta.annotation.Nonnull;
+
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -22,7 +25,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class DefinitionRegistry {
 
-  private static final Map<String, DataDefinition> DEFINITION_MAP = new ConcurrentHashMap<>();
+  private static final Map<String, DataDefinition> ORIGINAL_DEFINITION_MAP = new ConcurrentHashMap<>();
+  private static final Map<String, DataDefinition> LOCALIZED_DEFINITION_MAP = new ConcurrentHashMap<>();
 
   private DefinitionRegistry() {
   }
@@ -38,21 +42,46 @@ public final class DefinitionRegistry {
       throw new IllegalArgumentException("配置名称不能为空");
     }
 
-    // 构建导出和导入转换器链
-    ChainableExportConverterExecutor.build(definition);
-    ChainableImportConverterExecutor.build(definition);
-
-    DEFINITION_MAP.put(name, definition);
+    ORIGINAL_DEFINITION_MAP.put(name, definition);
   }
 
   /**
-   * 根据名称获取配置
+   * 根据名称获取原始配置
    *
    * @param name 配置名称
    * @return 配置对象，如果不存在返回 Optional.empty()
    */
   public static Optional<DataDefinition> get(String name) {
-    return Optional.ofNullable(DEFINITION_MAP.get(name));
+    return Optional.ofNullable(ORIGINAL_DEFINITION_MAP.get(name));
+  }
+
+  /**
+   * 根据名称和区域获取配置
+   */
+  public static Optional<DataDefinition> get(String name, String locale) {
+    return get(name).map(original -> {
+      String key = name + "#" + locale;
+      return LOCALIZED_DEFINITION_MAP.computeIfAbsent(key, k -> localize(original, locale));
+    });
+  }
+
+  private static DataDefinition localize(@Nonnull DataDefinition original, String locale) {
+    I18nResolver i18nResolver = new I18nResolver(original, locale);
+    DataDefinition localizedDefinition = i18nResolver.resolve();
+
+//    List<Column> columns = localizedDefinition.getColumns().values().stream().toList();
+    HeaderStructure headerStructure = HeaderBuilder.build(localizedDefinition);
+    localizedDefinition.setHeaders(headerStructure);
+
+    // 构建导出和导入转换器链
+    ChainableExportConverterExecutor.build(localizedDefinition);
+    ChainableImportConverterExecutor.build(localizedDefinition);
+
+    return localizedDefinition;
+  }
+
+  public static Optional<String> getDefinitionFilename(String name) {
+    return get(name).map(DataDefinition::getFilename);
   }
 
   /**
@@ -62,7 +91,7 @@ public final class DefinitionRegistry {
    * @return 是否存在
    */
   public static boolean contains(String name) {
-    return DEFINITION_MAP.containsKey(name);
+    return ORIGINAL_DEFINITION_MAP.containsKey(name);
   }
 
   /**
@@ -71,7 +100,7 @@ public final class DefinitionRegistry {
    * @return 配置名称列表
    */
   public static Set<String> getNames() {
-    return new java.util.LinkedHashSet<>(DEFINITION_MAP.keySet());
+    return new java.util.LinkedHashSet<>(ORIGINAL_DEFINITION_MAP.keySet());
   }
 
   /**
@@ -80,7 +109,7 @@ public final class DefinitionRegistry {
    * @return 配置数量
    */
   public static int size() {
-    return DEFINITION_MAP.size();
+    return ORIGINAL_DEFINITION_MAP.size();
   }
 
   /**
@@ -89,14 +118,14 @@ public final class DefinitionRegistry {
    * @return 是否为空
    */
   public static boolean isEmpty() {
-    return DEFINITION_MAP.isEmpty();
+    return ORIGINAL_DEFINITION_MAP.isEmpty();
   }
 
   /**
    * 清除所有配置
    */
   public static void clear() {
-    DEFINITION_MAP.clear();
+    ORIGINAL_DEFINITION_MAP.clear();
     ChainableExportConverterExecutor.clear();
     ChainableImportConverterExecutor.clear();
   }

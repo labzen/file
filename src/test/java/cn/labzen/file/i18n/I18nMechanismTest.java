@@ -4,11 +4,7 @@ import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.bean.column.Column;
 import cn.labzen.file.definition.bean.column.Exporting;
 import cn.labzen.file.definition.bean.column.Importing;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -31,11 +27,11 @@ class I18nMechanismTest {
   @DisplayName("NopI18NStoreProvider 测试")
   class NopI18NStoreProviderTest {
 
-    private ManualI18NStoreProvider store;
+    private ManualI18nStoreProvider store;
 
     @BeforeEach
     void setUp() {
-      store = new ManualI18NStoreProvider();
+      store = new ManualI18nStoreProvider();
       store.setDefaultLocale("zh-CN");
     }
 
@@ -144,7 +140,7 @@ class I18nMechanismTest {
     @Test
     @DisplayName("注册后 get 返回注册的实例")
     void testRegisterAndGet() {
-      ManualI18NStoreProvider store = new ManualI18NStoreProvider();
+      ManualI18nStoreProvider store = new ManualI18nStoreProvider();
       I18nStoreHolder.register(store);
 
       assertSame(store, I18nStoreHolder.get());
@@ -153,8 +149,8 @@ class I18nMechanismTest {
     @Test
     @DisplayName("重复注册覆盖之前的实例")
     void testRegisterOverride() {
-      ManualI18NStoreProvider store1 = new ManualI18NStoreProvider();
-      ManualI18NStoreProvider store2 = new ManualI18NStoreProvider();
+      ManualI18nStoreProvider store1 = new ManualI18nStoreProvider();
+      ManualI18nStoreProvider store2 = new ManualI18nStoreProvider();
 
       I18nStoreHolder.register(store1);
       assertSame(store1, I18nStoreHolder.get());
@@ -166,7 +162,7 @@ class I18nMechanismTest {
     @Test
     @DisplayName("注册 null 可清除持有者")
     void testRegisterNull() {
-      ManualI18NStoreProvider store = new ManualI18NStoreProvider();
+      ManualI18nStoreProvider store = new ManualI18nStoreProvider();
       I18nStoreHolder.register(store);
       assertNotNull(I18nStoreHolder.get());
 
@@ -181,12 +177,12 @@ class I18nMechanismTest {
   @DisplayName("I18nResolver 测试")
   class I18nResolverTest {
 
-    private ManualI18NStoreProvider store;
+    private ManualI18nStoreProvider store;
     private I18nResolver resolver;
 
     @BeforeEach
     void setUp() {
-      store = new ManualI18NStoreProvider();
+      store = new ManualI18nStoreProvider();
       store.setDefaultLocale("zh-CN");
 
       // 准备中文文案
@@ -213,7 +209,8 @@ class I18nMechanismTest {
       store.put("en-US", "male", "Male");
       store.put("en-US", "female", "Female");
 
-      resolver = new I18nResolver(store);
+      I18nStoreHolder.register(store);
+//      resolver = new I18nResolver(store);
     }
 
     @Test
@@ -222,10 +219,12 @@ class I18nMechanismTest {
       DataDefinition template = createTemplate();
       template.setTitle("${user-title}");
 
-      DataDefinition resolved = resolver.resolve(template, "zh-CN");
+      I18nResolver resolver = new I18nResolver(template, "zh-CN");
+      DataDefinition resolved = resolver.resolve();
       assertEquals("用户信息导出", resolved.getTitle());
 
-      resolved = resolver.resolve(template, "en-US");
+      I18nResolver resolver2 = new I18nResolver(template, "en-US");
+      resolved = resolver2.resolve();
       assertEquals("User Info Export", resolved.getTitle());
     }
 
@@ -236,11 +235,13 @@ class I18nMechanismTest {
       addColumn(template, "username", "${username-header}", null, null, null, null);
       addColumn(template, "age", "${age-header}", null, null, null, null);
 
-      DataDefinition resolved = resolver.resolve(template, "zh-CN");
+      I18nResolver resolver = new I18nResolver(template, "zh-CN");
+      DataDefinition resolved = resolver.resolve();
       assertEquals("用户名", getColumn(resolved, "username").getHeader());
       assertEquals("年龄", getColumn(resolved, "age").getHeader());
 
-      resolved = resolver.resolve(template, "en-US");
+      I18nResolver resolver2 = new I18nResolver(template, "en-US");
+      resolved = resolver2.resolve();
       assertEquals("Username", getColumn(resolved, "username").getHeader());
       assertEquals("Age", getColumn(resolved, "age").getHeader());
     }
@@ -253,10 +254,12 @@ class I18nMechanismTest {
       exporting.setWhenNull("${null-text}");
       addColumn(template, "username", "用户名", exporting, null, null, null);
 
-      DataDefinition resolved = resolver.resolve(template, "zh-CN");
+      I18nResolver resolver = new I18nResolver(template, "zh-CN");
+      DataDefinition resolved = resolver.resolve();
       assertEquals("未知", getColumn(resolved, "username").getExporting().getWhenNull());
 
-      resolved = resolver.resolve(template, "en-US");
+      I18nResolver resolver2 = new I18nResolver(template, "en-US");
+      resolved = resolver2.resolve();
       assertEquals("Unknown", getColumn(resolved, "username").getExporting().getWhenNull());
     }
 
@@ -268,10 +271,12 @@ class I18nMechanismTest {
       exporting.setWhenBlank("${blank-text}");
       addColumn(template, "username", "用户名", exporting, null, null, null);
 
-      DataDefinition resolved = resolver.resolve(template, "zh-CN");
+      I18nResolver resolver = new I18nResolver(template, "zh-CN");
+      DataDefinition resolved = resolver.resolve();
       assertEquals("空", getColumn(resolved, "username").getExporting().getWhenBlank());
 
-      resolved = resolver.resolve(template, "en-US");
+      I18nResolver resolver2 = new I18nResolver(template, "en-US");
+      resolved = resolver2.resolve();
       assertEquals("Empty", getColumn(resolved, "username").getExporting().getWhenBlank());
     }
 
@@ -283,10 +288,12 @@ class I18nMechanismTest {
       exporting.setConverter("bool(${bool-true}, ${bool-false})");
       addColumn(template, "active", "是否激活", exporting, null, null, null);
 
-      DataDefinition resolved = resolver.resolve(template, "zh-CN");
+      I18nResolver resolver = new I18nResolver(template, "zh-CN");
+      DataDefinition resolved = resolver.resolve();
       assertEquals("bool(是, 否)", getColumn(resolved, "active").getExporting().getConverter());
 
-      resolved = resolver.resolve(template, "en-US");
+      I18nResolver resolver2 = new I18nResolver(template, "en-US");
+      resolved = resolver2.resolve();
       assertEquals("bool(Yes, No)", getColumn(resolved, "active").getExporting().getConverter());
     }
 
@@ -299,11 +306,13 @@ class I18nMechanismTest {
       mapping.put("2", "${female}");
       addColumn(template, "gender", "${gender-header}", null, null, mapping, null);
 
-      DataDefinition resolved = resolver.resolve(template, "zh-CN");
+      I18nResolver resolver = new I18nResolver(template, "zh-CN");
+      DataDefinition resolved = resolver.resolve();
       assertEquals("男", getColumn(resolved, "gender").getMapping().get("1"));
       assertEquals("女", getColumn(resolved, "gender").getMapping().get("2"));
 
-      resolved = resolver.resolve(template, "en-US");
+      I18nResolver resolver2 = new I18nResolver(template, "en-US");
+      resolved = resolver2.resolve();
       assertEquals("Male", getColumn(resolved, "gender").getMapping().get("1"));
       assertEquals("Female", getColumn(resolved, "gender").getMapping().get("2"));
     }
@@ -319,7 +328,8 @@ class I18nMechanismTest {
       exporting.setMapping(mapping);
       addColumn(template, "gender", "${gender-header}", exporting, null, null, null);
 
-      DataDefinition resolved = resolver.resolve(template, "zh-CN");
+      I18nResolver resolver = new I18nResolver(template, "zh-CN");
+      DataDefinition resolved = resolver.resolve();
       assertEquals("男", getColumn(resolved, "gender").getExporting().getMapping().get("1"));
       assertEquals("女", getColumn(resolved, "gender").getExporting().getMapping().get("2"));
     }
@@ -332,7 +342,8 @@ class I18nMechanismTest {
       mapping.put("${some-key}", "值");
       addColumn(template, "test", "测试", null, null, mapping, null);
 
-      DataDefinition resolved = resolver.resolve(template, "zh-CN");
+      I18nResolver resolver = new I18nResolver(template, "zh-CN");
+      DataDefinition resolved = resolver.resolve();
       // key 保持原样（不被替换）
       assertTrue(resolved.getColumns().get("test").getMapping().containsKey("${some-key}"));
     }
@@ -345,10 +356,12 @@ class I18nMechanismTest {
       importing.setConverter("uppercase(${bool-true})");
       addColumn(template, "code", "编码", null, importing, null, null);
 
-      DataDefinition resolved = resolver.resolve(template, "zh-CN");
+      I18nResolver resolver = new I18nResolver(template, "zh-CN");
+      DataDefinition resolved = resolver.resolve();
       assertEquals("uppercase(是)", getColumn(resolved, "code").getImporting().getConverter());
 
-      resolved = resolver.resolve(template, "en-US");
+      I18nResolver resolver2 = new I18nResolver(template, "en-US");
+      resolved = resolver2.resolve();
       assertEquals("uppercase(Yes)", getColumn(resolved, "code").getImporting().getConverter());
     }
 
@@ -359,7 +372,8 @@ class I18nMechanismTest {
       template.setTitle("${user-title}");
       addColumn(template, "username", "${username-header}", null, null, null, null);
 
-      DataDefinition resolved = resolver.resolve(template, "zh-CN");
+      I18nResolver resolver = new I18nResolver(template, "zh-CN");
+      DataDefinition resolved = resolver.resolve();
 
       // 原始模板未被修改
       assertEquals("${user-title}", template.getTitle());
@@ -379,7 +393,8 @@ class I18nMechanismTest {
       exporting.setWhenNull("无");
       addColumn(template, "username", "用户名", exporting, null, null, null);
 
-      DataDefinition resolved = resolver.resolve(template, "zh-CN");
+      I18nResolver resolver = new I18nResolver(template, "zh-CN");
+      DataDefinition resolved = resolver.resolve();
       assertEquals("固定标题", resolved.getTitle());
       assertEquals("用户名", getColumn(resolved, "username").getHeader());
       assertEquals("无", getColumn(resolved, "username").getExporting().getWhenNull());
@@ -392,7 +407,8 @@ class I18nMechanismTest {
       template.setTitle(null);
       addColumn(template, "username", null, null, null, null, null);
 
-      DataDefinition resolved = resolver.resolve(template, "zh-CN");
+      I18nResolver resolver = new I18nResolver(template, "zh-CN");
+      DataDefinition resolved = resolver.resolve();
       assertNull(resolved.getTitle());
       assertNull(getColumn(resolved, "username").getHeader());
     }
@@ -403,10 +419,12 @@ class I18nMechanismTest {
       DataDefinition template = createTemplate();
       addColumn(template, "username", "【${username-header}】", null, null, null, null);
 
-      DataDefinition resolved = resolver.resolve(template, "zh-CN");
+      I18nResolver resolver = new I18nResolver(template, "zh-CN");
+      DataDefinition resolved = resolver.resolve();
       assertEquals("【用户名】", getColumn(resolved, "username").getHeader());
 
-      resolved = resolver.resolve(template, "en-US");
+      I18nResolver resolver2 = new I18nResolver(template, "en-US");
+      resolved = resolver2.resolve();
       assertEquals("【Username】", getColumn(resolved, "username").getHeader());
     }
 
@@ -416,7 +434,8 @@ class I18nMechanismTest {
       DataDefinition template = createTemplate();
       template.setTitle("${nonexistent-key}");
 
-      DataDefinition resolved = resolver.resolve(template, "zh-CN");
+      I18nResolver resolver = new I18nResolver(template, "zh-CN");
+      DataDefinition resolved = resolver.resolve();
       assertEquals("nonexistent-key", resolved.getTitle());
     }
 
@@ -427,8 +446,10 @@ class I18nMechanismTest {
       template.setTitle("${user-title}");
       addColumn(template, "username", "${username-header}", null, null, null, null);
 
-      DataDefinition zhResolved = resolver.resolve(template, "zh-CN");
-      DataDefinition enResolved = resolver.resolve(template, "en-US");
+      I18nResolver resolver = new I18nResolver(template, "zh-CN");
+      DataDefinition zhResolved = resolver.resolve();
+      I18nResolver resolver2 = new I18nResolver(template, "en-US");
+      DataDefinition enResolved = resolver2.resolve();
 
       assertEquals("用户信息导出", zhResolved.getTitle());
       assertEquals("用户名", getColumn(zhResolved, "username").getHeader());
@@ -465,7 +486,8 @@ class I18nMechanismTest {
       store.put("en-US", "active-header", "Active");
 
       // 中文解析
-      DataDefinition zhResolved = resolver.resolve(template, "zh-CN");
+      I18nResolver resolver = new I18nResolver(template, "zh-CN");
+      DataDefinition zhResolved = resolver.resolve();
       assertEquals("用户信息导出", zhResolved.getTitle());
       assertEquals("性别", getColumn(zhResolved, "gender").getHeader());
       assertEquals("未知", getColumn(zhResolved, "gender").getExporting().getWhenNull());
@@ -476,7 +498,8 @@ class I18nMechanismTest {
       assertEquals("bool(是, 否)", getColumn(zhResolved, "active").getExporting().getConverter());
 
       // 英文解析
-      DataDefinition enResolved = resolver.resolve(template, "en-US");
+      I18nResolver resolver2 = new I18nResolver(template, "en-US");
+      DataDefinition enResolved = resolver2.resolve();
       assertEquals("User Info Export", enResolved.getTitle());
       assertEquals("Gender", getColumn(enResolved, "gender").getHeader());
       assertEquals("Unknown", getColumn(enResolved, "gender").getExporting().getWhenNull());

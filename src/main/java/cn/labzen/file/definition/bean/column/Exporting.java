@@ -1,6 +1,7 @@
 package cn.labzen.file.definition.bean.column;
 
-import cn.labzen.file.definition.bean.scoped.TableExporting;
+import cn.labzen.file.definition.bean.scoped.GlobalExporting;
+import cn.labzen.file.definition.bean.style.Style;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -15,7 +16,7 @@ import java.util.Map;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class Exporting extends TableExporting {
+public class Exporting extends GlobalExporting {
 
   /**
    * 前缀
@@ -47,4 +48,9 @@ public class Exporting extends TableExporting {
    * 如 desensitize、truncate、bool 等，具体名称参考具体接口实现
    */
   private String converter;
+
+  /**
+   * 导出文件样式
+   */
+  private Style style;
 }

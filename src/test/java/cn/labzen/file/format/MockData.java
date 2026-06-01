@@ -32,7 +32,7 @@ public class MockData {
   /**
    * 创建完整的模拟数据集（10条）
    */
-  public static List<Property> createMockData() {
+  public static List<Property> create() {
     long now = System.currentTimeMillis();
 
     Property p1 = new Property();

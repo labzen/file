@@ -51,7 +51,7 @@ class ValidatorImplTest {
   void lengthValidator_tooLong() {
     LengthValidator validator = new LengthValidator();
     ValidateContext ctx = createContext("name", "名称");
-    ValidateResult result = validator.validate("abcdefghij", List.of(null, 5), ctx);
+    ValidateResult result = validator.validate("abcdefghij", Arrays.asList(null, 5), ctx);
     assertNotNull(result);
     assertEquals("import.validate.max-length", result.getErrorCode());
   }
@@ -60,7 +60,7 @@ class ValidatorImplTest {
   void lengthValidator_tooShort() {
     LengthValidator validator = new LengthValidator();
     ValidateContext ctx = createContext("name", "名称");
-    ValidateResult result = validator.validate("ab", List.of(3, null), ctx);
+    ValidateResult result = validator.validate("ab", Arrays.asList(3, null), ctx);
     assertNotNull(result);
     assertEquals("import.validate.min-length", result.getErrorCode());
   }
@@ -184,7 +184,7 @@ class ValidatorImplTest {
   void chainableValidatorExecutor_immediateChain() {
     ChainableValidatorExecutor executor = new ChainableValidatorExecutor();
     executor.addValidator("required", List.of());
-    executor.addValidator("length", List.of(null, 5));
+    executor.addValidator("length", Arrays.asList(null, 5));
     executor.sort();
 
     ValidateContext ctx = createContext("name", "名称");

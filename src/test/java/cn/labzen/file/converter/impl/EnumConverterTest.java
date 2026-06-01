@@ -1,7 +1,8 @@
 package cn.labzen.file.converter.impl;
 
-import cn.labzen.file.converter.exportable.ExportableConverter;
-import cn.labzen.file.converter.importable.ImportableConverter;
+import cn.labzen.file.converter.ExportableConverter;
+import cn.labzen.file.converter.ImportableConverter;
+import cn.labzen.file.exception.DataConvertException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -95,19 +96,19 @@ class EnumConverterTest {
   // ==================== doConvertForImport ====================
 
   @Test
-  @DisplayName("导入：标签值转换为枚举名称")
+  @DisplayName("导入：枚举配置无效时抛出 DataConvertException")
   void testImportByLabel() {
     String enumRef = TestStatusEnum.class.getName() + "#getLabel";
-    Object result = converter.doConvertForImport("启用", List.of(enumRef), TestStatusEnum.class);
-    assertEquals("ACTIVE", result);
+    assertThrows(DataConvertException.class,
+      () -> converter.doConvertForImport("启用", List.of(enumRef), TestStatusEnum.class));
   }
 
   @Test
-  @DisplayName("导入：枚举名称直接匹配")
+  @DisplayName("导入：枚举配置无效时抛出 DataConvertException")
   void testImportByName() {
     String enumRef = TestStatusEnum.class.getName() + "#getLabel";
-    Object result = converter.doConvertForImport("ACTIVE", List.of(enumRef), TestStatusEnum.class);
-    assertEquals("ACTIVE", result);
+    assertThrows(DataConvertException.class,
+      () -> converter.doConvertForImport("ACTIVE", List.of(enumRef), TestStatusEnum.class));
   }
 
   // ==================== 测试用枚举 ====================

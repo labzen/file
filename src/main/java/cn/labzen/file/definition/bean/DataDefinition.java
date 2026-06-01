@@ -1,8 +1,8 @@
 package cn.labzen.file.definition.bean;
 
 import cn.labzen.file.definition.bean.column.Column;
-import cn.labzen.file.definition.bean.scoped.TableExporting;
-import cn.labzen.file.definition.bean.scoped.TableImporting;
+import cn.labzen.file.definition.bean.scoped.GlobalExporting;
+import cn.labzen.file.definition.bean.scoped.GlobalImporting;
 import cn.labzen.file.definition.bean.style.Style;
 import cn.labzen.file.definition.bean.table.HeaderStructure;
 import lombok.AllArgsConstructor;
@@ -29,6 +29,11 @@ public class DataDefinition {
   private String domainName;
 
   /**
+   * 语言
+   */
+  private String locale;
+
+  /**
    * 导出文件名
    */
   private String filename;
@@ -41,12 +46,12 @@ public class DataDefinition {
   /**
    * 单表通用表头样式
    */
-  private Style headerStyle;
+  private Style exportingHeaderStyle;
 
   /**
    * 单表通用单元格样式
    */
-  private Style columnStyle;
+  private Style exportingColumnStyle;
 
   /**
    * 列定义（LinkedHashMap保持顺序，key=字段名）
@@ -56,12 +61,12 @@ public class DataDefinition {
   /**
    * 列导出方向全局配置
    */
-  private TableExporting exporting;
+  private GlobalExporting exporting;
 
   /**
    * 列导入方向全局配置
    */
-  private TableImporting importing;
+  private GlobalImporting importing;
 
   /**
    * 在运行时对数据定义构建后的计算出的表头结构

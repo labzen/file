@@ -1,5 +1,6 @@
 # $schema: https://labzen-schema.oss-cn-beijing.aliyuncs.com/file-export/labzen-file-export-data-schema.json
 filename: property
+domain: cn.labzen.file.bean.Property
 title: ${property-title}
 exporing-header-style:
   background: "#e4e6e8"
@@ -33,6 +34,8 @@ columns:
       prefix: "No."
       style:
         align: RIGHT
+    importing:
+      max: "1000"
   value:
     header: "${basic-info}:-:${prop-value}"
     mapping:
@@ -81,41 +84,51 @@ columns:
       converter: truncate(20);
   size:
     header: "数值:-:大小"
-    pattern:
-      number: "#,##0.00"
+    pattern-number: "#,##0.00"
     exporting:
       width: 12
       when-null: "0"
       suffix: " MB"
+    importing:
+      min: "66.6"
   amount:
     header: "数值:-:金额"
-    pattern:
-      number: "#,##0.00"
+    pattern-number: "#,##0.00"
     exporting:
       width: 14
       when-null: "0.00"
       prefix: "￥"
+    importing:
+      max: "666666.66"
+      min: "-66.66"
   createTime:
     header: "时间:-:创建时间"
-    pattern:
-      date: "yyyy-MM-dd HH:mm:ss"
+    pattern-date: "yyyy-MM-dd HH:mm:ss"
     exporting:
       width: 18
+    importing:
+      max: "2025-12-31 23:59:59"
+      min: "2025-01-01 00:00:00"
   effectiveDate:
     header: "时间:-:生效日期"
-    pattern:
-      date: "yyyy-MM-dd"
+    pattern-date: "yyyy-MM-dd"
     exporting:
       width: 14
+    importing:
+      max: "2024-12-31"
+      min: "2024-01-01"
   lastModified:
     header: "时间:-:最后修改"
-    pattern:
-      date: "yyyy/MM/dd HH:mm"
+    pattern-date: "yyyy/MM/dd HH:mm"
     exporting:
       width: 18
+    importing:
+      max: "2026/12/31 23:59"
   remindTime:
     header: "时间:-:提醒时间"
-    pattern:
-      date: "HH:mm"
+    pattern-date: "HH:mm"
     exporting:
       width: 12
+    importing:
+      max: "17:59"
+      min: "09:00"

@@ -2,12 +2,17 @@ package cn.labzen.file.format;
 
 import cn.labzen.file.definition.DefinitionRegistry;
 import cn.labzen.file.definition.enums.FileFormat;
+import cn.labzen.file.exception.DataReadException;
+import cn.labzen.file.exception.DataWriteException;
 import cn.labzen.file.format.core.writer.DataFileWriter;
+import cn.labzen.file.i18n.I18nStoreHolder;
 import cn.labzen.file.meta.FileConfiguration;
+import cn.labzen.file.util.DateTimeFormat;
 import cn.labzen.meta.Labzens;
 import jakarta.annotation.Nonnull;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -35,9 +40,9 @@ public final class DataFileExporter<T> {
    * 文件格式到写入器构造器的映射
    */
   private static final Map<FileFormat, DataFileWriter<?>> WRITER_INSTANCES = new EnumMap<>(FileFormat.class);
-  private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+  private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormat.get("yyyyMMddHHmmss");
 
-  private static final String defaultLocale;
+//  private static final String DEFAULT_LOCALE;
 
   static {
     FileConfiguration configuration = Labzens.configurationWith(FileConfiguration.class);
@@ -47,7 +52,7 @@ public final class DataFileExporter<T> {
       WRITER_INSTANCES.put(writer.format(), writer);
     });
 
-    defaultLocale = configuration.defaultLocale();
+//    DEFAULT_LOCALE = configuration.defaultLocale();
   }
 
   private final String name;
@@ -61,10 +66,10 @@ public final class DataFileExporter<T> {
   private DataFileExporter(Class<T> type) {
     this.name = type.getSimpleName();
     if (!DefinitionRegistry.contains(name)) {
-      throw new IllegalArgumentException("不支持的数据类型导出定义，请确认文件 [" + type + ".yml] 确实存在并有效");
+      throw new DataWriteException("不支持的数据类型导出定义，请确认文件 [{}.yml] 确实存在并有效", name);
     }
 
-    this.locale = defaultLocale;
+    this.locale = I18nStoreHolder.defaultLocale();
 //    this.definition = DefinitionRegistry.get(name)
 //      .orElseThrow(() -> new IllegalArgumentException("不支持的数据类型导出定义，请确认文件 [" + type + ".yml] 确实存在并有效"));
   }
@@ -150,9 +155,7 @@ public final class DataFileExporter<T> {
    * @param filePath 文件路径
    */
   public void to(String filePath) {
-    DefinitionRegistry.get(name, locale).ifPresent(definition ->
-      getWriter(format).write(definition, data, filePath)
-    );
+    to(new File(filePath));
   }
 
   /**
@@ -176,9 +179,11 @@ public final class DataFileExporter<T> {
    * @param file 文件
    */
   public void to(File file) {
-    DefinitionRegistry.get(name, locale).ifPresent(definition ->
-      getWriter(format).write(definition, data, file)
-    );
+    try (OutputStream os = new FileOutputStream(file)) {
+      to(os);
+    } catch (Exception e) {
+      throw new DataReadException(e, "生成数据文件失败: {}", file.getAbsolutePath());
+    }
   }
 
   /**

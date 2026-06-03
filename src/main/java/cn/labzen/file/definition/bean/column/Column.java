@@ -1,8 +1,6 @@
 package cn.labzen.file.definition.bean.column;
 
-import cn.labzen.file.definition.bean.scoped.GlobalColumn;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import java.util.Map;
 
@@ -13,6 +11,10 @@ import java.util.Map;
  */
 @Data
 public class Column {
+
+  private String fieldName;
+  private Class<?> fieldType;
+  private boolean validated;
 
   /**
    * 表头标题（支持二级，如 "成绩:-:语文"）

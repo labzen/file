@@ -1,5 +1,7 @@
 package cn.labzen.file.i18n;
 
+import java.util.List;
+
 /**
  * 国际化文案仓库接口
  * <p>
@@ -15,6 +17,26 @@ public interface I18nStoreProvider {
    * @return 对应的文本；若精准匹配不到，返回默认 locale 的文本；若仍无，返回 key 本身
    */
   String getText(String locale, String key);
+
+  /**
+   * 获取国际化文本
+   *
+   * @param locale 语言标签，如 zh-CN、en-US
+   * @param key    文案键，对应 YAML 中 ${key} 的 key
+   * @param args   文案参数
+   * @return 对应的文本；若精准匹配不到，返回默认 locale 的文本；若仍无，返回 key 本身
+   */
+  String getText(String locale, String key, Object... args);
+
+  /**
+   * 获取国际化文本
+   *
+   * @param locale 语言标签，如 zh-CN、en-US
+   * @param key    文案键，对应 YAML 中 ${key} 的 key
+   * @param args   文案参数
+   * @return 对应的文本；若精准匹配不到，返回默认 locale 的文本；若仍无，返回 key 本身
+   */
+  String getText(String locale, String key, List<Object> args);
 
   /**
    * 设置默认语言标签

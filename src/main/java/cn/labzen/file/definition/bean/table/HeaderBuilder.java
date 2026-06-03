@@ -6,6 +6,7 @@ import cn.labzen.tool.util.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -20,6 +21,10 @@ public class HeaderBuilder {
 
   public static boolean isValidHeaderLevel(String headerString) {
     return Strings.times(headerString, HEADER_LEVEL_SEPARATOR) <= SUPPORT_MAX_HEADER_LEVEL;
+  }
+
+  public static List<String> headerTexts(Column column) {
+    return Strings.isBlank(column.getHeader()) ? List.of("") : Arrays.stream(column.getHeader().split(HEADER_LEVEL_SEPARATOR)).toList();
   }
 
   public static HeaderStructure build(DataDefinition definition) {
@@ -50,16 +55,17 @@ public class HeaderBuilder {
 
     while (index < size) {
       Column current = columns.get(index);
-      String[] headers = current.getHeader() == null ? new String[]{""} : current.getHeader().split(HEADER_LEVEL_SEPARATOR);
+      List<String> headers = headerTexts(current);
+//      String[] headers = current.getHeader() == null ? new String[]{""} : current.getHeader().split(HEADER_LEVEL_SEPARATOR);
       // 如果当前是单级表头，或者header集合中只有一个表头，则直接添加到第一行表头中
-      if (isSingleHeader || headers.length == 1) {
-        firstRowHeaderCells.add(new HeaderCell(headers[0], index, 1, defaultRowSpanWhenSingle));
+      if (isSingleHeader || headers.size() == 1) {
+        firstRowHeaderCells.add(new HeaderCell(headers.getFirst(), index, 1, defaultRowSpanWhenSingle));
         index++;
         continue;
       }
 
       // 如果当前是多级表头，则需要将多级表头拆分为多个表头
-      String firstTopLevelHeader = headers[0];
+      String firstTopLevelHeader = headers.getFirst();
       int start = index;
       int colSpan = 0;
       while (index < size) {

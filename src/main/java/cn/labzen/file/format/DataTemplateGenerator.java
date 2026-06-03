@@ -1,9 +1,11 @@
-package cn.labzen.file.format.core.reader;
+package cn.labzen.file.format;
 
 import cn.labzen.file.definition.DefinitionRegistry;
-import cn.labzen.file.definition.bean.DataDefinition;
+import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.exception.DataReadException;
+import cn.labzen.file.exception.DataWriteException;
 import cn.labzen.file.format.excel.ExcelTemplateGenerator;
+import cn.labzen.file.i18n.I18nStoreHolder;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -28,14 +30,21 @@ import java.io.OutputStream;
 @Slf4j
 public final class DataTemplateGenerator<T> {
 
-//  private final Class<T> type;
-  private final DataDefinition definition;
+  //  private final Class<T> type;
+//  private final DataDefinition definition;
+  private final String name;
   private String locale;
 
   private DataTemplateGenerator(Class<T> type) {
+    this.name = type.getSimpleName();
+    if (!DefinitionRegistry.contains(name)) {
+      throw new DataReadException("未找到类[{}]的数据定义", name);
+    }
+
+    this.locale = I18nStoreHolder.defaultLocale();
 //    this.type = type;
-    this.definition = DefinitionRegistry.get(type.getSimpleName())
-      .orElseThrow(() -> new DataReadException("未找到类[{}]的数据定义", type.getSimpleName()));
+//    this.definition = DefinitionRegistry.get(type.getSimpleName())
+//      .orElseThrow(() -> new DataReadException("未找到类[{}]的数据定义", type.getSimpleName()));
   }
 
   /**
@@ -53,11 +62,20 @@ public final class DataTemplateGenerator<T> {
     return this;
   }
 
+  private String name() {
+    String originalFilename = DefinitionRegistry.getDefinitionFilename(name).orElse("unknown");
+    return originalFilename + "_template" + FileFormat.EXCEL.getExtension();
+  }
+
+
   /**
    * 生成模板到输出流
    */
   public void to(OutputStream outputStream) {
-    ExcelTemplateGenerator.generate(definition, locale, outputStream);
+    DefinitionRegistry.get(name, locale).ifPresent(definition ->
+        new ExcelTemplateGenerator(definition, locale).generate(outputStream)
+//      ExcelTemplateGenerator.generate(definition, locale, outputStream)
+    );
   }
 
   /**
@@ -67,7 +85,7 @@ public final class DataTemplateGenerator<T> {
     try (OutputStream os = new FileOutputStream(file)) {
       to(os);
     } catch (Exception e) {
-      throw new DataReadException(e, "生成模板文件失败: {}", file.getAbsolutePath());
+      throw new DataWriteException(e, "生成模板文件失败: {}", file.getAbsolutePath());
     }
   }
 

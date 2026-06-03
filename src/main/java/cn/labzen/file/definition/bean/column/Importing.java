@@ -66,4 +66,9 @@ public class Importing extends GlobalImporting {
    * 如 uppercase、lowercase, bool 等，具体名称参考具体接口实现
    */
   private String converter;
+
+//  private LengthRange lengthRange;
+//  private NumbericRange numbericRange;
+//  private DateRange dateRange;
+
 }

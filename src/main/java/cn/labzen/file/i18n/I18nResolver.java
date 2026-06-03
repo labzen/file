@@ -3,6 +3,8 @@ package cn.labzen.file.i18n;
 import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.bean.column.Column;
 import cn.labzen.file.definition.bean.column.Exporting;
+import cn.labzen.file.definition.bean.column.Importing;
+import cn.labzen.tool.util.Strings;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.LinkedHashMap;
@@ -52,16 +54,21 @@ public final class I18nResolver {
     column.setPatternNumber(resolveText(column.getPatternNumber()));
 
     // 共享 enumerable（不包含 ${key}，但保持一致性仍解析）
-    column.setEnumerable(resolveText(column.getEnumerable()));
+    if (Strings.isNotBlank(column.getEnumerable())) {
+      column.setEnumerable(resolveText(column.getEnumerable()));
+    }
     // 共享 mapping 中的 ${key}（只替换 value）
-//    resolveMapping(column.getMapping());
+    resolveMapping(column.getMapping());
 
     // 导出配置
     if (column.getExporting() != null) {
       resolveExporting(column.getExporting());
     }
 
-    // 导入时，不需要处理国际化
+    // 导入配置
+    if (column.getImporting() != null) {
+      resolveImporting(column.getImporting());
+    }
   }
 
   /**
@@ -89,18 +96,26 @@ public final class I18nResolver {
     // 列级专属属性
     exporting.setPrefix(resolveText(exporting.getPrefix()));
     exporting.setSuffix(resolveText(exporting.getSuffix()));
-    resolveMapping(exporting.getMapping());
-    exporting.setEnumerable(resolveText(exporting.getEnumerable()));
     exporting.setConverter(resolveText(exporting.getConverter()));
+    exporting.setEnumerable(resolveText(exporting.getEnumerable()));
+    resolveMapping(exporting.getMapping());
+  }
+
+
+  private void resolveImporting(Importing importing) {
+    // 继承自 TableExporting 的共享属性
+    importing.setConverter(resolveText(importing.getConverter()));
+    importing.setEnumerable(resolveText(importing.getEnumerable()));
+    resolveMapping(importing.getMapping());
   }
 
   /**
    * 解析文本中的 ${key} 占位符
    *
-   * @param text   原始文本，可能包含 ${key}
-   * @param locale 目标语言标签
+   * @param text 原始文本，可能包含 ${key}
    * @return 替换后的文本
    */
+  @SuppressWarnings("DuplicatedCode")
   private String resolveText(String text) {
     if (text == null || !text.contains("${")) {
       return text;

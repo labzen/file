@@ -13,6 +13,8 @@ import cn.labzen.file.definition.bean.style.Style;
 import cn.labzen.file.definition.bean.table.HeaderBuilder;
 import cn.labzen.file.exception.DefinitionLoaderException;
 import cn.labzen.tool.util.Strings;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
@@ -26,7 +28,9 @@ import org.yaml.snakeyaml.introspector.PropertyUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -50,6 +54,8 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class DefinitionLoader {
+
+  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   private final String dataLocationPattern;
   private final String globalLocation;
@@ -119,6 +125,9 @@ public class DefinitionLoader {
       // 合并全局配置
       DataDefinition definition = mergeDefinition(globalDefinition, value);
 
+      // 将每列的属性名，放入 Column 实例中
+//      definition.getColumns().forEach((cfn, column) -> column.setColumnFieldName(cfn));
+
       // 注册配置
       DefinitionRegistry.register(key, definition);
     });
@@ -169,11 +178,69 @@ public class DefinitionLoader {
       String domainName = filename.substring(0, extensionIndex);
       definition.setDomainName(domainName);
 
+      // 加载文件对应的domain类信息
+      loadDomainClass(definition);
+
+      // 加载同名 .mock.json 文件的 mock 数据
+      List<Map<String, String>> mockData = loadMockData(resource, definition);
+      definition.setMockData(mockData);
+
       return definition;
     } catch (Exception e) {
-      logger.warn("数据导出配置加载失败，from: {}", filename);
+      logger.atWarn().setCause(e).log("数据导出配置加载失败，from: {}", filename);
       return null;
     }
+  }
+
+  private void loadDomainClass(DataDefinition definition) {
+    String domain = definition.getDomain();
+    Class<?> domainClass;
+    try {
+      domainClass = Class.forName(domain);
+    } catch (ClassNotFoundException e) {
+      throw new DefinitionLoaderException("配置文件对应的domain类不存在，from: " + definition.getDomain());
+    }
+
+    definition.getColumns().forEach((fieldName, column) -> {
+      try {
+        Field declaredField = domainClass.getDeclaredField(fieldName);
+        Class<?> type = declaredField.getType();
+
+        column.setFieldName(fieldName);
+        column.setFieldType(type);
+        column.setValidated(true);
+      } catch (Exception e) {
+        throw new DefinitionLoaderException("配置文件中定义的字段 [{}] 在 [] 中不存在，该字段将被忽略，无法在导入/导出时使用", fieldName, domainClass);
+      }
+    });
+  }
+
+  /**
+   * 加载与 YAML 定义文件同名的 .mock.json 文件内容，作为 mock 数据
+   */
+  private List<Map<String, String>> loadMockData(Resource yamlResource, DataDefinition definition) {
+    try {
+      String url = yamlResource.getURL().toExternalForm();
+      String mockUrl;
+      if (url.endsWith(".yml")) {
+        mockUrl = url.substring(0, url.length() - 4) + ".mock.json";
+      } else if (url.endsWith(".yaml")) {
+        mockUrl = url.substring(0, url.length() - 5) + ".mock.json";
+      } else {
+        return null;
+      }
+
+      Resource mockResource = resourcePatternResolver.getResource(mockUrl);
+      if (mockResource.exists()) {
+        try (InputStream mockInputStream = mockResource.getInputStream()) {
+          return OBJECT_MAPPER.readValue(mockInputStream, new TypeReference<>() {
+          });
+        }
+      }
+    } catch (Exception e) {
+      logger.warn("Mock数据文件加载失败或不存在，domain: {}", definition.getDomainName());
+    }
+    return null;
   }
 
   /**

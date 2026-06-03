@@ -1,5 +1,8 @@
 package cn.labzen.file.i18n;
 
+import cn.labzen.file.meta.FileConfiguration;
+import cn.labzen.meta.Labzens;
+
 /**
  * 国际化文案仓库的全局持有者
  * <p>
@@ -10,7 +13,13 @@ package cn.labzen.file.i18n;
  */
 public final class I18nStoreHolder {
 
+  private static final String DEFAULT_LOCALE;
   private static volatile I18nStoreProvider instance;
+
+  static {
+    FileConfiguration configuration = Labzens.configurationWith(FileConfiguration.class);
+    DEFAULT_LOCALE = configuration.defaultLocale();
+  }
 
   private I18nStoreHolder() {
   }
@@ -31,5 +40,9 @@ public final class I18nStoreHolder {
    */
   public static I18nStoreProvider get() {
     return instance;
+  }
+
+  public static String defaultLocale() {
+    return DEFAULT_LOCALE;
   }
 }

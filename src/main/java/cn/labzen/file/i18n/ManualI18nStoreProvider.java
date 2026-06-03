@@ -1,5 +1,8 @@
 package cn.labzen.file.i18n;
 
+import cn.labzen.tool.util.Strings;
+
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -48,9 +51,23 @@ public class ManualI18nStoreProvider implements I18nStoreProvider {
     return key;
   }
 
-  public String defaultLocale() {
-    return defaultLocale;
+  @Override
+  public String getText(String locale, String key, Object... args) {
+    String text = getText(locale, key);
+    text = Strings.format(text, args);
+    return text;
   }
+
+  @Override
+  public String getText(String locale, String key, List<Object> args) {
+    String text = getText(locale, key);
+    text = Strings.format(text, args);
+    return text;
+  }
+
+  //  public String defaultLocale() {
+//    return defaultLocale;
+//  }
 
   public void put(String locale, String key, String text) {
     store.computeIfAbsent(locale, l -> new ConcurrentHashMap<>()).put(key, text);

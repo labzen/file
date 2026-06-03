@@ -29,6 +29,11 @@ public class DataDefinition {
   private String domainName;
 
   /**
+   * 域映射类FQCN
+   */
+  private String domain;
+
+  /**
    * 语言
    */
   private String locale;

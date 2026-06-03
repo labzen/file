@@ -1,0 +1,34 @@
+[
+  {
+    "amount": "9999.99",
+    "description": "这是一个系统级别的配置项，用于控制...",
+    "indexical": "1",
+    "remindTime": "09:30",
+    "size": "1024.5",
+    "phone": "13800138000",
+    "createTime": "2026-06-02 13:48:05",
+    "name": "系统配置",
+    "lastModified": "2026/06/02 13:48:05",
+    "category": "系统",
+    "value": "调试开启",
+    "email": "admin@example.com",
+    "effectiveDate": "2026-06-02",
+    "status": "启用"
+  },
+  {
+    "amount": "-500.00",
+    "description": "生产环境数据库连接字符串，包含主机...",
+    "indexical": "2",
+    "remindTime": "14:00",
+    "size": "2048.75",
+    "phone": "13512199325",
+    "createTime": "2026-06-01 12:18:41",
+    "name": "数据库连接",
+    "lastModified": "2026/06/01 01:13:12",
+    "category": "业务",
+    "value": "信息级别",
+    "email": "db@company.cn",
+    "effectiveDate": "2026-06-01",
+    "status": "待审核"
+  }
+]

@@ -21,9 +21,12 @@ import org.apache.poi.ss.util.CellRangeAddressList;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.OutputStream;
+import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -52,6 +55,7 @@ public final class ExcelTemplateGenerator {
 
   private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\$\\{([^}]+)}");
 
+  private static final int PREPARE_ROW_NUMBER = 10000;
   private static final String MARKER_TEXT_CODE = "CODE";
   private static final String MARKER_TEXT_HINT = "HINT";
   private static final String MARKER_MOCK = "MOCK";
@@ -178,6 +182,9 @@ public final class ExcelTemplateGenerator {
       Integer width = column.getExporting().getWidth();
       sheet.setColumnWidth(columnIndex, width * 256);
 
+      // 设置单元格格式
+      setupCellFormat(columnIndex, column);
+
       try {
         constraintBoxTitle = store.getText(locale, CONSTRAINT_BOX_TITLE);
         constraintBoxMessage = store.getText(locale, CONSTRAINT_BOX_MESSAGE);
@@ -209,10 +216,57 @@ public final class ExcelTemplateGenerator {
 
       columnIndex++;
     }
+
+    // 设置第一列 #序号：从最后一条MOCK行之后开始，递增生成10000条
+    for (int i = 0; i < PREPARE_ROW_NUMBER; i++) {
+      Row row = sheet.createRow(rowIndex + i);
+      Cell indexCell = row.createCell(0);
+      indexCell.setCellValue(i + 1);
+    }
+  }
+
+  private void setupCellFormat(int columnIndex, Column column) {
+    Class<?> fieldType = column.getFieldType();
+    if (fieldType == null) {
+      return;
+    }
+
+    DataFormat dataFormat = sheet.getWorkbook().createDataFormat();
+    CellStyle formatStyle = sheet.getWorkbook().createCellStyle();
+
+    boolean isDateType = Date.class.isAssignableFrom(fieldType)
+      || LocalDate.class.isAssignableFrom(fieldType)
+      || LocalDateTime.class.isAssignableFrom(fieldType)
+      || LocalTime.class.isAssignableFrom(fieldType)
+      || java.sql.Date.class.isAssignableFrom(fieldType)
+      || java.sql.Timestamp.class.isAssignableFrom(fieldType);
+    boolean isNumberType = Number.class.isAssignableFrom(fieldType);
+    boolean isDecimalType = Double.class.isAssignableFrom(fieldType)
+      || Float.class.isAssignableFrom(fieldType)
+      || BigDecimal.class.isAssignableFrom(fieldType);
+
+    if (isDateType) {
+      // 日期类型：根据 column.patternDate 设置格式
+      if (Strings.isNotBlank(column.getPatternDate())) {
+        formatStyle.setDataFormat(dataFormat.getFormat(column.getPatternDate()));
+      }
+    } else if (isNumberType) {
+      // 数值类型：根据 column.patternNumber 设置格式，若无则根据类型推断
+      if (Strings.isNotBlank(column.getPatternNumber())) {
+        formatStyle.setDataFormat(dataFormat.getFormat(column.getPatternNumber()));
+      } else {
+        formatStyle.setDataFormat(dataFormat.getFormat(isDecimalType ? "0.00" : "0"));
+      }
+    } else {
+      return;
+    }
+
+    // 对数据区域的列设置格式（整列）
+    sheet.setDefaultColumnStyle(columnIndex, formatStyle);
   }
 
   private void setupCellValidation(int rowIndex, int columnIndex, DataValidationConstraint constraint) {
-    CellRangeAddressList addressList = new CellRangeAddressList(rowIndex, 10000, columnIndex, columnIndex);
+    CellRangeAddressList addressList = new CellRangeAddressList(rowIndex, PREPARE_ROW_NUMBER, columnIndex, columnIndex);
     DataValidation validation = validationHelper.createValidation(constraint, addressList);
     validation.setShowErrorBox(true);
     validation.createErrorBox(constraintBoxTitle, constraintBoxMessage);
@@ -263,28 +317,70 @@ public final class ExcelTemplateGenerator {
 
   private void setupCellDateValidation(int rowIndex, int columnIndex, DateRange dateRange, Class<?> fieldType) {
     DataValidationConstraint constraint;
-    String min = dateRange.min();
-    String max = dateRange.max();
-    if (Date.class.isAssignableFrom(fieldType) || LocalDateTime.class.isAssignableFrom(fieldType) || LocalDate.class.isAssignableFrom(fieldType)) {
+
+    if (Date.class.isAssignableFrom(fieldType)
+      || LocalDateTime.class.isAssignableFrom(fieldType)
+      || LocalDate.class.isAssignableFrom(fieldType)
+      || java.sql.Date.class.isAssignableFrom(fieldType)
+      || Timestamp.class.isAssignableFrom(fieldType)) {
+      // dateFormat 参数在 XSSF 中已被忽略，需使用 Excel 日期序列号确保 Excel 可正确识别
+      String min = toExcelDateValue(dateRange.min());
+      String max = toExcelDateValue(dateRange.max());
       if (Strings.isBlank(min)) {
-        constraint = validationHelper.createDateConstraint(OperatorType.LESS_OR_EQUAL, max, null, dateRange.pattern());
+        constraint = validationHelper.createDateConstraint(OperatorType.LESS_OR_EQUAL, max, null, null);
       } else if (Strings.isBlank(max)) {
-        constraint = validationHelper.createDateConstraint(OperatorType.GREATER_OR_EQUAL, min, null, dateRange.pattern());
+        constraint = validationHelper.createDateConstraint(OperatorType.GREATER_OR_EQUAL, min, null, null);
       } else {
-        constraint = validationHelper.createDateConstraint(OperatorType.BETWEEN, dateRange.min(), dateRange.max(), dateRange.pattern());
+        constraint = validationHelper.createDateConstraint(OperatorType.BETWEEN, min, max, null);
       }
     } else if (LocalTime.class.isAssignableFrom(fieldType)) {
+      // 时间类型：转为 Excel 时间序列号（一天中的比例值）
+      String min = toExcelTimeValue(dateRange.min());
+      String max = toExcelTimeValue(dateRange.max());
       if (Strings.isBlank(min)) {
         constraint = validationHelper.createTimeConstraint(OperatorType.LESS_OR_EQUAL, max, null);
       } else if (Strings.isBlank(max)) {
         constraint = validationHelper.createTimeConstraint(OperatorType.GREATER_OR_EQUAL, min, null);
       } else {
-        constraint = validationHelper.createTimeConstraint(OperatorType.BETWEEN, dateRange.min(), dateRange.max());
+        constraint = validationHelper.createTimeConstraint(OperatorType.BETWEEN, min, max);
       }
     } else {
       throw new DataWriteException("对非日期类型的字段设置了max或min约束");
     }
     setupCellValidation(rowIndex, columnIndex, constraint);
+  }
+
+  /**
+   * 将 LocalDateTime 转换为 Excel 日期序列号字符串
+   * <p>
+   * Excel 日期序列号是从 1900-01-01 起的天数（数值型），
+   * 传给 createDateConstraint 可避免日期字符串格式因 locale 不同导致 Excel 无法解析的问题
+   */
+  private String toExcelDateValue(LocalDateTime dateTime) {
+    if (dateTime == null) {
+      return "";
+    }
+    Date date = Date.from(dateTime.atZone(ZoneId.systemDefault()).toInstant());
+    double excelDate = DateUtil.getExcelDate(date);
+    return String.valueOf(excelDate);
+  }
+
+  /**
+   * 将 LocalDateTime 转换为 Excel 时间序列号字符串
+   * <p>
+   * Excel 时间序列号是一天中的比例值（0.0 ~ 1.0），
+   * 例如 12:00 = 0.5, 18:00 = 0.75
+   */
+  private String toExcelTimeValue(LocalDateTime dateTime) {
+    if (dateTime == null) {
+      return "";
+    }
+    // 直接从时/分/秒计算比例值，避免基准日期序列号带来的精度问题
+    int hour = dateTime.getHour();
+    int minute = dateTime.getMinute();
+    int second = dateTime.getSecond();
+    double fraction = (hour * 3600.0 + minute * 60.0 + second) / 86400.0;
+    return String.valueOf(fraction);
   }
 
   private void setupCellOptionsValidation(int rowIndex, int columnIndex, Map<String, String> mapping) {
@@ -299,7 +395,7 @@ public final class ExcelTemplateGenerator {
 
     Importing importing = column.getImporting();
     if (importing != null) {
-      if (importing.getRequired()) sb.append(store.getText(locale, HINT_REQUIRED_VALUE)).append(CR);
+      if (importing.getRequire()) sb.append(store.getText(locale, HINT_REQUIRED_VALUE)).append(CR);
       if (importing.getMaxLength() != null)
         sb.append(store.getText(locale, HINT_MAX_LENGTH, importing.getMaxLength())).append(CR);
       if (importing.getMinLength() != null)
@@ -329,7 +425,10 @@ public final class ExcelTemplateGenerator {
     CreationHelper factory = sheet.getWorkbook().getCreationHelper();
     ClientAnchor anchor = factory.createClientAnchor();
     anchor.setCol1(cell.getColumnIndex());
+    anchor.setCol2(cell.getColumnIndex() + 2);
     anchor.setRow1(cell.getRowIndex());
+    anchor.setDx1(30);
+    anchor.setDy2(30);
     Comment comment = drawing.createCellComment(anchor);
     comment.setString(factory.createRichTextString(text));
     cell.setCellComment(comment);
@@ -411,194 +510,4 @@ public final class ExcelTemplateGenerator {
     matcher.appendTail(result);
     return result.toString();
   }
-
-//  /**
-//   * 生成Excel模板
-//   */
-//  public static void generate(DataDefinition definition, String locale, OutputStream outputStream) {
-//    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-//      Sheet sheet = workbook.createSheet(definition.getTitle() != null ? definition.getTitle() : definition.getDomainName());
-//
-//      // 创建样式
-//      CellStyle blueStyle = createBlueStyle(workbook);
-//      CellStyle yellowStyle = createYellowStyle(workbook);
-//
-//      List<String> fieldNames = new ArrayList<>(definition.getColumns().keySet());
-//      int columnCount = fieldNames.size() + 1; // +1 for # column
-//
-//      // ── Row 1: 代码标识行 ──
-//      Row row1 = sheet.createRow(0);
-//      Cell marker1 = row1.createCell(0);
-//      marker1.setCellValue(MARKER_TEXT_CODE);
-//      marker1.setCellStyle(blueStyle);
-//
-//      for (int i = 0; i < fieldNames.size(); i++) {
-//        Cell cell = row1.createCell(i + 1);
-//        cell.setCellValue(fieldNames.get(i));
-//        cell.setCellStyle(blueStyle);
-//
-//        // 添加批注：完整填写说明
-//        addHeaderComment(sheet, cell, definition.getColumns().get(fieldNames.get(i)), fieldNames.get(i));
-//      }
-//
-//      // ── Row 2: 人类阅读行 + 格式提示批注 ──
-//      Row row2 = sheet.createRow(1);
-//      Cell marker2 = row2.createCell(0);
-//      marker2.setCellValue(MARKER_TEXT_CODE);
-//      marker2.setCellStyle(blueStyle);
-//
-//      for (int i = 0; i < fieldNames.size(); i++) {
-//        Column column = definition.getColumns().get(fieldNames.get(i));
-//        Cell cell = row2.createCell(i + 1);
-//        String headerText = column.getHeader() != null ? column.getHeader() : fieldNames.get(i);
-//        cell.setCellValue(headerText);
-//        cell.setCellStyle(blueStyle);
-//
-//        // 添加格式提示批注
-//        addHintComment(sheet, cell, column);
-//      }
-//
-//      // ── Row 3: 示例数据行（可选）──
-//      if (definition.getMockData() != null && !definition.getMockData().isEmpty()) {
-//        for (int mockIdx = 0; mockIdx < definition.getMockData().size(); mockIdx++) {
-//          Map<String, String> mockRow = definition.getMockData().get(mockIdx);
-//          Row mockRowObj = sheet.createRow(2 + mockIdx);
-//
-//          Cell mockMarker = mockRowObj.createCell(0);
-//          mockMarker.setCellValue(MARKER_MOCK);
-//          mockMarker.setCellStyle(yellowStyle);
-//
-//          for (int i = 0; i < fieldNames.size(); i++) {
-//            Cell cell = mockRowObj.createCell(i + 1);
-//            String value = mockRow.get(fieldNames.get(i));
-//            cell.setCellValue(value != null ? value : "");
-//            cell.setCellStyle(yellowStyle);
-//          }
-//
-//          // 添加MOCK批注（仅第一行mock数据）
-//          if (mockIdx == 0) {
-//            addComment(sheet, mockMarker, "示例数据，仅供参考，导入时将自动忽略");
-//          }
-//        }
-//      }
-//
-//      // 设置列宽
-//      sheet.setColumnWidth(0, 3000); // # 列
-//      for (int i = 0; i < fieldNames.size(); i++) {
-//        sheet.setColumnWidth(i + 1, 5000);
-//      }
-//
-//      // 为mapping列添加数据验证（下拉列表）
-//      int dataStartRow = definition.getMockData() != null && !definition.getMockData().isEmpty()
-//        ? 2 + definition.getMockData().size() : 2;
-//      addDataValidation(sheet, definition, fieldNames, dataStartRow);
-//
-//      workbook.write(outputStream);
-//    } catch (Exception e) {
-//      throw new DataReadException(e, "生成Excel模板失败");
-//    }
-//  }
-//
-//  private static CellStyle createBlueStyle(XSSFWorkbook workbook) {
-//    CellStyle style = workbook.createCellStyle();
-//    style.setFillForegroundColor(LIGHT_BLUE_INDEX);
-//    style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-//    Font font = workbook.createFont();
-//    font.setFontName("Arial");
-//    font.setFontHeightInPoints((short) 11);
-//    style.setFont(font);
-//    style.setLocked(true);
-//    return style;
-//  }
-//
-//  private static CellStyle createYellowStyle(XSSFWorkbook workbook) {
-//    CellStyle style = workbook.createCellStyle();
-//    style.setFillForegroundColor(LIGHT_YELLOW_INDEX);
-//    style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-//    Font font = workbook.createFont();
-//    font.setFontName("Arial");
-//    font.setFontHeightInPoints((short) 11);
-//    style.setFont(font);
-//    return style;
-//  }
-//
-//  private static void addHeaderComment(Sheet sheet, Cell cell, Column column, String fieldName) {
-//    StringBuilder sb = new StringBuilder();
-//    sb.append("【").append(column.getHeader() != null ? column.getHeader() : fieldName).append("】\n");
-//
-//    // 类型
-//    Class<?> fieldType = null;
-//    try {
-//      fieldType = Class.class; // 简化，实际需要从Bean类获取
-//    } catch (Exception e) {
-//      // ignore
-//    }
-//
-//    Importing importing = column.getImporting();
-//    if (importing != null) {
-//      if (importing.getRequired()) sb.append("必填：是\n");
-//      if (importing.getMaxLength() != null) sb.append("最大长度：").append(importing.getMaxLength()).append("字\n");
-//      if (importing.getMin() != null || importing.getMax() != null) {
-//        sb.append("范围：").append(importing.getMin() != null ? importing.getMin() : "-")
-//          .append("~").append(importing.getMax() != null ? importing.getMax() : "-").append("\n");
-//      }
-//    }
-//
-//    if (column.getMapping() != null) {
-//      sb.append("允许值：\n");
-//      column.getMapping().forEach((k, v) -> sb.append("  ").append(k).append(" = ").append(v).append("\n"));
-//    }
-//
-//    sb.append("\n代码标识行，请勿修改，否则导入将失败");
-//    addComment(sheet, cell, sb.toString());
-//  }
-//
-//  private static void addHintComment(Sheet sheet, Cell cell, Column column) {
-//    Importing importing = column.getImporting();
-//    if (importing == null) return;
-//
-//    List<String> hints = new ArrayList<>();
-//    if (importing.getRequired()) hints.add("*必填");
-//    else hints.add("选填");
-//    if (importing.getMaxLength() != null) hints.add("≤" + importing.getMaxLength() + "字");
-//    if (importing.getMin() != null || importing.getMax() != null) {
-//      hints.add((importing.getMin() != null ? importing.getMin() : "-") + "~" + (importing.getMax() != null ? importing.getMax() : "-"));
-//    }
-//
-//    if (column.getMapping() != null) {
-//      List<String> mappingHints = new ArrayList<>();
-//      column.getMapping().forEach((k, v) -> mappingHints.add(k + "=" + v));
-//      hints.add(String.join("/", mappingHints));
-//    }
-//
-//    if (!hints.isEmpty()) {
-//      addComment(sheet, cell, String.join(" | ", hints));
-//    }
-//  }
-//
-//  private static void addComment(Sheet sheet, Cell cell, String text) {
-//    Drawing<?> drawing = sheet.createDrawingPatriarch();
-//    CreationHelper factory = sheet.getWorkbook().getCreationHelper();
-//    Comment comment = drawing.createCellComment(factory.createClientAnchor());
-//    comment.setString(factory.createRichTextString(text));
-//    cell.setCellComment(comment);
-//  }
-//
-//  private static void addDataValidation(Sheet sheet, DataDefinition definition,
-//                                        List<String> fieldNames, int dataStartRow) {
-//    for (int i = 0; i < fieldNames.size(); i++) {
-//      Column column = definition.getColumns().get(fieldNames.get(i));
-//      if (column.getMapping() != null && !column.getMapping().isEmpty()) {
-//        String[] options = column.getMapping().values().toArray(new String[0]);
-//        DataValidationHelper validationHelper = sheet.getDataValidationHelper();
-//        DataValidationConstraint constraint = validationHelper.createExplicitListConstraint(options);
-//        CellRangeAddressList addressList = new CellRangeAddressList(
-//          dataStartRow, 1000, i + 1, i + 1);
-//        DataValidation validation = validationHelper.createValidation(constraint, addressList);
-//        validation.setShowErrorBox(true);
-//        validation.setErrorStyle(DataValidation.ErrorStyle.STOP);
-//        sheet.addValidationData(validation);
-//      }
-//    }
-//  }
 }

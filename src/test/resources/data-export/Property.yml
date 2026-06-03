@@ -26,6 +26,8 @@ columns:
         font:
           family: "simkai"
           color: "#3552d4"
+    importing:
+      require: true
   indexical:
     header: "${basic-info}:-:${index}"
     exporting:
@@ -48,6 +50,8 @@ columns:
       when-blank: "${blank-value}"
       style:
         align: CENTER
+    importing:
+      require: true
   status:
     header: "${status-info}:-:${status}"
     mapping:
@@ -57,6 +61,8 @@ columns:
     exporting:
       width: 10
       when-null: "${unknown}"
+    importing:
+      depends-on: [ "indexical" ]
   category:
     header: "${status-info}:-:${category}"
     mapping:

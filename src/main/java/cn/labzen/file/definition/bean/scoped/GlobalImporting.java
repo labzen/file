@@ -15,7 +15,7 @@ public class GlobalImporting {
   /**
    * 必填
    */
-  private Boolean required = false;
+  private Boolean require = false;
 
   /**
    * 清理器列表

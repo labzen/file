@@ -266,7 +266,7 @@ public class ImportPipeline<T> {
       ChainableValidatorExecutor executor = new ChainableValidatorExecutor();
       boolean hasValidator = false;
 
-      if (importing.getRequired()) {
+      if (importing.getRequire()) {
         executor.addValidator("required", List.of());
         hasValidator = true;
       }

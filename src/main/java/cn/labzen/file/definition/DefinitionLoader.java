@@ -470,7 +470,7 @@ public class DefinitionLoader {
     }
 
     GlobalImporting clone = new GlobalImporting();
-    clone.setRequired(source.getRequired());
+    clone.setRequire(source.getRequire());
     clone.setCleansing(source.getCleansing());
     return clone;
   }
@@ -483,8 +483,8 @@ public class DefinitionLoader {
       return;
     }
 
-    if (target.getRequired() == null) {
-      target.setRequired(source.getRequired());
+    if (target.getRequire() == null) {
+      target.setRequire(source.getRequire());
     }
     if (target.getCleansing() == null) {
       target.setCleansing(source.getCleansing());

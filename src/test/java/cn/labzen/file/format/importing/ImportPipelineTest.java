@@ -50,7 +50,7 @@ class ImportPipelineTest {
     Column nameColumn = new Column();
     nameColumn.setHeader("名称");
     Importing nameImporting = new Importing();
-    nameImporting.setRequired(true);
+    nameImporting.setRequire(true);
     nameImporting.setMaxLength(50);
     nameColumn.setImporting(nameImporting);
     columns.put("name", nameColumn);

@@ -26,7 +26,7 @@ public class LengthValidator implements Validator {
     String value = input.toString();
     int len = value.length();
 
-    Integer minLength = arguments.size() > 0 ? toInt(arguments.get(0)) : null;
+    Integer minLength = !arguments.isEmpty() ? toInt(arguments.get(0)) : null;
     Integer maxLength = arguments.size() > 1 ? toInt(arguments.get(1)) : null;
 
     if (minLength != null && len < minLength) {

@@ -3,9 +3,9 @@ package cn.labzen.file.format.excel;
 import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.format.core.reader.AbstractDataFileReader;
-import com.alibaba.excel.EasyExcel;
-import com.alibaba.excel.context.AnalysisContext;
-import com.alibaba.excel.event.AnalysisEventListener;
+import org.apache.fesod.sheet.FesodSheet;
+import org.apache.fesod.sheet.context.AnalysisContext;
+import org.apache.fesod.sheet.event.AnalysisEventListener;
 
 import java.io.InputStream;
 import java.util.*;
@@ -36,7 +36,7 @@ public class ExcelFileReader extends AbstractDataFileReader {
     boolean headerFound = false;
 
     // 使用 EasyExcel 读取
-    EasyExcel.read(inputStream, new AnalysisEventListener<Map<Integer, String>>() {
+    FesodSheet.read(inputStream, new AnalysisEventListener<Map<Integer, String>>() {
       private boolean headerParsed = false;
 
       @Override

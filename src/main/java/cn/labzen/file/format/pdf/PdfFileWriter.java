@@ -98,7 +98,7 @@ public final class PdfFileWriter<T> extends AbstractDataFileWriter<T> {
       float[] columnWidths = new float[columnCount];
       int idx = 0;
       for (Column column : columns.values()) {
-        columnWidths[idx++] = column.getExporting().getWidth();
+        columnWidths[idx++] = column.getWidth() != null ? column.getWidth() : 10;
       }
 
       // 创建表格

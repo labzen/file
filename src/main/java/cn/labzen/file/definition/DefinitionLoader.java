@@ -315,6 +315,11 @@ public class DefinitionLoader {
       }
     }
 
+    // 合并全局默认列宽 -> 文件作用域列宽
+    if (globalDefinition.getWidth() != null && dataDefinition.getWidth() == null) {
+      dataDefinition.setWidth(globalDefinition.getWidth());
+    }
+
     // 合并文件作用域表头样式 -> 列作用域样式
     Map<String, Column> columns = dataDefinition.getColumns();
     if (columns != null) {
@@ -335,6 +340,11 @@ public class DefinitionLoader {
    * 合并优先级（从低到高）：全局列默认 → 文件作用域导出/导入默认 → 列定义配置
    */
   private void mergeColumnDefinition(DataDefinition dataDefinition, Column column) {
+    // 列宽：文件作用域默认列宽 → Column.width（列级别显式配置覆盖文件级别默认）
+    if (column.getWidth() == null && dataDefinition.getWidth() != null) {
+      column.setWidth(dataDefinition.getWidth());
+    }
+
     // 导出配置覆盖
     if (dataDefinition.getExporting() != null) {
       if (column.getExporting() == null) {
@@ -436,7 +446,6 @@ public class DefinitionLoader {
     }
 
     GlobalExporting clone = new GlobalExporting();
-    clone.setWidth(source.getWidth());
     clone.setWhenNull(source.getWhenNull());
     clone.setWhenBlank(source.getWhenBlank());
     return clone;
@@ -450,9 +459,6 @@ public class DefinitionLoader {
       return;
     }
 
-    if (target.getWidth() == null) {
-      target.setWidth(source.getWidth());
-    }
     if (target.getWhenNull() == null) {
       target.setWhenNull(source.getWhenNull());
     }

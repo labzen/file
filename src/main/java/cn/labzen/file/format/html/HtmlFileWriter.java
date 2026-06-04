@@ -130,14 +130,15 @@ public final class HtmlFileWriter<T> extends AbstractDataFileWriter<T> {
     String bodyFontStyle = safeConvertFontStyle(contentStyle.getFont());
     String cssOfBody = CSS_TABLE_BODY_TEMPLATE.formatted(bodyTextWrap, bodyFontStyle);
 
-    int allColumnsWidth = columns.values().stream().mapToInt(value -> value.getExporting().getWidth()).sum();
+    int allColumnsWidth = columns.values().stream().mapToInt(c -> c.getWidth() != null ? c.getWidth() : 10).sum();
 
     // 表格各列样式（头和内容）
     StringBuilder cssOfColumns = new StringBuilder();
     columns.forEach((columnName, column) -> {
       String columnTextAlign = safeConvertAlignmentStyle(column.getExporting().getStyle().getAlign());
       String columnFontStyle = safeConvertFontStyle(column.getExporting().getStyle().getFont());
-      String width = String.format("%.1f%%", (column.getExporting().getWidth() + 0.0) / allColumnsWidth * 100);
+      int columnWidth = column.getWidth() != null ? column.getWidth() : 10;
+      String width = String.format("%.1f%%", (columnWidth + 0.0) / allColumnsWidth * 100);
       String cssOfHeaderColumn = CSS_TABLE_HEADER_COLUMN_TEMPLATE.formatted(columnName, columnTextAlign, columnFontStyle);
       String cssOfBodyColumn = CSS_TABLE_BODY_COLUMN_TEMPLATE.formatted(columnName, columnTextAlign, width, columnFontStyle);
       cssOfColumns.append(cssOfHeaderColumn).append(cssOfBodyColumn);

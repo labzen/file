@@ -1,4 +1,5 @@
 # $schema: ../schema/def-global-schema.json
+width: 100
 exporting-header-style:
   align: CENTER
   background: "#000000"
@@ -19,7 +20,6 @@ exporting-column-style:
     size: 12
   wrapped: true
 exporting:
-  width: 100
   when-null: "-"
   when-blank: "-"
 importing:

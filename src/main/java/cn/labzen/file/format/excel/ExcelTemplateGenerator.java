@@ -6,7 +6,8 @@ import cn.labzen.file.definition.bean.column.Importing;
 import cn.labzen.file.definition.bean.column.constraint.DateRange;
 import cn.labzen.file.definition.bean.column.constraint.LengthRange;
 import cn.labzen.file.definition.bean.column.constraint.NumericRange;
-import cn.labzen.file.definition.bean.table.HeaderBuilder;
+import cn.labzen.file.definition.bean.table.HeaderCell;
+import cn.labzen.file.definition.bean.table.HeaderStructure;
 import cn.labzen.file.exception.DataReadException;
 import cn.labzen.file.exception.DataWriteException;
 import cn.labzen.file.format.excel.template.ExcelTemplateI18nDefaultStore;
@@ -17,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.usermodel.DataValidationConstraint.OperatorType;
 import org.apache.poi.ss.usermodel.DataValidationConstraint.ValidationType;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellRangeAddressList;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -27,7 +29,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -42,10 +43,11 @@ import static cn.labzen.file.format.excel.template.ExcelTemplateI18nKeys.*;
  * <p>
  * 生成包含以下结构的Excel模板文件：
  * <ul>
- *   <li>Row 1: 代码标识行（字段名），#列为HEADER，浅蓝背景</li>
- *   <li>Row 2: 人类阅读行（i18n表头文本 + 批注格式提示），#列为HEADER，浅蓝背景</li>
- *   <li>Row 3: 示例数据行（可选，来自mock.json），#列为MOCK，浅黄背景</li>
- *   <li>Row 4+: 用户数据区，#列为序号，白色背景</li>
+ *   <li>Row 1: 代码标识行（字段名），#列为CODE，浅蓝背景</li>
+ *   <li>Row 2~N: 人类阅读行（i18n表头文本 + 批注格式提示），#列为HINT，浅蓝背景
+ *       <br>单级表头占1行，多级表头占2行（含合并单元格）</li>
+ *   <li>Row N+1+: 示例数据行（可选，来自mock.json），#列为MOCK，浅黄背景</li>
+ *   <li>最后一部分: 用户数据区，#列为序号，白色背景</li>
  * </ul>
  *
  * @author labzen
@@ -103,17 +105,19 @@ public final class ExcelTemplateGenerator {
     CellStyle headerStyle = createHeaderCellStyle(LIGHT_BLUE_INDEX);
     CellStyle headerMarkStyle = createMarkCellStyle(LIGHT_BLUE_INDEX);
 
-    int columnIndex;
-    Collection<Column> columns = definition.getColumns().values();
-//    List<String> fieldNames = definition.getColumns().keySet().stream().toList();
+    List<Column> columns = List.copyOf(definition.getColumns().values());
 
-    // ── Row 1: 代码标识行 ──
-    Row columnCodeRow = sheet.createRow(0);
+    int columnIndex;
+    int rowIndex;
+
+    // ── Row 1: 代码标识行 (CODE) ── 扁平结构，每列一个单元格
+    rowIndex = 0;
+    Row columnCodeRow = sheet.createRow(rowIndex);
     Cell columnCodeMarkCell = columnCodeRow.createCell(0);
     columnCodeMarkCell.setCellValue(MARKER_TEXT_CODE);
     columnCodeMarkCell.setCellStyle(headerMarkStyle);
-    String commentText = store.getText(locale, MARKER_CODE_COMMENT);
-    addComment(columnCodeMarkCell, commentText);
+    String columnCodeComment = store.getText(locale, MARKER_CODE_COMMENT);
+    addComment(columnCodeMarkCell, columnCodeComment);
 
     columnIndex = 1;
     for (Column column : columns) {
@@ -121,35 +125,67 @@ public final class ExcelTemplateGenerator {
       cell.setCellValue(column.getFieldName());
       cell.setCellStyle(headerStyle);
 
-      addComment(cell, commentText);
+      addComment(cell, columnCodeComment);
 
       columnIndex++;
     }
 
-    // ── Row 2: 人类阅读行 + 格式提示批注 ──
-    Row columnHintRow = sheet.createRow(1);
+    // ── Row 2~3: 人类阅读行 (HINT) ── 支持多级表头渲染
+    rowIndex++;
+    Row columnHintRow = sheet.createRow(rowIndex);
     Cell columnHintMarkCell = columnHintRow.createCell(0);
     columnHintMarkCell.setCellValue(MARKER_TEXT_HINT);
     columnHintMarkCell.setCellStyle(headerMarkStyle);
     addComment(columnHintMarkCell, store.getText(locale, MARKER_HINT_COMMENT));
 
-    columnIndex = 1;
-    for (Column column : columns) {
-      Cell cell = columnHintRow.createCell(columnIndex);
-      List<String> headerTexts = HeaderBuilder.headerTexts(column);
-      cell.setCellValue(headerTexts.getLast());
+    HeaderStructure headers = definition.getHeaders();
+    boolean singleHeader = headers.isSingleHeader();
+    // 渲染 HINT 第一行（含合并单元格）
+    for (HeaderCell hc : headers.firstRow()) {
+      int col = hc.index() + 1; // 偏移1列（#标记列）
+      Cell cell = columnHintRow.createCell(col);
+      cell.setCellValue(hc.text());
       cell.setCellStyle(headerStyle);
 
-      addHintComment(cell, column);
+      // 横向合并（colSpan > 1）
+      if (hc.colSpan() > 1) {
+        sheet.addMergedRegion(new CellRangeAddress(rowIndex, rowIndex, col, col + hc.colSpan() - 1));
+      }
+      // 纵向合并（单级列在多级表头中 rowSpan=2）
+      if (!singleHeader && hc.rowSpan() > 1) {
+        sheet.addMergedRegion(new CellRangeAddress(rowIndex, rowIndex + 1, col, col));
+      }
 
-      columnIndex++;
+      // 叶子节点（单级表头 或 纵向合并的列）→ 添加导入提示批注
+      if (singleHeader || hc.rowSpan() > 1) {
+        Column column = columns.get(hc.index());
+        addHintComment(cell, column);
+      }
     }
 
-    // ── Row 3+: 示例数据行（可选）──
+    // 多级表头时：#列纵向合并 + 渲染 HINT 第二行
+    if (!singleHeader) {
+      // #标记列
+      rowIndex++;
+      sheet.addMergedRegion(new CellRangeAddress(rowIndex - 1, rowIndex, 0, 0));
+
+      Row hintSecondRow = sheet.createRow(2);
+      for (HeaderCell hc : headers.secondRow()) {
+        int col = hc.index() + 1;
+        Cell cell = hintSecondRow.createCell(col);
+        cell.setCellValue(hc.text());
+        cell.setCellStyle(headerStyle);
+
+        Column column = columns.get(hc.index());
+        addHintComment(cell, column);
+      }
+    }
+
+    // ── Row 3~4+: 示例数据行（MOCK） ── 可选
     CellStyle mockStyle = createHeaderCellStyle(LIGHT_YELLOW_INDEX);
     CellStyle mockMarkStyle = createMarkCellStyle(LIGHT_YELLOW_INDEX);
 
-    int rowIndex = 2;
+    rowIndex++; // CODE行 + HINT行数
     List<Map<String, String>> mockData = definition.getMockData();
     if (!Collections.isNullOrEmpty(mockData)) {
       for (Map<String, String> mock : mockData) {
@@ -157,7 +193,6 @@ public final class ExcelTemplateGenerator {
         Cell mockMarkCell = mockRow.createCell(0);
         mockMarkCell.setCellValue(MARKER_MOCK);
         mockMarkCell.setCellStyle(mockMarkStyle);
-
         addComment(mockMarkCell, store.getText(locale, MARKER_MOCK_COMMENT));
 
         columnIndex = 1;
@@ -175,11 +210,11 @@ public final class ExcelTemplateGenerator {
       }
     }
 
-    // 设置列宽，设置数据验证（下拉列表）
+    // ── 列宽 + 数据验证 ──
     sheet.setColumnWidth(0, 3000); // # 列
     columnIndex = 1;
     for (Column column : columns) {
-      Integer width = column.getExporting().getWidth();
+      Integer width = column.getWidth();
       sheet.setColumnWidth(columnIndex, width * 256);
 
       // 设置单元格格式
@@ -406,10 +441,9 @@ public final class ExcelTemplateGenerator {
         String dependsText = String.join(", ", importing.getDependsOn());
         sb.append(store.getText(locale, HINT_DEPENDS_ON, dependsText)).append(CR);
       }
-    }
 
-    if (column.getImporting() != null) {
-      Map<String, String> mapping = column.getMapping();
+      // 方案C：使用 importing 专属 mapping，而非共享 mapping
+      Map<String, String> mapping = importing.getMapping();
       if (mapping != null) {
         sb.append(store.getText(locale, HINT_OPTIONS)).append(CR);
         String optionsText = mapping.values().stream().map(v -> "- " + v).collect(Collectors.joining(CR));
@@ -429,6 +463,8 @@ public final class ExcelTemplateGenerator {
     anchor.setRow1(cell.getRowIndex());
     anchor.setDx1(30);
     anchor.setDy2(30);
+    anchor.setDx1(10000);
+    anchor.setDy2(10000);
     Comment comment = drawing.createCellComment(anchor);
     comment.setString(factory.createRichTextString(text));
     cell.setCellComment(comment);
@@ -467,6 +503,7 @@ public final class ExcelTemplateGenerator {
     style.setBorderRight(BorderStyle.THIN);
     style.setRightBorderColor(BLACK_INDEX);
     style.setAlignment(HorizontalAlignment.CENTER);
+    style.setVerticalAlignment(VerticalAlignment.CENTER);
     return style;
   }
 

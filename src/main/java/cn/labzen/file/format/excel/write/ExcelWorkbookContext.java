@@ -64,8 +64,8 @@ public final class ExcelWorkbookContext {
   private void applyColumnWidths() {
     int colIndex = 0;
     for (Column column : columns.values()) {
-      int width = (column.getExporting().getWidth() != null && column.getExporting().getWidth() > 0)
-        ? column.getExporting().getWidth()
+      int width = (column.getWidth() != null && column.getWidth() > 0)
+        ? column.getWidth()
         : DEFAULT_COLUMN_WIDTH;
       sheet.setColumnWidth(colIndex, width * WIDTH_UNIT);
       colIndex++;

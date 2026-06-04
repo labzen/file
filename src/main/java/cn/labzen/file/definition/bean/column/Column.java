@@ -17,6 +17,11 @@ public class Column {
   private boolean validated;
 
   /**
+   * 列宽（导入导出共享）
+   */
+  private Integer width = 10;
+
+  /**
    * 表头标题（支持二级，如 "成绩:-:语文"）
    */
   private String header;

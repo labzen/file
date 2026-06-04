@@ -16,8 +16,8 @@ exporting-column-style:
 columns:
   name:
     header: "${basic-info}:-:${prop-name}"
+    width: 18
     exporting:
-      width: 18
       when-null: "${unnamed}"
       prefix: "【"
       suffix: "】"
@@ -30,8 +30,8 @@ columns:
       require: true
   indexical:
     header: "${basic-info}:-:${index}"
+    width: 10
     exporting:
-      width: 10
       when-null: "0"
       prefix: "No."
       style:
@@ -40,12 +40,12 @@ columns:
       max: "1000"
   value:
     header: "${basic-info}:-:${prop-value}"
+    width: 22
     mapping:
       "debug=true": "${debug-on}"
       "debug=false": "${debug-off}"
       "INFO": "${info-level}"
     exporting:
-      width: 22
       when-null: "${no-value}"
       when-blank: "${blank-value}"
       style:
@@ -54,54 +54,54 @@ columns:
       require: true
   status:
     header: "${status-info}:-:${status}"
+    width: 10
     mapping:
       "1": "${enabled}"
       "2": "${disabled}"
       "3": "${pending}"
     exporting:
-      width: 10
       when-null: "${unknown}"
     importing:
       depends-on: [ "indexical" ]
   category:
     header: "${status-info}:-:${category}"
+    width: 10
     mapping:
       "A": "${system}"
       "B": "${business}"
       "C": "${other}"
     exporting:
-      width: 10
       when-null: "${uncategorized}"
   phone:
     header: "${contact-info}:-:${phone-number}"
+    width: 16
     exporting:
-      width: 16
       converter: desensitize("(\\d{3})\\d{4}(\\d{4})", "$1****$2");
   email:
     header: "${contact-info}:-:${email-addr}"
+    width: 22
     exporting:
-      width: 22
       converter: desensitize("(^.{2})(.*)(@.*)$", "$1****$3");
   description:
     header: "${desc}"
+    width: 25
     exporting:
-      width: 25
       when-null: "${no-desc}"
       converter: truncate(20);
   size:
     header: "数值:-:大小"
+    width: 12
     pattern-number: "#,##0.00"
     exporting:
-      width: 12
       when-null: "0"
       suffix: " MB"
     importing:
       min: "66.6"
   amount:
     header: "数值:-:金额"
+    width: 14
     pattern-number: "#,##0.00"
     exporting:
-      width: 14
       when-null: "0.00"
       prefix: "￥"
     importing:
@@ -109,32 +109,28 @@ columns:
       min: "-66.66"
   createTime:
     header: "时间:-:创建时间"
+    width: 18
     pattern-date: "yyyy-MM-dd HH:mm:ss"
-    exporting:
-      width: 18
     importing:
       max: "2025-12-31 23:59:59"
       min: "2025-01-01 00:00:00"
   effectiveDate:
     header: "时间:-:生效日期"
+    width: 14
     pattern-date: "yyyy-MM-dd"
-    exporting:
-      width: 14
     importing:
       max: "2024-12-31"
       min: "2024-01-01"
   lastModified:
     header: "时间:-:最后修改"
+    width: 18
     pattern-date: "yyyy/MM/dd HH:mm"
-    exporting:
-      width: 18
     importing:
       max: "2026/12/31 23:59"
   remindTime:
     header: "时间:-:提醒时间"
+    width: 12
     pattern-date: "HH:mm"
-    exporting:
-      width: 12
     importing:
       max: "17:59"
       min: "09:00"

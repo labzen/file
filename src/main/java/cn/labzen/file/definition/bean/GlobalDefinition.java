@@ -66,4 +66,11 @@ public class GlobalDefinition {
    * 全局导入默认配置
    */
   private GlobalImporting importing;
+
+  /**
+   * 全局默认列宽（导入导出共享）
+   * <p>
+   * 文件级别 dataDefinition.width 或 列级别 column.width 可覆盖此默认值
+   */
+  private Integer width;
 }

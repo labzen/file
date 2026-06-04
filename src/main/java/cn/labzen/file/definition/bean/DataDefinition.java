@@ -74,6 +74,13 @@ public class DataDefinition {
   private GlobalImporting importing;
 
   /**
+   * 全局默认列宽（导入导出共享）
+   * <p>
+   * 列级别 column.width 可覆盖此默认值
+   */
+  private Integer width;
+
+  /**
    * 在运行时对数据定义构建后的计算出的表头结构
    */
   private HeaderStructure headers;

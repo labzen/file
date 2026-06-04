@@ -11,11 +11,6 @@ import lombok.Data;
 public class GlobalExporting {
 
   /**
-   * 列宽
-   */
-  private Integer width = 10;
-
-  /**
    * null时默认值
    */
   private String whenNull;

@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * 纯文本文件写入器
+ * 纯文本文件导出器
  * <p>
  * 实现简单的文本表格格式文件生成，默认使用4个空格分隔列。
  * 结构：
@@ -56,7 +56,7 @@ public final class TxtFileWriter<T> extends AbstractDataFileWriter<T> {
 
   @SuppressWarnings("DuplicatedCode")
   @Override
-  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<Map<String, Object>> rows, @Nonnull OutputStream outputStream) {
+  protected void exportContent(@Nonnull DataDefinition definition, @Nonnull List<Map<String, Object>> rows, @Nonnull OutputStream outputStream) {
     List<String> headers = definition.getHeaders().getLeafLevelHeaders();
     Map<String, Column> columns = definition.getColumns();
 
@@ -74,7 +74,7 @@ public final class TxtFileWriter<T> extends AbstractDataFileWriter<T> {
 
       writer.flush();
     } catch (IOException e) {
-      throw new DataWriteException(e, "TXT 文件写入失败");
+      throw new DataWriteException(e, "TXT 文件导出失败");
     }
   }
 

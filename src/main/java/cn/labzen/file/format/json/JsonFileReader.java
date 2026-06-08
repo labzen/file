@@ -3,8 +3,11 @@ package cn.labzen.file.format.json;
 import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.format.core.reader.AbstractDataFileReader;
+import cn.labzen.file.meta.FileConfiguration;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 
 import java.io.InputStream;
 import java.util.*;
@@ -26,7 +29,12 @@ public class JsonFileReader extends AbstractDataFileReader {
   }
 
   @Override
-  protected Iterator<Map<String, String>> doRead(InputStream inputStream, DataDefinition definition) {
+  public void initialize(@NonNull FileConfiguration configuration) {
+    // do nothing
+  }
+
+  @Override
+  protected List<Map<String, String>> importContent(@NonNull InputStream inputStream) {
     try {
       JsonNode rootNode = OBJECT_MAPPER.readTree(inputStream);
 
@@ -37,16 +45,21 @@ public class JsonFileReader extends AbstractDataFileReader {
       List<Map<String, String>> dataRows = new ArrayList<>();
       for (JsonNode element : rootNode) {
         Map<String, String> rowData = new LinkedHashMap<>();
-        Iterator<Map.Entry<String, JsonNode>> fields = element.fields();
-        while (fields.hasNext()) {
-          Map.Entry<String, JsonNode> field = fields.next();
-          String value = field.getValue().isNull() ? null : field.getValue().asText();
-          rowData.put(field.getKey(), value);
+        Set<Map.Entry<String, JsonNode>> properties = element.properties();
+        for (Map.Entry<String, JsonNode> propertyEntry : properties) {
+          String value = propertyEntry.getValue().isNull() ? null : propertyEntry.getValue().asText();
+          rowData.put(propertyEntry.getKey(), value);
         }
+//        Iterator<Map.Entry<String, JsonNode>> fields = element.fields();
+//        while (fields.hasNext()) {
+//          Map.Entry<String, JsonNode> field = fields.next();
+//          String value = field.getValue().isNull() ? null : field.getValue().asText();
+//          rowData.put(field.getKey(), value);
+//        }
         dataRows.add(rowData);
       }
 
-      return dataRows.iterator();
+      return dataRows;
     } catch (Exception e) {
       throw new RuntimeException("JSON文件读取失败", e);
     }

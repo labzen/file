@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * PDF 文件写入器
+ * PDF 文件导出器
  * <p>
  * 使用 iTextPDF 库实现 PDF 文件的生成，支持：
  * <ul>
@@ -65,7 +65,7 @@ public final class PdfFileWriter<T> extends AbstractDataFileWriter<T> {
   }
 
   @Override
-  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<Map<String, Object>> rows, @Nonnull OutputStream outputStream) {
+  protected void exportContent(@Nonnull DataDefinition definition, @Nonnull List<Map<String, Object>> rows, @Nonnull OutputStream outputStream) {
     Map<String, Column> columns = definition.getColumns();
     int columnCount = columns.size();
 
@@ -105,16 +105,16 @@ public final class PdfFileWriter<T> extends AbstractDataFileWriter<T> {
       Table table = new Table(columnWidths);
       table.setWidth(UnitValue.createPercentValue(100));
 
-      // 写入表头
+      // 导出表头
       createTableHeader(table, headers, headerStyle, boldFont);
 
-      // 写入数据
+      // 导出数据
       createTableBody(table, rows, columns, regularFont);
 
       document.add(table);
     } catch (Exception e) {
       logger.error("PDF 生成异常: ", e);
-      throw new DataWriteException(e, "PDF 文件写入失败");
+      throw new DataWriteException(e, "PDF 文件导出失败");
     } finally {
       if (document != null) {
         document.close();
@@ -126,7 +126,7 @@ public final class PdfFileWriter<T> extends AbstractDataFileWriter<T> {
         try {
           pdfWriter.close();
         } catch (IOException e) {
-          logger.error("PDF 写入器关闭异常: ", e);
+          logger.error("PDF 导出器关闭异常: ", e);
         }
       }
     }

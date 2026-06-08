@@ -1,6 +1,6 @@
 cn.labzen.file.validator.impl.RequiredValidator
-cn.labzen.file.validator.impl.LengthValidator
-cn.labzen.file.validator.impl.PatternValidator
+cn.labzen.file.validator.impl.RangeLengthValidator
+cn.labzen.file.validator.impl.RangeNumericValidator
+cn.labzen.file.validator.impl.RangeDateValidator
 cn.labzen.file.validator.impl.UniqueValidator
-cn.labzen.file.validator.impl.DependencyValidator
-cn.labzen.file.validator.impl.RangeValidator
+cn.labzen.file.validator.impl.DependsOnValidator

@@ -1,4 +1,4 @@
-package cn.labzen.file.format.core.reader;
+package cn.labzen.file.format.core.reader.process;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -15,6 +15,8 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 public class ImportResult<T> {
+
+  private final Class<?> type;
 
   /**
    * 总数据行数（不含表头/提示/示例）

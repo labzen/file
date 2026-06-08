@@ -16,7 +16,7 @@ import org.apache.poi.ss.util.CellRangeAddress;
  * <p>
  * 参考 {@link cn.labzen.file.format.pdf.PdfFileWriter#createTableHeader} 的设计思路，
  * 表头结构在定义阶段即由 {@link cn.labzen.file.definition.bean.table.HeaderBuilder} 计算完成，
- * 渲染器只需按结构直接输出，无需在写入阶段重新计算合并逻辑。
+ * 渲染器只需按结构直接输出，无需在导出阶段重新计算合并逻辑。
  *
  * @author labzen
  */

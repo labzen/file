@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * HTML 文件写入器
+ * HTML 文件导出器
  * <p>
  * 实现 HTML 表格格式文件的生成。
  * 特性：
@@ -92,7 +92,7 @@ public final class HtmlFileWriter<T> extends AbstractDataFileWriter<T> {
   }
 
   @Override
-  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<Map<String, Object>> rows, @Nonnull OutputStream outputStream) {
+  protected void exportContent(@Nonnull DataDefinition definition, @Nonnull List<Map<String, Object>> rows, @Nonnull OutputStream outputStream) {
     Map<String, Column> columns = definition.getColumns();
     HeaderStructure headers = definition.getHeaders();
     String title = escapeHtml(definition.getTitle());
@@ -113,7 +113,7 @@ public final class HtmlFileWriter<T> extends AbstractDataFileWriter<T> {
       writer.write(html);
       writer.flush();
     } catch (IOException e) {
-      throw new DataWriteException(e, "HTML 文件写入失败");
+      throw new DataWriteException(e, "HTML 文件导出失败");
     }
   }
 

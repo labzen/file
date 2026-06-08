@@ -14,9 +14,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * 数据文件写入器抽象基类
+ * 数据文件导出器抽象基类
  * <p>
- * 提供文件写入的通用逻辑，子类只需实现具体的格式生成方法。
+ * 提供文件导出的通用逻辑，子类只需实现具体的格式生成方法。
  *
  * @param <T> 数据对象类型
  * @author labzen
@@ -46,6 +46,7 @@ public abstract class AbstractDataFileWriter<T> implements DataFileWriter<T> {
       field.setAccessible(true);
       Object value = field.get(item);
 
+      // todo 改为事先获取所有的转换器
       ChainableExportConverterExecutor executor = ChainableExportConverterExecutor.get(definition, fieldName);
 //      if (executors != null) {
 //        executor = executors.get(fieldName);
@@ -64,7 +65,7 @@ public abstract class AbstractDataFileWriter<T> implements DataFileWriter<T> {
     }
   }
 
-  protected FileOutputStream createFileOutputStream(File file) throws FileNotFoundException {
+  private FileOutputStream createFileOutputStream(File file) throws FileNotFoundException {
     File parent = file.getParentFile();
     if (parent != null && !parent.exists()) {
       boolean make = parent.mkdirs();
@@ -76,34 +77,34 @@ public abstract class AbstractDataFileWriter<T> implements DataFileWriter<T> {
   }
 
   @Override
-  public void write(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream) {
+  public final void write(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream) {
 //    I18nStoreProvider store = I18nStoreHolder.get();
 //    I18nResolver resolver = new I18nResolver(store);
 //    DataDefinition resolved = resolver.resolve(definition, locale);
 //    Map<String, ChainableExportConverterExecutor> executors = ChainableExportConverterExecutor.get(definition, locale);
     List<Map<String, Object>> rows = extractRows(definition, data);
-    generateContent(definition, rows, outputStream);
+    exportContent(definition, rows, outputStream);
   }
 
   @Override
-  public void write(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull File file) {
-    if (file.isDirectory()) {
-      throw new DataWriteException("输出文件不能是目录: {}", file.getAbsolutePath());
+  public final void write(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull File file) {
+    if (!file.isFile()) {
+      throw new DataWriteException("导出文件不是文件: {}", file.getAbsolutePath());
     }
 
     try (OutputStream outputStream = createFileOutputStream(file)) {
       write(definition, data, outputStream);
     } catch (IOException e) {
-      throw new DataWriteException(e, "写入文件失败: {}", file.getAbsolutePath());
+      throw new DataWriteException(e, "导出文件失败: {}", file.getAbsolutePath());
     }
   }
 
   @Override
-  public void write(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull String filePath) {
+  public final void write(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull String filePath) {
     write(definition, data, new File(filePath));
   }
 
-  protected abstract void generateContent(@Nonnull DataDefinition definition,
-                                          @Nonnull List<Map<String, Object>> rows,
-                                          @Nonnull OutputStream outputStream);
+  protected abstract void exportContent(@Nonnull DataDefinition definition,
+                                        @Nonnull List<Map<String, Object>> rows,
+                                        @Nonnull OutputStream outputStream);
 }

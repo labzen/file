@@ -3,6 +3,7 @@ package cn.labzen.file.cleanser;
 import cn.labzen.file.annotation.DataCleanser;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import jakarta.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
@@ -33,7 +34,7 @@ public class ChainableCleanserExecutor {
 
   private final List<Cleanser> chain;
 
-  public ChainableCleanserExecutor(List<String> cleanserNames) {
+  public ChainableCleanserExecutor(@Nonnull List<String> cleanserNames) {
     this.chain = Lists.newArrayList();
     List<CleanserInstance> instances = new ArrayList<>();
     for (String name : cleanserNames) {

@@ -1,0 +1,4 @@
+cn.labzen.file.format.excel.ExcelFileReader
+cn.labzen.file.format.json.JsonFileReader
+cn.labzen.file.format.xml.XmlFileReader
+cn.labzen.file.format.yaml.YamlFileReader

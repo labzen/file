@@ -14,13 +14,13 @@ import java.util.Arrays;
 @Getter
 public class ValidateResult {
 
-  private final String errorCode;
+  private final String errorI18nCode;
   private final Object[] errorArgs;
-  private final String defaultMessage;
+//  private final String defaultMessage;
 
-  private ValidateResult(String errorCode, String defaultMessage, Object[] errorArgs) {
-    this.errorCode = errorCode;
-    this.defaultMessage = defaultMessage;
+  private ValidateResult(String errorI18nCode, Object[] errorArgs) {
+    this.errorI18nCode = errorI18nCode;
+//    this.defaultMessage = defaultMessage;
     this.errorArgs = errorArgs;
   }
 
@@ -34,16 +34,16 @@ public class ValidateResult {
   /**
    * 校验失败
    *
-   * @param errorCode     国际化key
+   * @param errorCode      国际化key
    * @param defaultMessage 默认错误信息
    * @param errorArgs      国际化参数
    */
-  public static ValidateResult fail(String errorCode, String defaultMessage, Object... errorArgs) {
-    return new ValidateResult(errorCode, defaultMessage, errorArgs);
+  public static ValidateResult fail(String errorCode, Object... errorArgs) {
+    return new ValidateResult(errorCode, errorArgs);
   }
 
-  @Override
-  public String toString() {
-    return "ValidateResult{errorCode='" + errorCode + "', args=" + Arrays.toString(errorArgs) + "}";
-  }
+//  @Override
+//  public String toString() {
+//    return "ValidateResult{errorCode='" + errorI18nCode + "', args=" + Arrays.toString(errorArgs) + "}";
+//  }
 }

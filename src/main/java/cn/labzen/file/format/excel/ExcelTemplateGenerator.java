@@ -10,7 +10,7 @@ import cn.labzen.file.definition.bean.table.HeaderCell;
 import cn.labzen.file.definition.bean.table.HeaderStructure;
 import cn.labzen.file.exception.DataReadException;
 import cn.labzen.file.exception.DataWriteException;
-import cn.labzen.file.format.excel.template.ExcelTemplateI18nDefaultStore;
+import cn.labzen.file.i18n.I18nStoreHolder;
 import cn.labzen.file.i18n.I18nStoreProvider;
 import cn.labzen.tool.util.Collections;
 import cn.labzen.tool.util.Strings;
@@ -20,6 +20,7 @@ import org.apache.poi.ss.usermodel.DataValidationConstraint.OperatorType;
 import org.apache.poi.ss.usermodel.DataValidationConstraint.ValidationType;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellRangeAddressList;
+import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.OutputStream;
@@ -36,7 +37,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static cn.labzen.file.format.excel.template.ExcelTemplateI18nKeys.*;
+import static cn.labzen.file.i18n.internal.Internal18nKeys.*;
 
 /**
  * Excel 导入模板生成器
@@ -57,7 +58,7 @@ public final class ExcelTemplateGenerator {
 
   private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\$\\{([^}]+)}");
 
-  private static final int PREPARE_ROW_NUMBER = 10000;
+  private static final int PREPARE_ROW_NUMBER = 1000;
   private static final String MARKER_TEXT_CODE = "CODE";
   private static final String MARKER_TEXT_HINT = "HINT";
   private static final String MARKER_MOCK = "MOCK";
@@ -72,7 +73,7 @@ public final class ExcelTemplateGenerator {
 
   private static final int VALIDATION_CONSTRAINT_ERROR = DataValidation.ErrorStyle.WARNING;
 
-  private final I18nStoreProvider store = new ExcelTemplateI18nDefaultStore();
+  private final I18nStoreProvider i18nStore;
   private final DataDefinition definition;
   private final String locale;
   private Sheet sheet;
@@ -84,6 +85,7 @@ public final class ExcelTemplateGenerator {
   public ExcelTemplateGenerator(DataDefinition definition, String locale) {
     this.definition = definition;
     this.locale = locale;
+    this.i18nStore = I18nStoreHolder.get();
   }
 
   /**
@@ -116,7 +118,7 @@ public final class ExcelTemplateGenerator {
     Cell columnCodeMarkCell = columnCodeRow.createCell(0);
     columnCodeMarkCell.setCellValue(MARKER_TEXT_CODE);
     columnCodeMarkCell.setCellStyle(headerMarkStyle);
-    String columnCodeComment = store.getText(locale, MARKER_CODE_COMMENT);
+    String columnCodeComment = i18nStore.getText(locale, TEMPLATE_MARKER_CODE_COMMENT);
     addComment(columnCodeMarkCell, columnCodeComment);
 
     columnIndex = 1;
@@ -136,7 +138,7 @@ public final class ExcelTemplateGenerator {
     Cell columnHintMarkCell = columnHintRow.createCell(0);
     columnHintMarkCell.setCellValue(MARKER_TEXT_HINT);
     columnHintMarkCell.setCellStyle(headerMarkStyle);
-    addComment(columnHintMarkCell, store.getText(locale, MARKER_HINT_COMMENT));
+    addComment(columnHintMarkCell, i18nStore.getText(locale, TEMPLATE_MARKER_HINT_COMMENT));
 
     HeaderStructure headers = definition.getHeaders();
     boolean singleHeader = headers.isSingleHeader();
@@ -193,7 +195,7 @@ public final class ExcelTemplateGenerator {
         Cell mockMarkCell = mockRow.createCell(0);
         mockMarkCell.setCellValue(MARKER_MOCK);
         mockMarkCell.setCellStyle(mockMarkStyle);
-        addComment(mockMarkCell, store.getText(locale, MARKER_MOCK_COMMENT));
+        addComment(mockMarkCell, i18nStore.getText(locale, TEMPLATE_MARKER_MOCK_COMMENT));
 
         columnIndex = 1;
         for (Column column : columns) {
@@ -210,33 +212,34 @@ public final class ExcelTemplateGenerator {
       }
     }
 
+    // ── 冻结前几行 ──
+
+    sheet.createFreezePane(1, rowIndex);
+
     // ── 列宽 + 数据验证 ──
     sheet.setColumnWidth(0, 3000); // # 列
     columnIndex = 1;
     for (Column column : columns) {
-      Integer width = column.getWidth();
-      sheet.setColumnWidth(columnIndex, width * 256);
-
-      // 设置单元格格式
+      // 设置单元格默认格式
       setupCellFormat(columnIndex, column);
 
       try {
-        constraintBoxTitle = store.getText(locale, CONSTRAINT_BOX_TITLE);
-        constraintBoxMessage = store.getText(locale, CONSTRAINT_BOX_MESSAGE);
+        constraintBoxTitle = i18nStore.getText(locale, TEMPLATE_CONSTRAINT_BOX_TITLE);
+        constraintBoxMessage = i18nStore.getText(locale, TEMPLATE_CONSTRAINT_BOX_MESSAGE);
 
         Importing importing = column.getImporting();
         if (importing != null) {
-          LengthRange lengthRange = LengthRange.get(importing);
+          LengthRange lengthRange = importing.getLengthRange();
           if (lengthRange != null) {
             setupCellLengthValidation(rowIndex, columnIndex, lengthRange);
           }
 
-          NumericRange numericRange = NumericRange.get(importing);
+          NumericRange numericRange = importing.getNumericRange();
           if (numericRange != null) {
             setupCellNumberValidation(rowIndex, columnIndex, numericRange, column.getFieldType());
           }
 
-          DateRange dateRange = DateRange.get(importing, column.getPatternDate());
+          DateRange dateRange = importing.getDateRange();
           if (dateRange != null) {
             setupCellDateValidation(rowIndex, columnIndex, dateRange, column.getFieldType());
           }
@@ -252,12 +255,25 @@ public final class ExcelTemplateGenerator {
       columnIndex++;
     }
 
-    // 设置第一列 #序号：从最后一条MOCK行之后开始，递增生成10000条
+    // ── 初始化序号列 ──
+    String firstColumn = "B";
+    String lastColumn = calculateColumn(firstColumn, columns.size());
+    // 设置第一列 #序号：从最后一条MOCK行之后开始，递增生成 PREPARE_ROW_NUMBER 条
     for (int i = 0; i < PREPARE_ROW_NUMBER; i++) {
       Row row = sheet.createRow(rowIndex + i);
       Cell indexCell = row.createCell(0);
-      indexCell.setCellValue(i + 1);
+      int cr = rowIndex + i + 1;
+      String formula = String.format("IF(COUNTA(%s%d:%s%d)=0,\"\",ROW()-%d)", firstColumn, cr, lastColumn, cr, rowIndex);
+      indexCell.setCellFormula(formula);
     }
+
+    sheet.protectSheet("");
+  }
+
+  private String calculateColumn(String startColumn, int columnSize) {
+    int start = CellReference.convertColStringToIndex(startColumn);
+    int last = start + columnSize - 1;
+    return CellReference.convertNumToColString(last);
   }
 
   private void setupCellFormat(int columnIndex, Column column) {
@@ -265,6 +281,9 @@ public final class ExcelTemplateGenerator {
     if (fieldType == null) {
       return;
     }
+
+    Integer width = column.getWidth();
+    sheet.setColumnWidth(columnIndex, width * 256);
 
     DataFormat dataFormat = sheet.getWorkbook().createDataFormat();
     CellStyle formatStyle = sheet.getWorkbook().createCellStyle();
@@ -292,10 +311,9 @@ public final class ExcelTemplateGenerator {
       } else {
         formatStyle.setDataFormat(dataFormat.getFormat(isDecimalType ? "0.00" : "0"));
       }
-    } else {
-      return;
     }
 
+    formatStyle.setLocked(false);
     // 对数据区域的列设置格式（整列）
     sheet.setDefaultColumnStyle(columnIndex, formatStyle);
   }
@@ -430,22 +448,24 @@ public final class ExcelTemplateGenerator {
 
     Importing importing = column.getImporting();
     if (importing != null) {
-      if (importing.getRequire()) sb.append(store.getText(locale, HINT_REQUIRED_VALUE)).append(CR);
+      if (importing.getRequire()) sb.append(i18nStore.getText(locale, TEMPLATE_HINT_REQUIRED_VALUE)).append(CR);
       if (importing.getMaxLength() != null)
-        sb.append(store.getText(locale, HINT_MAX_LENGTH, importing.getMaxLength())).append(CR);
+        sb.append(i18nStore.getText(locale, TEMPLATE_HINT_MAX_LENGTH, importing.getMaxLength())).append(CR);
       if (importing.getMinLength() != null)
-        sb.append(store.getText(locale, HINT_MIN_LENGTH, importing.getMinLength())).append(CR);
-      if (importing.getMax() != null) sb.append(store.getText(locale, HINT_MAX_NUMBER, importing.getMax())).append(CR);
-      if (importing.getMin() != null) sb.append(store.getText(locale, HINT_MIN_NUMBER, importing.getMin())).append(CR);
+        sb.append(i18nStore.getText(locale, TEMPLATE_HINT_MIN_LENGTH, importing.getMinLength())).append(CR);
+      if (importing.getMax() != null)
+        sb.append(i18nStore.getText(locale, TEMPLATE_HINT_MAX_NUMBER, importing.getMax())).append(CR);
+      if (importing.getMin() != null)
+        sb.append(i18nStore.getText(locale, TEMPLATE_HINT_MIN_NUMBER, importing.getMin())).append(CR);
       if (importing.getDependsOn() != null) {
         String dependsText = String.join(", ", importing.getDependsOn());
-        sb.append(store.getText(locale, HINT_DEPENDS_ON, dependsText)).append(CR);
+        sb.append(i18nStore.getText(locale, TEMPLATE_HINT_DEPENDS_ON, dependsText)).append(CR);
       }
 
       // 方案C：使用 importing 专属 mapping，而非共享 mapping
       Map<String, String> mapping = importing.getMapping();
       if (mapping != null) {
-        sb.append(store.getText(locale, HINT_OPTIONS)).append(CR);
+        sb.append(i18nStore.getText(locale, TEMPLATE_HINT_OPTIONS)).append(CR);
         String optionsText = mapping.values().stream().map(v -> "- " + v).collect(Collectors.joining(CR));
         sb.append(optionsText);
       }
@@ -541,7 +561,7 @@ public final class ExcelTemplateGenerator {
     StringBuilder result = new StringBuilder();
     while (matcher.find()) {
       String key = matcher.group(1);
-      String replacement = store.getText(locale, key);
+      String replacement = i18nStore.getText(locale, key);
       matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
     }
     matcher.appendTail(result);

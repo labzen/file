@@ -3,6 +3,9 @@ package cn.labzen.file.format.xml;
 import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.format.core.reader.AbstractDataFileReader;
+import cn.labzen.file.meta.FileConfiguration;
+import jakarta.annotation.Nonnull;
+import org.jspecify.annotations.NonNull;
 
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamReader;
@@ -25,7 +28,12 @@ public class XmlFileReader extends AbstractDataFileReader {
   }
 
   @Override
-  protected Iterator<Map<String, String>> doRead(InputStream inputStream, DataDefinition definition) {
+  public void initialize(@NonNull FileConfiguration configuration) {
+    // do nothing
+  }
+
+  @Override
+  protected List<Map<String, String>> importContent(@NonNull InputStream inputStream) {
     try {
       XMLInputFactory factory = XMLInputFactory.newInstance();
       XMLStreamReader reader = factory.createXMLStreamReader(inputStream);
@@ -48,7 +56,7 @@ public class XmlFileReader extends AbstractDataFileReader {
             break;
 
           case XMLStreamReader.CHARACTERS:
-            if (currentFieldName != null && currentRow != null) {
+            if (currentFieldName != null) {
               String text = reader.getText().trim();
               if (!text.isEmpty()) {
                 currentRow.put(currentFieldName, text);
@@ -67,7 +75,7 @@ public class XmlFileReader extends AbstractDataFileReader {
       }
 
       reader.close();
-      return dataRows.iterator();
+      return dataRows;
     } catch (Exception e) {
       throw new RuntimeException("XML文件读取失败", e);
     }

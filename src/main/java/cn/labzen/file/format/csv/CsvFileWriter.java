@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * CSV 文件写入器
+ * CSV 文件导出器
  * <p>
  * 实现逗号分隔值文件的生成
  *
@@ -51,20 +51,20 @@ public final class CsvFileWriter<T> extends AbstractDataFileWriter<T> {
 
   @SuppressWarnings("DuplicatedCode")
   @Override
-  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<Map<String, Object>> rows, @Nonnull OutputStream outputStream) {
+  protected void exportContent(@Nonnull DataDefinition definition, @Nonnull List<Map<String, Object>> rows, @Nonnull OutputStream outputStream) {
     LinkedHashMap<String, Column> columns = new LinkedHashMap<>(definition.getColumns());
     List<String> headers = definition.getHeaders().getLeafLevelHeaders();
 
     try (Writer writer = new BufferedWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8))) {
-      // 写入 UTF-8 BOM，Excel 能正确识别中文
+      // 导出 UTF-8 BOM，Excel 能正确识别中文
       writer.write("\uFEFF");
 
-      // 写入表头行
+      // 导出表头行
       // CSV 不支持多级表头，只取最低级别的表头（最后一个元素）
       String headerLine = buildHeaderLine(headers);
       writer.write(headerLine + "\n");
 
-      // 写入数据行
+      // 导出数据行
       for (Map<String, Object> row : rows) {
         String dataLine = buildDataLine(row, columns);
         writer.write(dataLine + "\n");
@@ -72,7 +72,7 @@ public final class CsvFileWriter<T> extends AbstractDataFileWriter<T> {
 
       writer.flush();
     } catch (IOException e) {
-      throw new DataWriteException(e, "CSV 文件写入失败");
+      throw new DataWriteException(e, "CSV 文件导出失败");
     }
   }
 

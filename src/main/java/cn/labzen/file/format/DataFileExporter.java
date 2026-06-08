@@ -1,6 +1,7 @@
 package cn.labzen.file.format;
 
 import cn.labzen.file.definition.DefinitionRegistry;
+import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.exception.DataReadException;
 import cn.labzen.file.exception.DataWriteException;
@@ -9,35 +10,32 @@ import cn.labzen.file.i18n.I18nStoreHolder;
 import cn.labzen.file.meta.FileConfiguration;
 import cn.labzen.file.util.DateTimeFormat;
 import cn.labzen.meta.Labzens;
-import jakarta.annotation.Nonnull;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
-import java.util.ServiceLoader;
+import java.util.*;
 
 /**
  * 数据文件生成器
  * <p>
  * usage:
  * <pre>
- * DataFileGenerator.by(Property.class)
- *                  .with(properties)
- *                  .as(FileFormat.PDF)
- *                  .to(file);
+ * DataFileExporter.by(Property.class)
+ *                 .with(properties)
+ *                 .as(FileFormat.PDF)
+ *                 .to(file);
  * </pre>
  *
  * @param <T> 数据对象类型
+ * @author labzen
  */
 public final class DataFileExporter<T> {
 
   /**
-   * 文件格式到写入器构造器的映射
+   * 文件格式到导出器构造器的映射
    */
   private static final Map<FileFormat, DataFileWriter<?>> WRITER_INSTANCES = new EnumMap<>(FileFormat.class);
   private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormat.get("yyyyMMddHHmmss");
@@ -55,6 +53,7 @@ public final class DataFileExporter<T> {
 //    DEFAULT_LOCALE = configuration.defaultLocale();
   }
 
+  private final Class<T> type;
   private final String name;
   //  private DataDefinition definition;
   private List<T> data;
@@ -64,11 +63,8 @@ public final class DataFileExporter<T> {
   private String locale;
 
   private DataFileExporter(Class<T> type) {
+    this.type = type;
     this.name = type.getSimpleName();
-    if (!DefinitionRegistry.contains(name)) {
-      throw new DataWriteException("不支持的数据类型导出定义，请确认文件 [{}.yml] 确实存在并有效", name);
-    }
-
     this.locale = I18nStoreHolder.defaultLocale();
 //    this.definition = DefinitionRegistry.get(name)
 //      .orElseThrow(() -> new IllegalArgumentException("不支持的数据类型导出定义，请确认文件 [" + type + ".yml] 确实存在并有效"));
@@ -166,9 +162,13 @@ public final class DataFileExporter<T> {
    * @param outputStream 输出流
    */
   public void to(OutputStream outputStream) {
-    DefinitionRegistry.get(name, locale).ifPresent(definition ->
-      getWriter(format).write(definition, data, outputStream)
-    );
+    DataDefinition definition = DefinitionRegistry.get(name, locale)
+      .orElseThrow(() -> new DataWriteException("不支持的数据类型导出定义，请确认文件 {}.yml 确实存在并有效", name));
+    if (!Objects.equals(type, definition.getDomainClass())) {
+      throw new DataWriteException("数据定义文件 {}.yml 的 domain - [{}] 与导出数据类型 [{}] 不一致", name, definition.getDomain(), type.getName());
+    }
+
+    getWriter().write(definition, data, outputStream);
   }
 
   /**
@@ -182,7 +182,7 @@ public final class DataFileExporter<T> {
     try (OutputStream os = new FileOutputStream(file)) {
       to(os);
     } catch (Exception e) {
-      throw new DataReadException(e, "生成数据文件失败: {}", file.getAbsolutePath());
+      throw new DataReadException(e, "导出数据文件失败: {}", file.getAbsolutePath());
     }
   }
 
@@ -199,16 +199,19 @@ public final class DataFileExporter<T> {
   }
 
   /**
-   * 根据文件格式获取对应的写入器
+   * 根据文件格式获取对应的导出器
    *
-   * @param format 文件格式枚举
-   * @return 对应的写入器实例
+   * @return 对应的导出器实例
    * @throws IllegalArgumentException 如果格式不支持
    */
-  private DataFileWriter<T> getWriter(@Nonnull FileFormat format) {
+  private DataFileWriter<T> getWriter() {
+    if (format == null) {
+      throw new DataWriteException("未设置导出文件格式，请调用 as() 方法");
+    }
+
     DataFileWriter<?> writer = WRITER_INSTANCES.get(format);
     if (writer == null) {
-      throw new IllegalArgumentException("不支持的文件格式: " + format);
+      throw new DataWriteException("不支持的导出文件格式: {}", format);
     }
     //noinspection unchecked
     return (DataFileWriter<T>) writer;

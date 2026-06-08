@@ -1,6 +1,8 @@
 package cn.labzen.file.i18n;
 
 import cn.labzen.tool.util.Strings;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 import java.util.Map;
@@ -21,12 +23,9 @@ public class ManualI18nStoreProvider implements I18nStoreProvider {
    */
   private final Map<String, Map<String, String>> store = new ConcurrentHashMap<>();
 
+  @Setter
+  @Getter
   private String defaultLocale;
-
-  @Override
-  public void setDefaultLocale(String defaultLocale) {
-    this.defaultLocale = defaultLocale;
-  }
 
   @Override
   public String getText(String locale, String key) {

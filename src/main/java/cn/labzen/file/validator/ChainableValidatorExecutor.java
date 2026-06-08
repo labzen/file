@@ -38,6 +38,10 @@ public class ChainableValidatorExecutor {
   public ChainableValidatorExecutor() {
   }
 
+  public boolean hasValidator() {
+    return !immediateValidators.isEmpty() || !deferredValidators.isEmpty();
+  }
+
   public void addValidator(String name, List<Object> arguments) {
     ValidatorInstance instance = VALIDATOR_INSTANCES.get(name);
     if (instance == null) {
@@ -66,15 +70,16 @@ public class ChainableValidatorExecutor {
    *
    * @return 所有校验失败的结果，空列表表示全部通过
    */
-  public List<ValidateResult> executeImmediate(Object input, ValidateContext context) {
-    List<ValidateResult> failures = new ArrayList<>();
-    for (ConfiguredValidator cv : immediateValidators) {
-      ValidateResult result = cv.validator().validate(input, cv.arguments(), context);
-      if (result != null) {
-        failures.add(result);
-      }
-    }
-    return failures;
+  public List<ValidateResult> executeImmediate(ValidateContext context) {
+    return execute(immediateValidators, context);
+//    List<ValidateResult> failures = new ArrayList<>();
+//    for (ConfiguredValidator cv : immediateValidators) {
+//      ValidateResult result = cv.validator().validate(input, cv.arguments(), context);
+//      if (result != null) {
+//        failures.add(result);
+//      }
+//    }
+//    return failures;
   }
 
   /**
@@ -82,10 +87,22 @@ public class ChainableValidatorExecutor {
    *
    * @return 所有校验失败的结果，空列表表示全部通过
    */
-  public List<ValidateResult> executeDeferred(Object input, ValidateContext context) {
+  public List<ValidateResult> executeDeferred(ValidateContext context) {
+    return execute(deferredValidators, context);
+//    List<ValidateResult> failures = new ArrayList<>();
+//    for (ConfiguredValidator cv : deferredValidators) {
+//      ValidateResult result = cv.validator().validate(input, cv.arguments(), context);
+//      if (result != null) {
+//        failures.add(result);
+//      }
+//    }
+//    return failures;
+  }
+
+  private List<ValidateResult> execute(List<ConfiguredValidator> validators, ValidateContext context) {
     List<ValidateResult> failures = new ArrayList<>();
-    for (ConfiguredValidator cv : deferredValidators) {
-      ValidateResult result = cv.validator().validate(input, cv.arguments(), context);
+    for (ConfiguredValidator cv : validators) {
+      ValidateResult result = cv.validator().validate(context, cv.arguments());
       if (result != null) {
         failures.add(result);
       }
@@ -93,13 +110,13 @@ public class ChainableValidatorExecutor {
     return failures;
   }
 
-  public boolean hasDeferredValidators() {
-    return !deferredValidators.isEmpty();
-  }
-
-  public static Set<String> availableValidatorNames() {
-    return VALIDATOR_INSTANCES.keySet();
-  }
+//  public boolean hasDeferredValidators() {
+//    return !deferredValidators.isEmpty();
+//  }
+//
+//  public static Set<String> availableValidatorNames() {
+//    return VALIDATOR_INSTANCES.keySet();
+//  }
 
   record ValidatorInstance(String name, int priority, DataValidator.Execution execution, Validator validator) {
   }

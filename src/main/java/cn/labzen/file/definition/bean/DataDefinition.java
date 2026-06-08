@@ -1,9 +1,14 @@
 package cn.labzen.file.definition.bean;
 
 import cn.labzen.file.definition.bean.column.Column;
+import cn.labzen.file.definition.bean.column.Importing;
+import cn.labzen.file.definition.bean.column.constraint.DateRange;
+import cn.labzen.file.definition.bean.column.constraint.LengthRange;
+import cn.labzen.file.definition.bean.column.constraint.NumericRange;
 import cn.labzen.file.definition.bean.scoped.GlobalExporting;
 import cn.labzen.file.definition.bean.scoped.GlobalImporting;
 import cn.labzen.file.definition.bean.style.Style;
+import cn.labzen.file.definition.bean.table.HeaderBuilder;
 import cn.labzen.file.definition.bean.table.HeaderStructure;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -32,6 +37,8 @@ public class DataDefinition {
    * 域映射类FQCN
    */
   private String domain;
+
+  private Class<?> domainClass;
 
   /**
    * 语言
@@ -89,4 +96,19 @@ public class DataDefinition {
    * Mock数据（来自同名.mock.json文件，可能为null）
    */
   private List<Map<String, String>> mockData;
+
+  public void pretreatment() {
+    this.headers = HeaderBuilder.build(this);
+
+    for (Column column : columns.values()) {
+      Importing ipt = column.getImporting();
+      if (ipt == null) {
+        continue;
+      }
+
+      ipt.setLengthRange(LengthRange.get(ipt));
+      ipt.setDateRange(DateRange.get(ipt, column.getPatternDate()));
+      ipt.setNumericRange(NumericRange.get(ipt));
+    }
+  }
 }

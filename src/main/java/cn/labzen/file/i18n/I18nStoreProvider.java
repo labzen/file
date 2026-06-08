@@ -44,4 +44,10 @@ public interface I18nStoreProvider {
    * @param defaultLocale 默认语言标签，如 zh-CN
    */
   void setDefaultLocale(String defaultLocale);
+
+  /**
+   * 获取默认语言标签
+   * @return 默认语言标签，如 zh-CN
+   */
+  String getDefaultLocale();
 }

@@ -1,5 +1,8 @@
 package cn.labzen.file.validator;
 
+import cn.labzen.file.format.core.reader.process.ProceedRow;
+
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -9,7 +12,7 @@ import java.util.Map;
  *
  * @author labzen
  */
-public record ValidateContext(int rowIndex, String fieldName, String headerText, Map<String, Object> currentRowData,
-                              Map<String, String> rawRowData, String locale) {
+public record ValidateContext<T>(String fieldName, Object value, Map<String, String> rawRowData,
+                                 List<ProceedRow<T>> proceedRows) {
 
 }

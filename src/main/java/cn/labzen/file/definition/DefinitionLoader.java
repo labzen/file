@@ -197,6 +197,7 @@ public class DefinitionLoader {
     Class<?> domainClass;
     try {
       domainClass = Class.forName(domain);
+      definition.setDomainClass(domainClass);
     } catch (ClassNotFoundException e) {
       throw new DefinitionLoaderException("配置文件对应的domain类不存在，from: " + definition.getDomain());
     }

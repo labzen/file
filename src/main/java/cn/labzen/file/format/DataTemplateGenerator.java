@@ -13,13 +13,13 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 
 /**
- * 数据导入模板生成器 — Fluent API 入口
+ * 数据导入模板生成器
  * <p>
  * 使用方式：
  * <pre>
  * DataTemplateGenerator.by(Property.class)
- *     .locale("zh-CN")
- *     .to(outputStream);
+ *                      .locale("zh-CN")
+ *                      .to(outputStream);
  * </pre>
  * <p>
  * 模板仅支持 Excel 格式。

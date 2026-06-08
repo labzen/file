@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Excel 文件写入器
+ * Excel 文件导出器
  * <p>
  * 使用 Apache POI 库实现 Excel（.xlsx）文件的生成，支持：
  * <ul>
@@ -44,11 +44,11 @@ public final class ExcelFileWriter<T> extends AbstractDataFileWriter<T> {
 
   @Override
   public void initialize(@NonNull FileConfiguration configuration) {
-    // Excel 写入器无需额外的初始化配置
+    // do nothing
   }
 
   @Override
-  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<Map<String, Object>> rows, @Nonnull OutputStream outputStream) {
+  protected void exportContent(@Nonnull DataDefinition definition, @Nonnull List<Map<String, Object>> rows, @Nonnull OutputStream outputStream) {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       ExcelWorkbookContext context = new ExcelWorkbookContext(workbook, resolveSheetName(definition), definition.getColumns());
 
@@ -58,11 +58,11 @@ public final class ExcelFileWriter<T> extends AbstractDataFileWriter<T> {
       // 渲染数据行
       context.createDataRenderer().render(rows, headerRowCount, definition.getExportingColumnStyle());
 
-      // 写入输出流
+      // 导出输出流
       workbook.write(outputStream);
 
     } catch (Exception e) {
-      throw new DataWriteException(e, "Excel 文件写入失败");
+      throw new DataWriteException(e, "Excel 文件导出失败");
     }
   }
 

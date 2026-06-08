@@ -1,4 +1,4 @@
-package cn.labzen.file.format.core.reader;
+package cn.labzen.file.format.core.reader.process;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

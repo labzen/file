@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * Markdown 文件写入器
+ * Markdown 文件导出器
  * <p>
  * 实现 Markdown 表格格式文件的生成。
  * 结构：
@@ -75,7 +75,7 @@ public final class MarkdownFileWriter<T> extends AbstractDataFileWriter<T> {
   }
 
   @Override
-  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<Map<String, Object>> rows, @Nonnull OutputStream outputStream) {
+  protected void exportContent(@Nonnull DataDefinition definition, @Nonnull List<Map<String, Object>> rows, @Nonnull OutputStream outputStream) {
     List<String> headers = definition.getHeaders().getLeafLevelHeaders();
     Map<String, Column> columns = definition.getColumns();
     String title = definition.getTitle();
@@ -100,7 +100,7 @@ public final class MarkdownFileWriter<T> extends AbstractDataFileWriter<T> {
 
       writer.flush();
     } catch (IOException e) {
-      throw new DataWriteException(e, "Markdown 文件写入失败");
+      throw new DataWriteException(e, "Markdown 文件导出失败");
     }
   }
 

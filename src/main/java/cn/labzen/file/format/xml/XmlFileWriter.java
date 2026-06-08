@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * XML 文件写入器
+ * XML 文件导出器
  * <p>
  * 实现 XML 格式文件的生成，输出格式为顶级数组类型。
  * 数据对象的属性键使用 columns 的 key 值（字段名），而不是 header 的定义内容。
@@ -52,7 +52,7 @@ public final class XmlFileWriter<T> extends AbstractDataFileWriter<T> {
   }
 
   @Override
-  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<Map<String, Object>> rows, @Nonnull OutputStream outputStream) {
+  protected void exportContent(@Nonnull DataDefinition definition, @Nonnull List<Map<String, Object>> rows, @Nonnull OutputStream outputStream) {
     String filename = definition.getFilename();
     String title = definition.getTitle();
 
@@ -61,7 +61,7 @@ public final class XmlFileWriter<T> extends AbstractDataFileWriter<T> {
       writer.write(content);
       writer.flush();
     } catch (IOException e) {
-      throw new DataWriteException(e, "XML 文件写入失败");
+      throw new DataWriteException(e, "XML 文件导出失败");
     }
   }
 

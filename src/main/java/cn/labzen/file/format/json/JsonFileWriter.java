@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * JSON 文件写入器
+ * JSON 文件导出器
  * <p>
  * 实现 JSON 格式文件的生成，输出格式为顶级数组类型。
  * 数据对象的属性键使用 columns 的 key 值（字段名），而不是 header 的定义内容。
@@ -47,12 +47,12 @@ public final class JsonFileWriter<T> extends AbstractDataFileWriter<T> {
   }
 
   @Override
-  protected void generateContent(@Nonnull DataDefinition definition, @Nonnull List<Map<String, Object>> rows, @Nonnull OutputStream outputStream) {
+  protected void exportContent(@Nonnull DataDefinition definition, @Nonnull List<Map<String, Object>> rows, @Nonnull OutputStream outputStream) {
     try {
       objectMapper.writeValue(outputStream, rows);
       outputStream.flush();
     } catch (IOException e) {
-      throw new DataWriteException(e, "JSON 文件写入失败");
+      throw new DataWriteException(e, "JSON 文件导出失败");
     }
   }
 }

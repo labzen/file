@@ -70,8 +70,9 @@ public final class DefinitionRegistry {
     DataDefinition localizedDefinition = i18nResolver.resolve();
 
 //    List<Column> columns = localizedDefinition.getColumns().values().stream().toList();
-    HeaderStructure headerStructure = HeaderBuilder.build(localizedDefinition);
-    localizedDefinition.setHeaders(headerStructure);
+//    HeaderStructure headerStructure = HeaderBuilder.build(localizedDefinition);
+//    localizedDefinition.setHeaders(headerStructure);
+    localizedDefinition.pretreatment();
 
     // 构建导出和导入转换器链
     ChainableExportConverterExecutor.build(localizedDefinition);

@@ -1,5 +1,8 @@
 package cn.labzen.file.definition.bean.column;
 
+import cn.labzen.file.definition.bean.column.constraint.DateRange;
+import cn.labzen.file.definition.bean.column.constraint.LengthRange;
+import cn.labzen.file.definition.bean.column.constraint.NumericRange;
 import cn.labzen.file.definition.bean.scoped.GlobalImporting;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -67,8 +70,8 @@ public class Importing extends GlobalImporting {
    */
   private String converter;
 
-//  private LengthRange lengthRange;
-//  private NumbericRange numbericRange;
-//  private DateRange dateRange;
+  private LengthRange lengthRange;
+  private NumericRange numericRange;
+  private DateRange dateRange;
 
 }

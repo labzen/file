@@ -4,8 +4,13 @@ import cn.labzen.file.annotation.DataValidator;
 import cn.labzen.file.validator.ValidateContext;
 import cn.labzen.file.validator.ValidateResult;
 import cn.labzen.file.validator.Validator;
+import org.jspecify.annotations.NonNull;
 
 import java.util.List;
+
+import static cn.labzen.file.i18n.internal.Internal18nKeys.IMPORT_VALIDATE_REQUIRE;
+import static cn.labzen.file.validator.Validator.REQUIRE_NAME;
+import static cn.labzen.file.validator.Validator.REQUIRE_PRIORITY;
 
 /**
  * 必填校验器
@@ -14,18 +19,16 @@ import java.util.List;
  *
  * @author labzen
  */
-@DataValidator(name = "required", priority = 0, execution = DataValidator.Execution.IMMEDIATE)
+@DataValidator(name = REQUIRE_NAME, priority = REQUIRE_PRIORITY, execution = DataValidator.Execution.DEFERRED)
 public class RequiredValidator implements Validator {
 
   @Override
-  public ValidateResult validate(Object input, List<Object> arguments, ValidateContext context) {
-    if (input == null) {
-      return ValidateResult.fail("import.validate.required",
-        context.headerText() + "不能为空", context.headerText());
+  public ValidateResult validate(@NonNull ValidateContext<?> context, @NonNull List<Object> arguments) {
+    if (context.value() == null) {
+      return ValidateResult.fail(IMPORT_VALIDATE_REQUIRE);
     }
-    if (input instanceof String s && s.isBlank()) {
-      return ValidateResult.fail("import.validate.required",
-        context.headerText() + "不能为空", context.headerText());
+    if (context.value() instanceof String str && str.isBlank()) {
+      return ValidateResult.fail(IMPORT_VALIDATE_REQUIRE);
     }
     return ValidateResult.ok();
   }

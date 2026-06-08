@@ -1,5 +1,6 @@
 package cn.labzen.file.i18n;
 
+import cn.labzen.file.i18n.internal.Internal18nDefaultStore;
 import cn.labzen.file.meta.FileConfiguration;
 import cn.labzen.meta.Labzens;
 
@@ -14,7 +15,8 @@ import cn.labzen.meta.Labzens;
 public final class I18nStoreHolder {
 
   private static final String DEFAULT_LOCALE;
-  private static volatile I18nStoreProvider instance;
+  //  private static volatile I18nStoreProvider instance;
+  private static volatile I18nStoreProvider internal = new Internal18nDefaultStore(new ManualI18nStoreProvider());
 
   static {
     FileConfiguration configuration = Labzens.configurationWith(FileConfiguration.class);
@@ -30,7 +32,8 @@ public final class I18nStoreHolder {
    * @param store 国际化文案仓库
    */
   public static void register(I18nStoreProvider store) {
-    instance = store;
+    internal = new Internal18nDefaultStore(store);
+//    instance = store;
   }
 
   /**
@@ -39,7 +42,7 @@ public final class I18nStoreHolder {
    * @return 国际化文案仓库，未注册时返回 null
    */
   public static I18nStoreProvider get() {
-    return instance;
+    return internal;
   }
 
   public static String defaultLocale() {

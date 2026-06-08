@@ -30,7 +30,7 @@ public class ExcelFileImportTest {
     ImportResult<Property> result = DataFileImporter.by(Property.class)
       .as(FileFormat.EXCEL)
       .locale("zh-CN")
-      .from(new File("C:\\Working\\labzen\\file\\.testing\\property-import.xlsx"));
+      .from(new File("C:\\Working\\labzen\\file\\.testing\\property-import-test.xlsx"));
 
     assertNotNull(result);
   }

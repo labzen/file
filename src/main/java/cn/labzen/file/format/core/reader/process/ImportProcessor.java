@@ -97,8 +97,6 @@ public final class ImportProcessor<T> {
         continue;
       }
 
-      errors = Lists.newArrayList();
-
       String fieldName = column.getFieldName();
       String header = column.getHeader();
       String rawValue = rawRowData.get(code);
@@ -136,10 +134,12 @@ public final class ImportProcessor<T> {
           errors.add(new FieldError(fieldName, header, rawValue, ImportPhase.CONVERT, resolveConvertError(e)));
           continue;
         }
-      } else if (cleansedValue != null && targetType != null) {
-        // 无转换器，尝试默认类型转换
+      }
+
+      // 兜底：转换器链执行后，若值仍为String但目标类型非String，尝试默认类型转换
+      if (convertedValue instanceof String && targetType != null && targetType != String.class) {
         try {
-          convertedValue = defaultTypeConvert(cleansedValue, targetType);
+          convertedValue = defaultTypeConvert((String) convertedValue, targetType);
         } catch (Exception e) {
           errors.add(new FieldError(fieldName, header, rawValue, ImportPhase.CONVERT, resolveConvertError(e)));
           continue;

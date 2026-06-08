@@ -20,6 +20,7 @@ public class ExcelEventListener extends AnalysisEventListener<Map<Integer, Objec
   private static final String MARKER_COLUMN_MOCK = "MOCK";
 
   private volatile boolean headerParsed = false;
+  private volatile boolean firstHintParsed = false;
   private final Map<Integer, String> columnMapping = Maps.newHashMap();
 
   private final List<Map<String, String>> rowsData;
@@ -46,7 +47,14 @@ public class ExcelEventListener extends AnalysisEventListener<Map<Integer, Objec
     }
 
     // 已解析过表头，跳过标记行（CODE/HINT/MOCK）
-    if (MARKER_COLUMN_CODE.equals(marker) || MARKER_COLUMN_HINT.equals(marker) || MARKER_COLUMN_MOCK.equals(marker)) {
+    if (MARKER_COLUMN_CODE.equals(marker) || MARKER_COLUMN_MOCK.equals(marker)) {
+      return;
+    }
+    // 兼容两级表头的第二行跳过
+    if (!firstHintParsed && MARKER_COLUMN_HINT.equals(marker)) {
+      firstHintParsed = true;
+      return;
+    } else if (firstHintParsed && Strings.isBlank(marker)) {
       return;
     }
 
@@ -76,6 +84,6 @@ public class ExcelEventListener extends AnalysisEventListener<Map<Integer, Objec
   @Override
   public void doAfterAllAnalysed(AnalysisContext analysisContext) {
     // 读取完成，可以做一些后续处理
-    System.out.println("读取完成，共读取 " + rowsData.size() + " 行数据");
+//    System.out.println("读取完成，共读取 " + rowsData.size() + " 行数据");
   }
 }

@@ -78,7 +78,7 @@ public abstract class AbstractDataFileWriter<T> implements DataFileWriter<T> {
 
   @Override
   public final void write(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream) {
-//    I18nStoreProvider store = I18nStoreHolder.get();
+//    I18nMessageSource messageSource = I18nMessageSourceHolder.get();
 //    I18nResolver resolver = new I18nResolver(store);
 //    DataDefinition resolved = resolver.resolve(definition, locale);
 //    Map<String, ChainableExportConverterExecutor> executors = ChainableExportConverterExecutor.get(definition, locale);

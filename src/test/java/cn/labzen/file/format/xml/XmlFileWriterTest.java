@@ -1,14 +1,10 @@
 package cn.labzen.file.format.xml;
 
 import cn.labzen.file.bean.Property;
-import cn.labzen.file.definition.DefinitionLoader;
-import cn.labzen.file.definition.DefinitionRegistry;
 import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.format.DataFileExporter;
 import cn.labzen.file.format.FormatTestHelper;
-import cn.labzen.file.format.I18nData;
 import cn.labzen.file.format.MockData;
-import cn.labzen.meta.LabzenMetaInitializer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -50,7 +47,7 @@ class XmlFileWriterTest {
       DataFileExporter.by(Property.class)
         .with(data)
         .as(FileFormat.XML)
-        .locale("en-US")
+        .locale(Locale.SIMPLIFIED_CHINESE)
         .folder(FormatTestHelper.outputFolder())
         .name()
         .to();

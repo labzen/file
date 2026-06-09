@@ -1,8 +1,8 @@
 package cn.labzen.file.format.core.reader.process;
 
 import cn.labzen.file.definition.bean.DataDefinition;
-import cn.labzen.file.i18n.I18nStoreHolder;
-import cn.labzen.file.i18n.I18nStoreProvider;
+import cn.labzen.file.locale.FileResourceBundleLoader;
+import cn.labzen.file.locale.FormattableResourceBundle;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.Getter;
@@ -13,7 +13,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
 
-import static cn.labzen.file.i18n.internal.Internal18nKeys.IMPORT_CONSTRUCT_ERROR_MESSAGE;
+import static cn.labzen.file.locale.LocaleKeys.IMPORT_CONSTRUCT_ERROR_MESSAGE;
 
 @Getter
 public class ProceedRow<T> {
@@ -42,8 +42,9 @@ public class ProceedRow<T> {
         if (errors == null) {
           errors = Lists.newArrayList();
         }
-        I18nStoreProvider i18nStore = I18nStoreHolder.get();
-        String message = i18nStore.getText("", IMPORT_CONSTRUCT_ERROR_MESSAGE);
+
+        FormattableResourceBundle resourceBundle = FileResourceBundleLoader.load(definition.getLocale());
+        String message = resourceBundle.getString(IMPORT_CONSTRUCT_ERROR_MESSAGE);
         errors.add(new FieldError("", "", null, ImportPhase.CONSTRUCT, message));
       }
     }

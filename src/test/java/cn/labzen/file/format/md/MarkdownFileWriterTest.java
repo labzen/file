@@ -1,13 +1,10 @@
 package cn.labzen.file.format.md;
 
 import cn.labzen.file.bean.Property;
-import cn.labzen.file.definition.DefinitionLoader;
-import cn.labzen.file.definition.DefinitionRegistry;
 import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.format.DataFileExporter;
 import cn.labzen.file.format.FormatTestHelper;
 import cn.labzen.file.format.MockData;
-import cn.labzen.meta.LabzenMetaInitializer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

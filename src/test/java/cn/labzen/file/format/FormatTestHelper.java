@@ -22,7 +22,7 @@ public class FormatTestHelper {
     );
     loader.load();
 
-    I18nData.prepare();
+//    I18nData.prepare();
 
     File outputDir = new File(OUTPUT_DIR);
     if (!outputDir.exists()) {

@@ -9,7 +9,7 @@ import org.jspecify.annotations.NonNull;
 
 import java.util.List;
 
-import static cn.labzen.file.i18n.internal.Internal18nKeys.IMPORT_VALIDATE_DEPENDS_ON;
+import static cn.labzen.file.locale.LocaleKeys.IMPORT_VALIDATE_DEPENDS_ON;
 import static cn.labzen.file.validator.Validator.DEPENDS_ON_NAME;
 import static cn.labzen.file.validator.Validator.DEPENDS_ON_PRIORITY;
 

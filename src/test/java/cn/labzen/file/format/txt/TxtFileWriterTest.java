@@ -1,13 +1,10 @@
 package cn.labzen.file.format.txt;
 
 import cn.labzen.file.bean.Property;
-import cn.labzen.file.definition.DefinitionLoader;
-import cn.labzen.file.definition.DefinitionRegistry;
 import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.format.DataFileExporter;
 import cn.labzen.file.format.FormatTestHelper;
 import cn.labzen.file.format.MockData;
-import cn.labzen.meta.LabzenMetaInitializer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -48,7 +45,7 @@ class TxtFileWriterTest {
     DataFileExporter.by(Property.class)
       .with(data)
       .as(FileFormat.TXT)
-      .to(OUTPUT_FILE);
+      .to(outputFile);
 
     assertTrue(outputFile.exists(), "TXT 文件应已创建");
 

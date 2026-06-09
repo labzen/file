@@ -16,6 +16,7 @@ import lombok.NoArgsConstructor;
 
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -43,7 +44,7 @@ public class DataDefinition {
   /**
    * 语言
    */
-  private String locale;
+  private Locale locale;
 
   /**
    * 导出文件名

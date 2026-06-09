@@ -10,7 +10,7 @@ import org.jspecify.annotations.NonNull;
 import java.util.List;
 import java.util.Objects;
 
-import static cn.labzen.file.i18n.internal.Internal18nKeys.IMPORT_VALIDATE_UNIQUE;
+import static cn.labzen.file.locale.LocaleKeys.IMPORT_VALIDATE_UNIQUE;
 import static cn.labzen.file.validator.Validator.UNIQUE_NAME;
 import static cn.labzen.file.validator.Validator.UNIQUE_PRIORITY;
 

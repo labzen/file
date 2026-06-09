@@ -3,11 +3,10 @@ package cn.labzen.file.definition;
 import cn.labzen.file.converter.executor.ChainableExportConverterExecutor;
 import cn.labzen.file.converter.executor.ChainableImportConverterExecutor;
 import cn.labzen.file.definition.bean.DataDefinition;
-import cn.labzen.file.definition.bean.table.HeaderBuilder;
-import cn.labzen.file.definition.bean.table.HeaderStructure;
-import cn.labzen.file.i18n.I18nResolver;
+import cn.labzen.file.locale.LocaledDefinitionResolver;
 import jakarta.annotation.Nonnull;
 
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -58,16 +57,17 @@ public final class DefinitionRegistry {
   /**
    * 根据名称和区域获取配置
    */
-  public static Optional<DataDefinition> get(String name, String locale) {
+  public static Optional<DataDefinition> get(String name, Locale locale) {
     return get(name).map(original -> {
-      String key = name + "#" + locale;
+      String key = name + "#[" + locale + "]";
       return LOCALIZED_DEFINITION_MAP.computeIfAbsent(key, k -> localize(original, locale));
     });
   }
 
-  private static DataDefinition localize(@Nonnull DataDefinition original, String locale) {
-    I18nResolver i18nResolver = new I18nResolver(original, locale);
-    DataDefinition localizedDefinition = i18nResolver.resolve();
+  private static DataDefinition localize(@Nonnull DataDefinition original, Locale locale) {
+    LocaledDefinitionResolver resolver = new LocaledDefinitionResolver(original, locale);
+//    I18nResolver i18nResolver = new I18nResolver(original, locale);
+    DataDefinition localizedDefinition = resolver.resolve();
 
 //    List<Column> columns = localizedDefinition.getColumns().values().stream().toList();
 //    HeaderStructure headerStructure = HeaderBuilder.build(localizedDefinition);

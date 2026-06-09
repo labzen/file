@@ -7,16 +7,13 @@ import cn.labzen.file.exception.DataReadException;
 import cn.labzen.file.exception.DataWriteException;
 import cn.labzen.file.format.core.reader.DataFileReader;
 import cn.labzen.file.format.core.reader.process.ImportResult;
-import cn.labzen.file.i18n.I18nStoreHolder;
+import cn.labzen.file.locale.FileResourceBundleLoader;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.util.EnumMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.ServiceLoader;
+import java.util.*;
 
 /**
  * 数据文件导入器
@@ -47,12 +44,12 @@ public final class DataFileImporter<T> {
   private final String name;
   //  private final DataDefinition definition;
   private FileFormat format;
-  private String locale;
+  private Locale locale;
 
   private DataFileImporter(Class<T> type) {
     this.type = type;
     this.name = type.getSimpleName();
-    this.locale = I18nStoreHolder.defaultLocale();
+    this.locale = FileResourceBundleLoader.DEFAULT_LOCALE;
 //    this.definition = DefinitionRegistry.get(type.getSimpleName())
 //      .orElseThrow(() -> new DataReadException("未找到类[{}]的数据定义", type.getSimpleName()));
   }
@@ -78,7 +75,15 @@ public final class DataFileImporter<T> {
   /**
    * 设置语言标签
    */
-  public DataFileImporter<T> locale(String locale) {
+  public DataFileImporter<T> locale(String language) {
+    this.locale = FileResourceBundleLoader.forLanguage(language);
+    return this;
+  }
+
+  /**
+   * 设置语言标签
+   */
+  public DataFileImporter<T> locale(Locale locale) {
     this.locale = locale;
     return this;
   }

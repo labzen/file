@@ -10,8 +10,8 @@ import org.jspecify.annotations.NonNull;
 
 import java.util.List;
 
-import static cn.labzen.file.i18n.internal.Internal18nKeys.IMPORT_VALIDATE_LENGTH_MAX;
-import static cn.labzen.file.i18n.internal.Internal18nKeys.IMPORT_VALIDATE_LENGTH_MIN;
+import static cn.labzen.file.locale.LocaleKeys.IMPORT_VALIDATE_LENGTH_MAX;
+import static cn.labzen.file.locale.LocaleKeys.IMPORT_VALIDATE_LENGTH_MIN;
 import static cn.labzen.file.validator.Validator.RANGE_LENGTH_NAME;
 import static cn.labzen.file.validator.Validator.RANGE_LENGTH_PRIORITY;
 

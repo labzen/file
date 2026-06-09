@@ -6,7 +6,7 @@ import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.exception.DataReadException;
 import cn.labzen.file.exception.DataWriteException;
 import cn.labzen.file.format.core.writer.DataFileWriter;
-import cn.labzen.file.i18n.I18nStoreHolder;
+import cn.labzen.file.locale.FileResourceBundleLoader;
 import cn.labzen.file.meta.FileConfiguration;
 import cn.labzen.file.util.DateTimeFormat;
 import cn.labzen.meta.Labzens;
@@ -60,12 +60,12 @@ public final class DataFileExporter<T> {
   private FileFormat format;
   private String filename;
   private File file;
-  private String locale;
+  private Locale locale;
 
   private DataFileExporter(Class<T> type) {
     this.type = type;
     this.name = type.getSimpleName();
-    this.locale = I18nStoreHolder.defaultLocale();
+    this.locale = FileResourceBundleLoader.DEFAULT_LOCALE;
 //    this.definition = DefinitionRegistry.get(name)
 //      .orElseThrow(() -> new IllegalArgumentException("不支持的数据类型导出定义，请确认文件 [" + type + ".yml] 确实存在并有效"));
   }
@@ -98,9 +98,19 @@ public final class DataFileExporter<T> {
   /**
    * 设置导出时的语言标签，用于国际化 ${key} 占位符的解析
    *
-   * @param locale 语言标签，如 zh-CN、en-US
+   * @param language 语言标签，如 zh-CN、en-US
    */
-  public DataFileExporter<T> locale(String locale) {
+  public DataFileExporter<T> locale(String language) {
+    this.locale = FileResourceBundleLoader.forLanguage(language);
+    return this;
+  }
+
+  /**
+   * 设置导出时的语言标签，用于国际化 ${key} 占位符的解析
+   *
+   * @param locale 地区
+   */
+  public DataFileExporter<T> locale(Locale locale) {
     this.locale = locale;
     return this;
   }

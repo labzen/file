@@ -7,8 +7,8 @@ import cn.labzen.file.definition.bean.column.Column;
 import cn.labzen.file.definition.bean.column.Importing;
 import cn.labzen.file.exception.DataConvertException;
 import cn.labzen.file.exception.DataReadException;
-import cn.labzen.file.i18n.I18nStoreHolder;
-import cn.labzen.file.i18n.I18nStoreProvider;
+import cn.labzen.file.locale.FileResourceBundleLoader;
+import cn.labzen.file.locale.FormattableResourceBundle;
 import cn.labzen.file.validator.ChainableValidatorExecutor;
 import cn.labzen.file.validator.ValidateContext;
 import cn.labzen.file.validator.ValidateResult;
@@ -22,8 +22,8 @@ import java.math.BigDecimal;
 import java.util.*;
 
 import static cn.labzen.file.format.core.reader.DataFileReader.SEQUENCE_KEY;
-import static cn.labzen.file.i18n.internal.Internal18nKeys.IMPORT_CLEANSING_ERROR_MESSAGE;
-import static cn.labzen.file.i18n.internal.Internal18nKeys.IMPORT_CONVERTER_ERROR_MESSAGE;
+import static cn.labzen.file.locale.LocaleKeys.IMPORT_CLEANSING_ERROR_MESSAGE;
+import static cn.labzen.file.locale.LocaleKeys.IMPORT_CONVERTER_ERROR_MESSAGE;
 import static cn.labzen.file.validator.Validator.*;
 
 /**
@@ -39,8 +39,8 @@ public final class ImportProcessor<T> {
 
   private final DataDefinition definition;
   private final Class<T> type;
-  private final String locale;
-  private final I18nStoreProvider i18nStore;
+  private final Locale locale;
+  private final FormattableResourceBundle resourceBundle;
 
   private final Map<String, ChainableCleanserExecutor> cleansers = Maps.newHashMap();
   private final Map<String, ChainableValidatorExecutor> validators = Maps.newHashMap();
@@ -58,7 +58,7 @@ public final class ImportProcessor<T> {
     //noinspection unchecked
     this.type = (Class<T>) definition.getDomainClass();
     this.locale = definition.getLocale();
-    this.i18nStore = I18nStoreHolder.get();
+    this.resourceBundle = FileResourceBundleLoader.load(locale);
 
     buildCleansers();
     buildValidators();
@@ -205,18 +205,18 @@ public final class ImportProcessor<T> {
   }
 
   private String resolveCleansingError(Exception e) {
-    String text = i18nStore.getText(locale, IMPORT_CLEANSING_ERROR_MESSAGE, e.getMessage());
+    String text = resourceBundle.getString(IMPORT_CLEANSING_ERROR_MESSAGE, e.getMessage());
     return Strings.value(text, "");
   }
 
   private String resolveValidateResult(ValidateResult result) {
     // 从I18n获取
-    String text = i18nStore.getText(locale, result.getErrorI18nCode(), result.getErrorArgs());
+    String text = resourceBundle.getString(result.getErrorI18nCode(), result.getErrorArgs());
     return Strings.value(text, "");
   }
 
   private String resolveConvertError(Exception e) {
-    String text = i18nStore.getText(locale, IMPORT_CONVERTER_ERROR_MESSAGE, e.getMessage());
+    String text = resourceBundle.getString(IMPORT_CONVERTER_ERROR_MESSAGE, e.getMessage());
     return Strings.value(text, "");
   }
 

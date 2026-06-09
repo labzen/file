@@ -14,7 +14,7 @@ import java.time.LocalTime;
 import java.util.Date;
 import java.util.List;
 
-import static cn.labzen.file.i18n.internal.Internal18nKeys.*;
+import static cn.labzen.file.locale.LocaleKeys.*;
 import static cn.labzen.file.validator.Validator.RANGE_DATE_NAME;
 import static cn.labzen.file.validator.Validator.RANGE_DATE_PRIORITY;
 

@@ -10,8 +10,9 @@ import cn.labzen.file.definition.bean.table.HeaderCell;
 import cn.labzen.file.definition.bean.table.HeaderStructure;
 import cn.labzen.file.exception.DataReadException;
 import cn.labzen.file.exception.DataWriteException;
-import cn.labzen.file.i18n.I18nStoreHolder;
-import cn.labzen.file.i18n.I18nStoreProvider;
+import cn.labzen.file.locale.FileResourceBundleLoader;
+import cn.labzen.file.locale.FormattableResourceBundle;
+import cn.labzen.file.util.LocaledTextWithPlaceholder;
 import cn.labzen.tool.util.Collections;
 import cn.labzen.tool.util.Strings;
 import lombok.extern.slf4j.Slf4j;
@@ -32,12 +33,11 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static cn.labzen.file.i18n.internal.Internal18nKeys.*;
+import static cn.labzen.file.locale.LocaleKeys.*;
 
 /**
  * Excel 导入模板生成器
@@ -56,8 +56,6 @@ import static cn.labzen.file.i18n.internal.Internal18nKeys.*;
 @Slf4j
 public final class ExcelTemplateGenerator {
 
-  private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\$\\{([^}]+)}");
-
   private static final int PREPARE_ROW_NUMBER = 1000;
   private static final String MARKER_TEXT_CODE = "CODE";
   private static final String MARKER_TEXT_HINT = "HINT";
@@ -73,19 +71,20 @@ public final class ExcelTemplateGenerator {
 
   private static final int VALIDATION_CONSTRAINT_ERROR = DataValidation.ErrorStyle.WARNING;
 
-  private final I18nStoreProvider i18nStore;
+  //  private final I18nMessageSource i18nMessageSource;
   private final DataDefinition definition;
-  private final String locale;
+  //  private final Locale locale;
+  private final FormattableResourceBundle resourceBundle;
   private Sheet sheet;
   private DataValidationHelper validationHelper;
 
   private String constraintBoxTitle;
   private String constraintBoxMessage;
 
-  public ExcelTemplateGenerator(DataDefinition definition, String locale) {
+  public ExcelTemplateGenerator(DataDefinition definition, Locale locale) {
     this.definition = definition;
-    this.locale = locale;
-    this.i18nStore = I18nStoreHolder.get();
+//    this.locale = locale;
+    this.resourceBundle = FileResourceBundleLoader.load(locale);
   }
 
   /**
@@ -118,7 +117,7 @@ public final class ExcelTemplateGenerator {
     Cell columnCodeMarkCell = columnCodeRow.createCell(0);
     columnCodeMarkCell.setCellValue(MARKER_TEXT_CODE);
     columnCodeMarkCell.setCellStyle(headerMarkStyle);
-    String columnCodeComment = i18nStore.getText(locale, TEMPLATE_MARKER_CODE_COMMENT);
+    String columnCodeComment = resourceBundle.getString(TEMPLATE_MARKER_CODE_COMMENT);
     addComment(columnCodeMarkCell, columnCodeComment);
 
     columnIndex = 1;
@@ -138,7 +137,7 @@ public final class ExcelTemplateGenerator {
     Cell columnHintMarkCell = columnHintRow.createCell(0);
     columnHintMarkCell.setCellValue(MARKER_TEXT_HINT);
     columnHintMarkCell.setCellStyle(headerMarkStyle);
-    addComment(columnHintMarkCell, i18nStore.getText(locale, TEMPLATE_MARKER_HINT_COMMENT));
+    addComment(columnHintMarkCell, resourceBundle.getString(TEMPLATE_MARKER_HINT_COMMENT));
 
     HeaderStructure headers = definition.getHeaders();
     boolean singleHeader = headers.isSingleHeader();
@@ -195,7 +194,7 @@ public final class ExcelTemplateGenerator {
         Cell mockMarkCell = mockRow.createCell(0);
         mockMarkCell.setCellValue(MARKER_MOCK);
         mockMarkCell.setCellStyle(mockMarkStyle);
-        addComment(mockMarkCell, i18nStore.getText(locale, TEMPLATE_MARKER_MOCK_COMMENT));
+        addComment(mockMarkCell, resourceBundle.getString(TEMPLATE_MARKER_MOCK_COMMENT));
 
         columnIndex = 1;
         for (Column column : columns) {
@@ -224,8 +223,8 @@ public final class ExcelTemplateGenerator {
       setupCellFormat(columnIndex, column);
 
       try {
-        constraintBoxTitle = i18nStore.getText(locale, TEMPLATE_CONSTRAINT_BOX_TITLE);
-        constraintBoxMessage = i18nStore.getText(locale, TEMPLATE_CONSTRAINT_BOX_MESSAGE);
+        constraintBoxTitle = resourceBundle.getString(TEMPLATE_CONSTRAINT_BOX_TITLE);
+        constraintBoxMessage = resourceBundle.getString(TEMPLATE_CONSTRAINT_BOX_MESSAGE);
 
         Importing importing = column.getImporting();
         if (importing != null) {
@@ -448,24 +447,24 @@ public final class ExcelTemplateGenerator {
 
     Importing importing = column.getImporting();
     if (importing != null) {
-      if (importing.getRequire()) sb.append(i18nStore.getText(locale, TEMPLATE_HINT_REQUIRED_VALUE)).append(CR);
+      if (importing.getRequire()) sb.append(resourceBundle.getString(TEMPLATE_HINT_REQUIRED_VALUE)).append(CR);
       if (importing.getMaxLength() != null)
-        sb.append(i18nStore.getText(locale, TEMPLATE_HINT_MAX_LENGTH, importing.getMaxLength())).append(CR);
+        sb.append(resourceBundle.getString(TEMPLATE_HINT_MAX_LENGTH, importing.getMaxLength())).append(CR);
       if (importing.getMinLength() != null)
-        sb.append(i18nStore.getText(locale, TEMPLATE_HINT_MIN_LENGTH, importing.getMinLength())).append(CR);
+        sb.append(resourceBundle.getString(TEMPLATE_HINT_MIN_LENGTH, importing.getMinLength())).append(CR);
       if (importing.getMax() != null)
-        sb.append(i18nStore.getText(locale, TEMPLATE_HINT_MAX_NUMBER, importing.getMax())).append(CR);
+        sb.append(resourceBundle.getString(TEMPLATE_HINT_MAX_NUMBER, importing.getMax())).append(CR);
       if (importing.getMin() != null)
-        sb.append(i18nStore.getText(locale, TEMPLATE_HINT_MIN_NUMBER, importing.getMin())).append(CR);
+        sb.append(resourceBundle.getString(TEMPLATE_HINT_MIN_NUMBER, importing.getMin())).append(CR);
       if (importing.getDependsOn() != null) {
         String dependsText = String.join(", ", importing.getDependsOn());
-        sb.append(i18nStore.getText(locale, TEMPLATE_HINT_DEPENDS_ON, dependsText)).append(CR);
+        sb.append(resourceBundle.getString(TEMPLATE_HINT_DEPENDS_ON, dependsText)).append(CR);
       }
 
       // 方案C：使用 importing 专属 mapping，而非共享 mapping
       Map<String, String> mapping = importing.getMapping();
       if (mapping != null) {
-        sb.append(i18nStore.getText(locale, TEMPLATE_HINT_OPTIONS)).append(CR);
+        sb.append(resourceBundle.getString(TEMPLATE_HINT_OPTIONS)).append(CR);
         String optionsText = mapping.values().stream().map(v -> "- " + v).collect(Collectors.joining(CR));
         sb.append(optionsText);
       }
@@ -545,26 +544,7 @@ public final class ExcelTemplateGenerator {
     return font;
   }
 
-  /**
-   * 解析文本中的 ${key} 占位符
-   *
-   * @param text 原始文本，可能包含 ${key}
-   * @return 替换后的文本
-   */
-  @SuppressWarnings("DuplicatedCode")
   private String resolveText(String text) {
-    if (text == null || !text.contains("${")) {
-      return text;
-    }
-
-    Matcher matcher = PLACEHOLDER_PATTERN.matcher(text);
-    StringBuilder result = new StringBuilder();
-    while (matcher.find()) {
-      String key = matcher.group(1);
-      String replacement = i18nStore.getText(locale, key);
-      matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
-    }
-    matcher.appendTail(result);
-    return result.toString();
+    return LocaledTextWithPlaceholder.resolve(resourceBundle, text);
   }
 }

@@ -1,31 +1,32 @@
-package cn.labzen.file.i18n;
+package cn.labzen.file.locale;
 
 import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.bean.column.Column;
 import cn.labzen.file.definition.bean.column.Exporting;
 import cn.labzen.file.definition.bean.column.Importing;
+import cn.labzen.file.util.LocaledTextWithPlaceholder;
 import cn.labzen.tool.util.Strings;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-public final class I18nResolver {
+@Slf4j
+public final class LocaledDefinitionResolver {
 
-  private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\$\\{([^}]+)}");
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   private final DataDefinition definition;
-  private final String locale;
-  private final I18nStoreProvider i18NStore;
+  //  private final Locale locale;
+  private final FormattableResourceBundle resourceBundle;
 
-  public I18nResolver(DataDefinition definition, String locale) {
+  public LocaledDefinitionResolver(DataDefinition definition, Locale locale) {
     this.definition = copy(definition);
     this.definition.setLocale(locale);
-    this.locale = locale;
-    this.i18NStore = I18nStoreHolder.get();
+//    this.locale = locale;
+    this.resourceBundle = FileResourceBundleLoader.load(locale);
   }
 
   private DataDefinition copy(DataDefinition definition) {
@@ -109,26 +110,7 @@ public final class I18nResolver {
     resolveMapping(importing.getMapping());
   }
 
-  /**
-   * 解析文本中的 ${key} 占位符
-   *
-   * @param text 原始文本，可能包含 ${key}
-   * @return 替换后的文本
-   */
-  @SuppressWarnings("DuplicatedCode")
   private String resolveText(String text) {
-    if (text == null || !text.contains("${")) {
-      return text;
-    }
-
-    Matcher matcher = PLACEHOLDER_PATTERN.matcher(text);
-    StringBuilder result = new StringBuilder();
-    while (matcher.find()) {
-      String key = matcher.group(1);
-      String replacement = i18NStore.getText(locale, key);
-      matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
-    }
-    matcher.appendTail(result);
-    return result.toString();
+    return LocaledTextWithPlaceholder.resolve(resourceBundle, text);
   }
 }

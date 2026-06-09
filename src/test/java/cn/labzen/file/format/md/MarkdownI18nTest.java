@@ -6,7 +6,7 @@
 //import cn.labzen.file.format.DataFileExporter;
 //import cn.labzen.file.format.I18nData;
 //import cn.labzen.file.i18n.I18nStoreHolder;
-//import cn.labzen.file.i18n.ManualI18nStoreProvider;
+//import cn.labzen.file.i18n.ManualI18nMessageSource;
 //import cn.labzen.meta.LabzenMetaInitializer;
 //import org.junit.jupiter.api.AfterEach;
 //import org.junit.jupiter.api.BeforeEach;
@@ -26,7 +26,7 @@
 //import static org.junit.jupiter.api.Assertions.assertFalse;
 //import static org.junit.jupiter.api.Assertions.assertTrue;
 //
-///**
+/// **
 // * Markdown 文件写入器国际化集成测试
 // * <p>
 // * 使用 PropertyI18n.yml（含 ${key} 占位符），验证端到端 i18n 解析流程：

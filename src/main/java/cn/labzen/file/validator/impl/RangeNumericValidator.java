@@ -10,7 +10,7 @@ import org.jspecify.annotations.NonNull;
 import java.math.BigDecimal;
 import java.util.List;
 
-import static cn.labzen.file.i18n.internal.Internal18nKeys.*;
+import static cn.labzen.file.locale.LocaleKeys.*;
 import static cn.labzen.file.validator.Validator.RANGE_NUMERIC_NAME;
 import static cn.labzen.file.validator.Validator.RANGE_NUMERIC_PRIORITY;
 

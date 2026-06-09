@@ -5,12 +5,13 @@ import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.exception.DataReadException;
 import cn.labzen.file.exception.DataWriteException;
 import cn.labzen.file.format.excel.ExcelTemplateGenerator;
-import cn.labzen.file.i18n.I18nStoreHolder;
+import cn.labzen.file.locale.FileResourceBundleLoader;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.util.Locale;
 
 /**
  * 数据导入模板生成器
@@ -33,15 +34,17 @@ public final class DataTemplateGenerator<T> {
   //  private final Class<T> type;
 //  private final DataDefinition definition;
   private final String name;
-  private String locale;
+  private Locale locale;
 
   private DataTemplateGenerator(Class<T> type) {
     this.name = type.getSimpleName();
     if (!DefinitionRegistry.contains(name)) {
       throw new DataReadException("未找到类[{}]的数据定义", name);
     }
+    this.locale = FileResourceBundleLoader.DEFAULT_LOCALE;
 
-    this.locale = I18nStoreHolder.defaultLocale();
+//    String language = I18nMessageSourceHolder.defaultLocale();
+//    this.locale = FileResourceBundleLoader.forLanguage(language);
 //    this.type = type;
 //    this.definition = DefinitionRegistry.get(type.getSimpleName())
 //      .orElseThrow(() -> new DataReadException("未找到类[{}]的数据定义", type.getSimpleName()));
@@ -57,7 +60,15 @@ public final class DataTemplateGenerator<T> {
   /**
    * 设置语言标签
    */
-  public DataTemplateGenerator<T> locale(String locale) {
+  public DataTemplateGenerator<T> locale(String language) {
+    this.locale = FileResourceBundleLoader.forLanguage(language);
+    return this;
+  }
+
+  /**
+   * 设置语言标签
+   */
+  public DataTemplateGenerator<T> locale(Locale locale) {
     this.locale = locale;
     return this;
   }

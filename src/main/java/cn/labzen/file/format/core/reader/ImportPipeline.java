@@ -10,8 +10,8 @@
 //import cn.labzen.file.format.core.reader.process.ImportFailure;
 //import cn.labzen.file.format.core.reader.process.ImportPhase;
 //import cn.labzen.file.format.core.reader.process.ImportResult;
-//import cn.labzen.file.i18n.I18nStoreHolder;
-//import cn.labzen.file.i18n.I18nStoreProvider;
+//import cn.labzen.file.i18n.I18nMessageSourceHolder;
+//import cn.labzen.file.i18n.I18nMessageSource;
 //import cn.labzen.file.validator.ChainableValidatorExecutor;
 //import cn.labzen.file.validator.ValidateContext;
 //import cn.labzen.file.validator.ValidateResult;
@@ -55,7 +55,7 @@
 //    this.locale = locale;
 //
 //    // i18n 解析
-////    I18nStoreProvider store = I18nStoreHolder.get();
+////    I18nMessageSource messageSource = I18nMessageSourceHolder.get();
 ////    I18nResolverTmp resolver = new I18nResolverTmp(store);
 ////    DataDefinition resolved = resolver.resolve(definition, locale);
 //
@@ -396,8 +396,8 @@
 //
 //  private String resolveErrorMessage(ValidateResult result) {
 //    // 优先从I18n获取，fallback到默认消息
-//    I18nStoreProvider store = I18nStoreHolder.get();
-//    String text = store.getText(locale, result.getErrorI18nCode());
+//    I18nMessageSource messageSource = I18nMessageSourceHolder.get();
+//    String text = messageSource.getText(locale, result.getErrorI18nCode());
 //    if (text != null) {
 //      return text;
 //    }
@@ -405,8 +405,8 @@
 //  }
 //
 //  private String resolveConvertErrorMessage(DataConvertException e, String headerText) {
-//    I18nStoreProvider store = I18nStoreHolder.get();
-//    String text = store.getText(locale, "import.convert.type");
+//    I18nMessageSource messageSource = I18nMessageSourceHolder.get();
+//    String text = messageSource.getText(locale, "import.convert.type");
 //    if (text != null) {
 //      return text;
 //    }

@@ -57,11 +57,11 @@ public abstract class AbstractDataFileWriter<T> implements DataFileWriter<T> {
       if (executor != null) {
         return executor.execute(value);
       } else {
-        logger.warn("未找到字段转换器 [{} - {}]", definition.getDomainName(), fieldName);
+        logger.warn("未找到字段转换器 [{} - {}]", definition.getName(), fieldName);
         return "failed";
       }
     } catch (NoSuchFieldException | IllegalAccessException e) {
-      throw new DataWriteException(e, "无法访问字段 - {}#{}", definition.getDomainName(), fieldName);
+      throw new DataWriteException(e, "无法访问字段 - {}#{}", definition.getName(), fieldName);
     }
   }
 

@@ -1,7 +1,6 @@
 package cn.labzen.file.converter.executor;
 
 import cn.labzen.file.converter.Converter;
-import cn.labzen.file.converter.ImportableConverter;
 import cn.labzen.file.definition.bean.DataDefinition;
 import com.google.common.collect.Lists;
 
@@ -14,7 +13,7 @@ public abstract class ChainableExecutor<C extends Converter> {
   final List<ConfiguredConverter<C>> converters = Lists.newArrayList();
 
   protected static String cacheKey(DataDefinition definition, String columnName) {
-    return definition.getDomainName() + "#" + definition.getLocale() + "@@" + columnName;
+    return definition.getName() + "#" + definition.getLocale() + "@@" + columnName;
   }
 
   protected void sortConverter() {

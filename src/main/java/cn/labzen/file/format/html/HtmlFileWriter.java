@@ -4,8 +4,8 @@ import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.bean.column.Column;
 import cn.labzen.file.definition.bean.style.Font;
 import cn.labzen.file.definition.bean.style.Style;
-import cn.labzen.file.definition.bean.table.HeaderCell;
-import cn.labzen.file.definition.bean.table.HeaderStructure;
+import cn.labzen.file.definition.bean.head.HeaderCell;
+import cn.labzen.file.definition.bean.head.HeaderStructure;
 import cn.labzen.file.definition.enums.Alignment;
 import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.exception.DataWriteException;
@@ -95,7 +95,7 @@ public final class HtmlFileWriter<T> extends AbstractDataFileWriter<T> {
   protected void exportContent(@Nonnull DataDefinition definition, @Nonnull List<Map<String, Object>> rows, @Nonnull OutputStream outputStream) {
     Map<String, Column> columns = definition.getColumns();
     HeaderStructure headers = definition.getHeaders();
-    String title = escapeHtml(definition.getTitle());
+    String title = escapeHtml(definition.getExportTitle());
     Style headerStyle = definition.getExportingHeaderStyle();
     Style contentStyle = definition.getExportingColumnStyle();
 

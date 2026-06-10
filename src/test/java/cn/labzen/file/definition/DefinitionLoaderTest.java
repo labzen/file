@@ -65,8 +65,8 @@ class DefinitionLoaderTest {
     assertTrue(configOpt.isPresent());
 
     DataDefinition config = configOpt.get();
-    assertEquals("property", config.getFilename());
-    assertEquals("系统属性", config.getTitle());
+    assertEquals("property", config.getExportFilename());
+    assertEquals("系统属性", config.getExportTitle());
   }
 
   @Test

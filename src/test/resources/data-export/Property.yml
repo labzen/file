@@ -1,7 +1,7 @@
-# $schema: https://labzen-schema.oss-cn-beijing.aliyuncs.com/file-export/labzen-file-export-data-schema.json
-filename: property
+# $schema: https://json-schema.oss-cn-beijing.aliyuncs.com/labzen-file-data-v2.json
 domain: cn.labzen.file.bean.Property
-title: ${property-title}
+export-filename: property
+export-title: ${property-title}
 exporing-header-style:
   background: "#e4e6e8"
   font:

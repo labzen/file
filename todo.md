@@ -20,3 +20,4 @@
 - [x] 想个办法，支持i18n，配合paragon的界面语言选择使用
 - [x] 导入功能
 - [x] I18nStoreProvider 接口命名过于中性，重构名称
+- [ ] json schema 文件中，对于filename和title，应该归入导出的配置中；相应的Bean中，应该处于 文件scope 的exporting中

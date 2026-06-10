@@ -1,4 +1,4 @@
-package cn.labzen.file.definition.bean.table;
+package cn.labzen.file.definition.bean.head;
 
 import java.util.List;
 import java.util.Map;

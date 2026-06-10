@@ -21,7 +21,7 @@ import java.util.Map;
  * <p>
  * 使用 Apache POI 库实现 Excel（.xlsx）文件的生成，支持：
  * <ul>
- *   <li>多级表头（通过 {@link cn.labzen.file.definition.bean.table.HeaderStructure} 预计算合并信息）</li>
+ *   <li>多级表头（通过 {@link cn.labzen.file.definition.bean.head.HeaderStructure} 预计算合并信息）</li>
  *   <li>单元格背景色、字体、边框、对齐方式</li>
  *   <li>列宽配置</li>
  *   <li>样式缓存，避免重复创建 CellStyle</li>
@@ -77,7 +77,7 @@ public final class ExcelFileWriter<T> extends AbstractDataFileWriter<T> {
    * @return 合法的 Sheet 名称
    */
   private String resolveSheetName(DataDefinition definition) {
-    String title = Strings.valueWhenBlank(definition.getTitle(), "data");
+    String title = Strings.valueWhenBlank(definition.getExportTitle(), "data");
 
     // Excel sheet 名称最大 31 字符，不能包含 : \ / ? * [ ]
     String sanitized = title.replaceAll("[:\\\\/?*\\[\\]]", "_").trim();

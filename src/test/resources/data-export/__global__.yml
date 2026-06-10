@@ -1,4 +1,4 @@
-# $schema: ../schema/def-global-schema.json
+# $schema: https://json-schema.oss-cn-beijing.aliyuncs.com/labzen-file-global-v2.json
 width: 100
 exporting-header-style:
   align: CENTER

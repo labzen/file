@@ -6,11 +6,11 @@ import cn.labzen.file.definition.bean.GlobalDefinition;
 import cn.labzen.file.definition.bean.column.Column;
 import cn.labzen.file.definition.bean.column.Exporting;
 import cn.labzen.file.definition.bean.column.Importing;
-import cn.labzen.file.definition.bean.scoped.GlobalExporting;
-import cn.labzen.file.definition.bean.scoped.GlobalImporting;
+import cn.labzen.file.definition.bean.column.GlobalExporting;
+import cn.labzen.file.definition.bean.column.GlobalImporting;
 import cn.labzen.file.definition.bean.style.Font;
 import cn.labzen.file.definition.bean.style.Style;
-import cn.labzen.file.definition.bean.table.HeaderBuilder;
+import cn.labzen.file.definition.bean.head.HeaderBuilder;
 import cn.labzen.file.definition.resource.Resource;
 import cn.labzen.file.definition.resource.ResourcePatternResolver;
 import cn.labzen.file.exception.DefinitionLoaderException;
@@ -174,7 +174,7 @@ public class DefinitionLoader {
       assert filename != null;
       int extensionIndex = filename.lastIndexOf(".");
       String domainName = filename.substring(0, extensionIndex);
-      definition.setDomainName(domainName);
+      definition.setName(domainName);
 
       // 加载文件对应的domain类信息
       loadDomainClass(definition);
@@ -237,7 +237,7 @@ public class DefinitionLoader {
         }
       }
     } catch (Exception e) {
-      logger.warn("Mock数据文件加载失败或不存在，domain: {}", definition.getDomainName());
+      logger.warn("Mock数据文件加载失败或不存在，domain: {}", definition.getName());
     }
     return null;
   }
@@ -260,7 +260,7 @@ public class DefinitionLoader {
         })
         .map(this::loadDataDefinition)
         .filter(Objects::nonNull)
-        .collect(Collectors.toMap(DataDefinition::getDomainName, definition -> definition));
+        .collect(Collectors.toMap(DataDefinition::getName, definition -> definition));
     } catch (IOException e) {
       logger.atWarn().setCause(e).log("数据导出文件配置的目录扫描加载失败，from: {}", dataLocationPattern);
       return null;
@@ -625,16 +625,16 @@ public class DefinitionLoader {
    * 校验配置
    */
   private void validateDataDefinition(DataDefinition definition) {
-    if (Strings.isBlank(definition.getFilename())) {
-      throw new DefinitionLoaderException("{} 定义文件中的 filename 不能为空", definition.getDomainName());
+    if (Strings.isBlank(definition.getExportFilename())) {
+      throw new DefinitionLoaderException("{} 定义文件中的 filename 不能为空", definition.getName());
     }
 
-    if (Strings.isBlank(definition.getTitle())) {
-      throw new DefinitionLoaderException("{} 定义文件中的 title 不能为空", definition.getDomainName());
+    if (Strings.isBlank(definition.getExportTitle())) {
+      throw new DefinitionLoaderException("{} 定义文件中的 title 不能为空", definition.getName());
     }
 
     if (definition.getColumns() == null || definition.getColumns().isEmpty()) {
-      throw new DefinitionLoaderException("{} 定义文件中的 columns 不能为空", definition.getDomainName());
+      throw new DefinitionLoaderException("{} 定义文件中的 columns 不能为空", definition.getName());
     }
 
     // 校验列定义
@@ -643,10 +643,10 @@ public class DefinitionLoader {
       Column column = entry.getValue();
 
       if (Strings.isBlank(column.getHeader())) {
-        throw new DefinitionLoaderException("{} 定义文件中的列 [{}] 的 header 不能为空", definition.getDomainName(), fieldName);
+        throw new DefinitionLoaderException("{} 定义文件中的列 [{}] 的 header 不能为空", definition.getName(), fieldName);
       }
       if (!HeaderBuilder.isValidHeaderLevel(column.getHeader())) {
-        throw new DefinitionLoaderException("{} 定义文件中的列 [{}] 的 header 暂时无法支持定义的多级表头", definition.getDomainName(), fieldName);
+        throw new DefinitionLoaderException("{} 定义文件中的列 [{}] 的 header 暂时无法支持定义的多级表头", definition.getName(), fieldName);
       }
     }
   }

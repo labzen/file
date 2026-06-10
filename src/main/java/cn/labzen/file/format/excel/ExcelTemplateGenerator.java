@@ -6,8 +6,8 @@ import cn.labzen.file.definition.bean.column.Importing;
 import cn.labzen.file.definition.bean.column.constraint.DateRange;
 import cn.labzen.file.definition.bean.column.constraint.LengthRange;
 import cn.labzen.file.definition.bean.column.constraint.NumericRange;
-import cn.labzen.file.definition.bean.table.HeaderCell;
-import cn.labzen.file.definition.bean.table.HeaderStructure;
+import cn.labzen.file.definition.bean.head.HeaderCell;
+import cn.labzen.file.definition.bean.head.HeaderStructure;
 import cn.labzen.file.exception.DataReadException;
 import cn.labzen.file.exception.DataWriteException;
 import cn.labzen.file.locale.FileResourceBundleLoader;
@@ -92,7 +92,7 @@ public final class ExcelTemplateGenerator {
    */
   public void generate(OutputStream outputStream) {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-      String sheetTitle = definition.getTitle() != null ? definition.getTitle() : definition.getDomainName();
+      String sheetTitle = definition.getExportTitle() != null ? definition.getExportTitle() : definition.getName();
       this.sheet = workbook.createSheet(sheetTitle);
       this.validationHelper = sheet.getDataValidationHelper();
       doGenerate(sheet, definition);

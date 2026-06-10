@@ -1,4 +1,4 @@
-package cn.labzen.file.definition.bean.table;
+package cn.labzen.file.definition.bean.head;
 
 import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.bean.column.Column;

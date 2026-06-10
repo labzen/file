@@ -1,13 +1,9 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://labzen.cn/file/export-schema.json",
-  "title": "Global Data Export Style Schema",
-  "description": "数据导出全局样式元数据定义 Schema，仅定义全局的数据样式，不涉及到任何具体的字段信息",
+  "$id": "https://labzen.cn/json-schema/file-global/v2",
+  "title": "Global Data Definition Style Schema",
+  "description": "数据文件全局定义 Schema",
   "type": "object",
-  "required": [
-    "header",
-    "column"
-  ],
   "properties": {
     "exporting-header-style": {
       "$ref": "#/definitions/Style",

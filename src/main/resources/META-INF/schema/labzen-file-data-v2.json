@@ -1,22 +1,25 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://labzen.cn/file/export-schema.json",
-  "title": "Data Export Schema",
-  "description": "数据导出元数据定义 Schema，用于定义数据库映射类导出文件时的列信息、样式、数据转换等配置",
+  "$id": "https://labzen.cn/json-schema/file-data/v2",
+  "title": "Data Definition Export Schema",
+  "description": "数据文件元数据定义 Schema，用于定义数据库映射类导入/出文件时的列信息、样式、数据转换等配置",
   "type": "object",
   "required": [
-    "filename",
-    "title",
+    "domain",
     "columns"
   ],
   "properties": {
-    "filename": {
+    "domain": {
+      "type": "string",
+      "description": "域映射类的FQCN"
+    },
+    "export-filename": {
       "type": "string",
       "description": "导出文件名，不包含扩展名"
     },
-    "title": {
+    "export-title": {
       "type": "string",
-      "description": "数据标题（用于显示在表头上方，如果导出是Excel则是sheet名，如是csv则会忽略，其他文件格式会作为数据表格上方的标题）。支持国际化：使用 ${key} 占位符，导出时根据locale替换为对应文本"
+      "description": "导出数据标题（用于显示在表头上方，如果导出是Excel则是sheet名，如是csv则会忽略，其他文件格式会作为数据表格上方的标题）。支持国际化：使用 ${key} 占位符，导出时根据locale替换为对应文本"
     },
     "exporting-header-style": {
       "$ref": "#/definitions/Style",

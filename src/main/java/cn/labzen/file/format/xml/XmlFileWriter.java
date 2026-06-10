@@ -53,8 +53,8 @@ public final class XmlFileWriter<T> extends AbstractDataFileWriter<T> {
 
   @Override
   protected void exportContent(@Nonnull DataDefinition definition, @Nonnull List<Map<String, Object>> rows, @Nonnull OutputStream outputStream) {
-    String filename = definition.getFilename();
-    String title = definition.getTitle();
+    String filename = definition.getExportFilename();
+    String title = definition.getExportTitle();
 
     try (OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)) {
       String content = buildXml(filename, title, rows);

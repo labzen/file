@@ -34,7 +34,7 @@ public final class LocaledDefinitionResolver {
   }
 
   public DataDefinition resolve() {
-    definition.setTitle(resolveText(definition.getTitle()));
+    definition.setExportTitle(resolveText(definition.getExportTitle()));
 
     // 解析列定义
     if (definition.getColumns() != null) {

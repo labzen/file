@@ -1,6 +1,5 @@
 package cn.labzen.file.definition.bean.column;
 
-import cn.labzen.file.definition.bean.scoped.GlobalExporting;
 import cn.labzen.file.definition.bean.style.Style;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

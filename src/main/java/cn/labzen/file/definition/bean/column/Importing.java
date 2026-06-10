@@ -3,7 +3,6 @@ package cn.labzen.file.definition.bean.column;
 import cn.labzen.file.definition.bean.column.constraint.DateRange;
 import cn.labzen.file.definition.bean.column.constraint.LengthRange;
 import cn.labzen.file.definition.bean.column.constraint.NumericRange;
-import cn.labzen.file.definition.bean.scoped.GlobalImporting;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

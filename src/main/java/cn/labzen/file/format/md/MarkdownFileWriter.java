@@ -78,7 +78,7 @@ public final class MarkdownFileWriter<T> extends AbstractDataFileWriter<T> {
   protected void exportContent(@Nonnull DataDefinition definition, @Nonnull List<Map<String, Object>> rows, @Nonnull OutputStream outputStream) {
     List<String> headers = definition.getHeaders().getLeafLevelHeaders();
     Map<String, Column> columns = definition.getColumns();
-    String title = definition.getTitle();
+    String title = definition.getExportTitle();
 
     try (OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)) {
       // 第一行：Markdown 大标题

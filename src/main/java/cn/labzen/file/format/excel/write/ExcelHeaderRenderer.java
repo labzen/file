@@ -1,8 +1,8 @@
 package cn.labzen.file.format.excel.write;
 
 import cn.labzen.file.definition.bean.style.Style;
-import cn.labzen.file.definition.bean.table.HeaderCell;
-import cn.labzen.file.definition.bean.table.HeaderStructure;
+import cn.labzen.file.definition.bean.head.HeaderCell;
+import cn.labzen.file.definition.bean.head.HeaderStructure;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -15,7 +15,7 @@ import org.apache.poi.ss.util.CellRangeAddress;
  * 自动处理横向合并（colSpan）和纵向合并（rowSpan）。
  * <p>
  * 参考 {@link cn.labzen.file.format.pdf.PdfFileWriter#createTableHeader} 的设计思路，
- * 表头结构在定义阶段即由 {@link cn.labzen.file.definition.bean.table.HeaderBuilder} 计算完成，
+ * 表头结构在定义阶段即由 {@link cn.labzen.file.definition.bean.head.HeaderBuilder} 计算完成，
  * 渲染器只需按结构直接输出，无需在导出阶段重新计算合并逻辑。
  *
  * @author labzen

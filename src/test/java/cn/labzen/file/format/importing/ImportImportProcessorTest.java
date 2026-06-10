@@ -1,7 +1,7 @@
 //package cn.labzen.file.format.importing;
 //
 //import cn.labzen.file.definition.bean.DataDefinition;
-//import cn.labzen.file.definition.bean.scoped.GlobalImporting;
+//import cn.labzen.file.definition.bean.column.GlobalImporting;
 //import cn.labzen.file.definition.bean.column.Importing;
 //import cn.labzen.file.definition.bean.column.Column;
 //import cn.labzen.file.format.core.reader.process.ImportFailure;

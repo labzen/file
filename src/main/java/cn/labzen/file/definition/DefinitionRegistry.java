@@ -82,7 +82,7 @@ public final class DefinitionRegistry {
   }
 
   public static Optional<String> getDefinitionFilename(String name) {
-    return get(name).map(DataDefinition::getFilename);
+    return get(name).map(DataDefinition::getExportFilename);
   }
 
   /**

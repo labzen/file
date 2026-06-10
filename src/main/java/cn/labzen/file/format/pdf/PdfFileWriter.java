@@ -3,8 +3,8 @@ package cn.labzen.file.format.pdf;
 import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.bean.column.Column;
 import cn.labzen.file.definition.bean.style.Style;
-import cn.labzen.file.definition.bean.table.HeaderCell;
-import cn.labzen.file.definition.bean.table.HeaderStructure;
+import cn.labzen.file.definition.bean.head.HeaderCell;
+import cn.labzen.file.definition.bean.head.HeaderStructure;
 import cn.labzen.file.definition.enums.Alignment;
 import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.exception.DataWriteException;
@@ -136,7 +136,7 @@ public final class PdfFileWriter<T> extends AbstractDataFileWriter<T> {
    * 构建标题
    */
   private Paragraph buildTitle(@NonNull DataDefinition definition, @Nonnull PdfFont font) {
-    String title = Strings.value(definition.getTitle(), "Unknown Title");
+    String title = Strings.value(definition.getExportTitle(), "Unknown Title");
 
     return new Paragraph(title)
       .setFontSize(18)

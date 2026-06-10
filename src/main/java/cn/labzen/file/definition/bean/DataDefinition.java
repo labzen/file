@@ -5,11 +5,11 @@ import cn.labzen.file.definition.bean.column.Importing;
 import cn.labzen.file.definition.bean.column.constraint.DateRange;
 import cn.labzen.file.definition.bean.column.constraint.LengthRange;
 import cn.labzen.file.definition.bean.column.constraint.NumericRange;
-import cn.labzen.file.definition.bean.scoped.GlobalExporting;
-import cn.labzen.file.definition.bean.scoped.GlobalImporting;
+import cn.labzen.file.definition.bean.column.GlobalExporting;
+import cn.labzen.file.definition.bean.column.GlobalImporting;
 import cn.labzen.file.definition.bean.style.Style;
-import cn.labzen.file.definition.bean.table.HeaderBuilder;
-import cn.labzen.file.definition.bean.table.HeaderStructure;
+import cn.labzen.file.definition.bean.head.HeaderBuilder;
+import cn.labzen.file.definition.bean.head.HeaderStructure;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -32,13 +32,16 @@ public class DataDefinition {
   /**
    * 域名（对应YAML文件名，也对应Java Bean类名）
    */
-  private String domainName;
+  private String name;
 
   /**
    * 域映射类FQCN
    */
   private String domain;
 
+  /**
+   * 域映射类
+   */
   private Class<?> domainClass;
 
   /**
@@ -49,12 +52,12 @@ public class DataDefinition {
   /**
    * 导出文件名
    */
-  private String filename;
+  private String exportFilename;
 
   /**
-   * 数据标题（Excel sheet名/PDF标题等）
+   * 导出数据标题（Excel sheet名/PDF标题等）
    */
-  private String title;
+  private String exportTitle;
 
   /**
    * 单表通用表头样式

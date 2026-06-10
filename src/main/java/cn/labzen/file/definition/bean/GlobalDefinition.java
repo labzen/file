@@ -1,7 +1,7 @@
 package cn.labzen.file.definition.bean;
 
-import cn.labzen.file.definition.bean.scoped.GlobalExporting;
-import cn.labzen.file.definition.bean.scoped.GlobalImporting;
+import cn.labzen.file.definition.bean.column.GlobalExporting;
+import cn.labzen.file.definition.bean.column.GlobalImporting;
 import cn.labzen.file.definition.bean.style.Style;
 import lombok.AllArgsConstructor;
 import lombok.Data;

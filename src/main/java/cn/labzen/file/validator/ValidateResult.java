@@ -2,8 +2,6 @@ package cn.labzen.file.validator;
 
 import lombok.Getter;
 
-import java.util.Arrays;
-
 /**
  * 校验结果
  * <p>
@@ -16,11 +14,9 @@ public class ValidateResult {
 
   private final String errorI18nCode;
   private final Object[] errorArgs;
-//  private final String defaultMessage;
 
   private ValidateResult(String errorI18nCode, Object[] errorArgs) {
     this.errorI18nCode = errorI18nCode;
-//    this.defaultMessage = defaultMessage;
     this.errorArgs = errorArgs;
   }
 
@@ -41,9 +37,4 @@ public class ValidateResult {
   public static ValidateResult fail(String errorCode, Object... errorArgs) {
     return new ValidateResult(errorCode, errorArgs);
   }
-
-//  @Override
-//  public String toString() {
-//    return "ValidateResult{errorCode='" + errorI18nCode + "', args=" + Arrays.toString(errorArgs) + "}";
-//  }
 }

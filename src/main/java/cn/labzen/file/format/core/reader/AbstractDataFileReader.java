@@ -32,7 +32,6 @@ public abstract class AbstractDataFileReader implements DataFileReader {
       List<Map<String, String>> rowsData = importContent(inputStream);
       ImportProcessor<T> pipeline = new ImportProcessor<>(definition);
       return pipeline.process(rowsData);
-//      return rowsData;
     } catch (Exception e) {
       if (e instanceof DataReadException dre) {
         throw dre;

@@ -66,12 +66,8 @@ public final class DefinitionRegistry {
 
   private static DataDefinition localize(@Nonnull DataDefinition original, Locale locale) {
     LocaledDefinitionResolver resolver = new LocaledDefinitionResolver(original, locale);
-//    I18nResolver i18nResolver = new I18nResolver(original, locale);
     DataDefinition localizedDefinition = resolver.resolve();
 
-//    List<Column> columns = localizedDefinition.getColumns().values().stream().toList();
-//    HeaderStructure headerStructure = HeaderBuilder.build(localizedDefinition);
-//    localizedDefinition.setHeaders(headerStructure);
     localizedDefinition.pretreatment();
 
     // 构建导出和导入转换器链

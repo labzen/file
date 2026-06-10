@@ -49,13 +49,10 @@ public final class DataFileExporter<T> {
       writer.initialize(configuration);
       WRITER_INSTANCES.put(writer.format(), writer);
     });
-
-//    DEFAULT_LOCALE = configuration.defaultLocale();
   }
 
   private final Class<T> type;
   private final String name;
-  //  private DataDefinition definition;
   private List<T> data;
   private FileFormat format;
   private String filename;
@@ -66,8 +63,6 @@ public final class DataFileExporter<T> {
     this.type = type;
     this.name = type.getSimpleName();
     this.locale = FileResourceBundleLoader.DEFAULT_LOCALE;
-//    this.definition = DefinitionRegistry.get(name)
-//      .orElseThrow(() -> new IllegalArgumentException("不支持的数据类型导出定义，请确认文件 [" + type + ".yml] 确实存在并有效"));
   }
 
   /**

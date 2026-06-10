@@ -19,13 +19,11 @@ public final class LocaledDefinitionResolver {
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   private final DataDefinition definition;
-  //  private final Locale locale;
   private final FormattableResourceBundle resourceBundle;
 
   public LocaledDefinitionResolver(DataDefinition definition, Locale locale) {
     this.definition = copy(definition);
     this.definition.setLocale(locale);
-//    this.locale = locale;
     this.resourceBundle = FileResourceBundleLoader.load(locale);
   }
 

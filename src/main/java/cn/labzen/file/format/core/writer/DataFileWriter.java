@@ -4,7 +4,6 @@ import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.meta.FileConfiguration;
 import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
 
 import java.io.File;
 import java.io.OutputStream;
@@ -35,35 +34,6 @@ public interface DataFileWriter<T> {
    * @param configuration 文件配置
    */
   void initialize(@Nonnull FileConfiguration configuration);
-
-//  /**
-//   * 导出数据到指定文件路径
-//   *
-//   * @param definition 数据定义配置
-//   * @param data       数据集合
-//   * @param filePath   输出文件路径
-//   */
-//  void write(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull String filePath);
-//
-//  /**
-//   * 导出数据到指定输出流
-//   * <p>
-//   * 此方法主要用于支持 Web 下载等场景，不关闭输出流
-//   *
-//   * @param definition   数据定义配置
-//   * @param data         数据集合
-//   * @param outputStream 输出流
-//   */
-//  void write(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream);
-//
-//  /**
-//   * 导出数据到指定文件
-//   *
-//   * @param definition 数据定义配置
-//   * @param data       数据集合
-//   * @param file       输出文件
-//   */
-//  void write(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull File file);
 
   /**
    * 导出数据到指定输出流，支持国际化

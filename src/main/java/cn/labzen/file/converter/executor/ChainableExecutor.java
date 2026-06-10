@@ -27,15 +27,10 @@ public abstract class ChainableExecutor<C extends Converter> {
       return;
     }
 
-//    DataConverter annotation = converter.getClass().getAnnotation(DataConverter.class);
-//    ConfiguredImportConverter cc;
     if (args.length == 1 && args[0] instanceof List<?> list) {
-//      cc = new ConfiguredImportConverter(annotation.priority(), converter, (List<Object>) list);
       converters.add(new ConfiguredConverter<>(converterInstance, (List<Object>) list));
     } else {
-//      cc = new ConfiguredImportConverter(annotation.priority(), converter, Arrays.stream(args).toList());
       converters.add(new ConfiguredConverter<>(converterInstance, Arrays.stream(args).toList()));
     }
-//    converters.add(cc);
   }
 }

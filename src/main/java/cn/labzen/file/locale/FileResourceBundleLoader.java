@@ -17,8 +17,6 @@ public final class FileResourceBundleLoader {
   private static final List<FileResourceBundleProvider> PROVIDERS;
   private static final Map<Locale, FormattableResourceBundle> RESOURCE_BUNDLE_CACHE = new ConcurrentHashMap<>();
 
-  //  private static final FileResourceBundleProvider PROVIDER;
-//
   static {
     FileConfiguration configuration = Labzens.configurationWith(FileConfiguration.class);
     String language = configuration.defaultLocale();
@@ -33,28 +31,11 @@ public final class FileResourceBundleLoader {
     providers.sort(Comparator.comparingInt(FileResourceBundleProvider::order));
 
     PROVIDERS = providers;
-//
-//    FileResourceBundleProvider latestProvider =null;
-//    Iterator<FileResourceBundleProvider> iterator = providers.iterator();
-//    while (iterator.hasNext()) {
-//      FileResourceBundleProvider current = iterator.next();
-//      if (latestProvider != null) {
-//        current.getResourceBundle()
-//      }
-//      latestProvider = iterator.next();
-//    }
   }
 
   private FileResourceBundleLoader() {
 
   }
-
-//  public static void main(String[] args) {
-//    System.out.println(Locale.SIMPLIFIED_CHINESE);
-//    System.out.println(Locale.forLanguageTag("zh-CN"));
-//    System.out.println(Locale.forLanguageTag("en-US"));
-//    System.out.println(Locale.forLanguageTag("xx-fS"));
-//  }
 
   public static FormattableResourceBundle load(Locale locale) {
     return RESOURCE_BUNDLE_CACHE.computeIfAbsent(locale, FileResourceBundleLoader::compute);

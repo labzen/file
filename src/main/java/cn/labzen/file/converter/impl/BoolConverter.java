@@ -60,22 +60,6 @@ public class BoolConverter implements ExportableConverter<String>, ImportableCon
     if (Objects.equals(value, arguments.getLast())) {
       return false;
     }
-//    String trueText = Strings.value(arguments.getFirst(), "true");
-//    String falseText = Strings.value(arguments.getLast(), "false");
-//    if (trueText.equals(value)) {
-//      return true;
-//    }
-//    if (falseText.equals(value)) {
-//      return false;
-//    }
-
-//    // 默认匹配常见文本  !!!!!!! 已经配置bool转换器了，就严格按照配置的转换，这里不做处理
-//    if ("true".equalsIgnoreCase(value) || "1".equals(value) || "yes".equalsIgnoreCase(value) || "是".equals(value)) {
-//      return true;
-//    }
-//    if ("false".equalsIgnoreCase(value) || "0".equals(value) || "no".equalsIgnoreCase(value) || "否".equals(value)) {
-//      return false;
-//    }
 
     throw new DataConvertException("布尔转换失败：值[{}]无法识别为布尔值", value);
   }

@@ -47,49 +47,19 @@ public class RangeNumericValidator implements Validator {
     if (maxObj instanceof Number mumMax) {
       max = toBigDecimal(mumMax);
     }
-//    String minStr = arguments.get(0) != null ? arguments.get(0).toString() : null;
-//    String maxStr = arguments.get(1) != null ? arguments.get(1).toString() : null;
 
     BigDecimal decimalValue = toBigDecimal(number);
 
     if (min != null && decimalValue.compareTo(min) < 0) {
-      return ValidateResult.fail(IMPORT_VALIDATE_NUMERIC_MIN,
-//          context.headerText() + "必须在" + minStr + "到" + maxStr + "之间", context.headerText(),
-        min, max);
+      return ValidateResult.fail(IMPORT_VALIDATE_NUMERIC_MIN, min, max);
     }
 
     if (max != null && decimalValue.compareTo(max) > 0) {
-      return ValidateResult.fail(IMPORT_VALIDATE_NUMERIC_MAX,
-//          context.headerText() + "必须在" + minStr + "到" + maxStr + "之间", context.headerText(),
-        min, max);
+      return ValidateResult.fail(IMPORT_VALIDATE_NUMERIC_MAX, min, max);
     }
 
     return ValidateResult.ok();
   }
-
-//  private ValidateResult validateNumberRange(Number value, String minStr, String maxStr, ValidateContext context) {
-//
-//  }
-
-  //  private ValidateResult validateComparableRange(Comparable<Object> value, String minStr, String maxStr, ValidateContext context) {
-//    if (minStr != null && !minStr.isBlank()) {
-//      if (value.compareTo((Object) minStr) < 0) {
-//        return ValidateResult.fail("import.validate.range",
-//          context.headerText() + "必须在" + minStr + "到" + maxStr + "之间",
-//          context.headerText(), minStr, maxStr);
-//      }
-//    }
-//
-//    if (maxStr != null && !maxStr.isBlank()) {
-//      if (value.compareTo((Object) maxStr) > 0) {
-//        return ValidateResult.fail("import.validate.range",
-//          context.headerText() + "必须在" + minStr + "到" + maxStr + "之间",
-//          context.headerText(), minStr, maxStr);
-//      }
-//    }
-//
-//    return ValidateResult.ok();
-//  }
 
   private BigDecimal toBigDecimal(Number value) {
     if (value instanceof BigDecimal bd) return bd;

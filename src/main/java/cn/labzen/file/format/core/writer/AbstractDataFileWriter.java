@@ -48,11 +48,6 @@ public abstract class AbstractDataFileWriter<T> implements DataFileWriter<T> {
 
       // todo 改为事先获取所有的转换器
       ChainableExportConverterExecutor executor = ChainableExportConverterExecutor.get(definition, fieldName);
-//      if (executors != null) {
-//        executor = executors.get(fieldName);
-//      } else {
-//        executor = ChainableExportConverterExecutor.get(definition, fieldName);
-//      }
 
       if (executor != null) {
         return executor.execute(value);
@@ -78,10 +73,6 @@ public abstract class AbstractDataFileWriter<T> implements DataFileWriter<T> {
 
   @Override
   public final void write(@Nonnull DataDefinition definition, @Nonnull List<T> data, @Nonnull OutputStream outputStream) {
-//    I18nMessageSource messageSource = I18nMessageSourceHolder.get();
-//    I18nResolver resolver = new I18nResolver(store);
-//    DataDefinition resolved = resolver.resolve(definition, locale);
-//    Map<String, ChainableExportConverterExecutor> executors = ChainableExportConverterExecutor.get(definition, locale);
     List<Map<String, Object>> rows = extractRows(definition, data);
     exportContent(definition, rows, outputStream);
   }

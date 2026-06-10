@@ -31,8 +31,6 @@ import java.util.Locale;
 @Slf4j
 public final class DataTemplateGenerator<T> {
 
-  //  private final Class<T> type;
-//  private final DataDefinition definition;
   private final String name;
   private Locale locale;
 
@@ -42,12 +40,6 @@ public final class DataTemplateGenerator<T> {
       throw new DataReadException("未找到类[{}]的数据定义", name);
     }
     this.locale = FileResourceBundleLoader.DEFAULT_LOCALE;
-
-//    String language = I18nMessageSourceHolder.defaultLocale();
-//    this.locale = FileResourceBundleLoader.forLanguage(language);
-//    this.type = type;
-//    this.definition = DefinitionRegistry.get(type.getSimpleName())
-//      .orElseThrow(() -> new DataReadException("未找到类[{}]的数据定义", type.getSimpleName()));
   }
 
   /**
@@ -84,8 +76,7 @@ public final class DataTemplateGenerator<T> {
    */
   public void to(OutputStream outputStream) {
     DefinitionRegistry.get(name, locale).ifPresent(definition ->
-        new ExcelTemplateGenerator(definition, locale).generate(outputStream)
-//      ExcelTemplateGenerator.generate(definition, locale, outputStream)
+      new ExcelTemplateGenerator(definition, locale).generate(outputStream)
     );
   }
 

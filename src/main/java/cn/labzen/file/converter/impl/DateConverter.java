@@ -29,13 +29,7 @@ import java.util.List;
 @DataConverter(name = Converter.DATE_NAME, priority = Converter.DATE_PRIORITY)
 public class DateConverter implements ExportableConverter<String>, ImportableConverter {
 
-//  private static final Map<String, DateTimeFormatter> DATETIME_FORMATTER_CACHE = new ConcurrentHashMap<>();
-
   protected static final String DEFAULT_DATE_PATTERN = "yyyy-MM-dd HH:mm:ss";
-
-//  private DateTimeFormatter getDateTimeFormatter(String pattern) {
-//    return DATETIME_FORMATTER_CACHE.computeIfAbsent(pattern, DateTimeFormatter::ofPattern);
-//  }
 
   private String resolvePattern(List<Object> arguments) {
     String pattern = Strings.value(arguments.getFirst(), DEFAULT_DATE_PATTERN);

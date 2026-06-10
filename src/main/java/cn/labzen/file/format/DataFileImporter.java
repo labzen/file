@@ -42,7 +42,6 @@ public final class DataFileImporter<T> {
 
   private final Class<T> type;
   private final String name;
-  //  private final DataDefinition definition;
   private FileFormat format;
   private Locale locale;
 
@@ -50,8 +49,6 @@ public final class DataFileImporter<T> {
     this.type = type;
     this.name = type.getSimpleName();
     this.locale = FileResourceBundleLoader.DEFAULT_LOCALE;
-//    this.definition = DefinitionRegistry.get(type.getSimpleName())
-//      .orElseThrow(() -> new DataReadException("未找到类[{}]的数据定义", type.getSimpleName()));
   }
 
   /**
@@ -111,21 +108,6 @@ public final class DataFileImporter<T> {
 
     // 读取文件，获取行迭代器
     return getReader().read(definition, inputStream);
-
-//    // 创建导入管线并逐行处理
-//    ImportPipeline<T> pipeline = new ImportPipeline<>(definition, type, locale);
-//    int rowIndex = 1;
-//    while (rowIterator.hasNext()) {
-//      Map<String, String> rowData = rowIterator.next();
-//      pipeline.processRow(rowIndex, rowData);
-//      rowIndex++;
-//    }
-//
-//    // 执行延后校验
-//    pipeline.executeDeferredValidation();
-//
-//    return pipeline.buildResult();
-//    return doImport(inputStream);
   }
 
   /**
@@ -147,22 +129,4 @@ public final class DataFileImporter<T> {
 
     return reader;
   }
-
-  // ── 内部方法 ──
-
-//  private ImportResult<T> doImport(InputStream inputStream) {
-//    if (format == null) {
-//      throw new DataReadException("未设置导入文件格式，请调用 as() 方法");
-//    }
-//
-//    DataFileReader reader = READER_INSTANCES.get(format);
-//    if (reader == null) {
-//      throw new DataReadException("不支持的导入文件格式: {}", format);
-//    }
-//
-//  }
-//
-//  private static void registerReader(DataFileReader reader) {
-//    READER_INSTANCES.put(reader.format(), reader);
-//  }
 }

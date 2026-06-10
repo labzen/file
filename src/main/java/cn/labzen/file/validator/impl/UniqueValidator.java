@@ -37,21 +37,15 @@ public class UniqueValidator implements Validator {
     // 此处仅校验当前值在rawRowData集合中的出现次数
     String fieldName = context.fieldName();
     boolean found = false;
-//    boolean found = context.proceedRows().stream().anyMatch(row -> Objects.equals(input, row.get(fieldName)));
     for (ProceedRow<?> row : context.proceedRows()) {
       if (Objects.equals(input, row.getData().get(fieldName))) {
         found = true;
         break;
       }
     }
-//    long count = context.rawRowData().values().stream()
-//      .filter(v -> v != null && v.equals(input))
-//      .count();
 
     if (found) {
       return ValidateResult.fail(IMPORT_VALIDATE_UNIQUE);
-//        context.headerText() + "在导入数据中存在重复",
-//        context.headerText());
     }
 
     return ValidateResult.ok();

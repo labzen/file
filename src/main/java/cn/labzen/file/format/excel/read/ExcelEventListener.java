@@ -84,6 +84,5 @@ public class ExcelEventListener extends AnalysisEventListener<Map<Integer, Objec
   @Override
   public void doAfterAllAnalysed(AnalysisContext analysisContext) {
     // 读取完成，可以做一些后续处理
-//    System.out.println("读取完成，共读取 " + rowsData.size() + " 行数据");
   }
 }

@@ -1,11 +1,9 @@
 package cn.labzen.file.format.yaml;
 
-import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.enums.FileFormat;
 import cn.labzen.file.format.core.reader.AbstractDataFileReader;
 import cn.labzen.file.meta.FileConfiguration;
 import com.google.common.collect.Lists;
-import jakarta.annotation.Nonnull;
 import org.jspecify.annotations.NonNull;
 import org.yaml.snakeyaml.Yaml;
 
@@ -44,30 +42,9 @@ public class YamlFileReader extends AbstractDataFileReader {
       List<Map<String, String>> dataRows = new ArrayList<>();
       for (Object doc : documents) {
         if (doc instanceof List<?> list) {
-//          for (Object item : list) {
-//            if (item instanceof Map<?, ?> map) {
-//              Map<String, String> rowData = new LinkedHashMap<>();
-//              for (Map.Entry<?, ?> entry : map.entrySet()) {
-//                String key = entry.getKey() != null ? entry.getKey().toString() : null;
-//                String value = entry.getValue() != null ? entry.getValue().toString() : null;
-//                if (key != null) {
-//                  rowData.put(key, value);
-//                }
-//              }
-//              dataRows.add(rowData);
-//            }
-//          }
           List<Map<String, String>> rows = readAsList(list);
           dataRows.addAll(rows);
         } else if (doc instanceof Map<?, ?> map) {
-//          Map<String, String> rowData = new LinkedHashMap<>();
-//          for (Map.Entry<?, ?> entry : map.entrySet()) {
-//            String key = entry.getKey() != null ? entry.getKey().toString() : null;
-//            String value = entry.getValue() != null ? entry.getValue().toString() : null;
-//            if (key != null) {
-//              rowData.put(key, value);
-//            }
-//          }
           Map<String, String> data = readAsMap(map);
           dataRows.add(data);
         }

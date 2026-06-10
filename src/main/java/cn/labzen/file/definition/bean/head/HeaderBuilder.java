@@ -38,25 +38,12 @@ public class HeaderBuilder {
     // 默认的合并行数
     int defaultRowSpanWhenSingle = isSingleHeader ? 1 : SUPPORT_MAX_HEADER_LEVEL;
 
-//    return build(definition.getColumns());
-//  }
-//
-//  public static HeaderStructure build(List<Column> columns) {
-//    int size = columns.size();
-//    int index = 0;
-//
-//    // 判断当前是否配置的是单级表头（所有的header集合中都是一个表头）
-//    boolean isSingleHeader = columns.stream().allMatch(column -> Strings.times(column.getHeader(), HEADER_LEVEL_SEPARATOR) == 0);
-//    // 默认的合并行数
-//    int defaultRowSpanWhenSingle = isSingleHeader ? 1 : SUPPORT_MAX_HEADER_LEVEL;
-
     List<HeaderCell> firstRowHeaderCells = Lists.newArrayList();
     List<HeaderCell> secondRowHeaderCells = Lists.newArrayList();
 
     while (index < size) {
       Column current = columns.get(index);
       List<String> headers = headerTexts(current);
-//      String[] headers = current.getHeader() == null ? new String[]{""} : current.getHeader().split(HEADER_LEVEL_SEPARATOR);
       // 如果当前是单级表头，或者header集合中只有一个表头，则直接添加到第一行表头中
       if (isSingleHeader || headers.size() == 1) {
         firstRowHeaderCells.add(new HeaderCell(headers.getFirst(), index, 1, defaultRowSpanWhenSingle));

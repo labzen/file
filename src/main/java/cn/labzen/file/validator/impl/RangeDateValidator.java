@@ -47,8 +47,6 @@ public class RangeDateValidator implements Validator {
 
     input = switch (context.value()) {
       case java.sql.Date sqlDate -> sqlDate.toLocalDate().atStartOfDay();
-      case java.sql.Time sqlTime -> DateTimes.toLocalDateTime(sqlTime);
-      case java.sql.Timestamp sqlTimestamp -> DateTimes.toLocalDateTime(sqlTimestamp);
       case Date date -> DateTimes.toLocalDateTime(date);
       case LocalDateTime ldt -> ldt;
       case LocalDate ld -> ld.atStartOfDay();
@@ -73,53 +71,4 @@ public class RangeDateValidator implements Validator {
 
     return ValidateResult.ok();
   }
-
-//  private ValidateResult validateNumberRange(Number value, String minStr, String maxStr, ValidateContext context) {
-//    BigDecimal decimalValue = toBigDecimal(value);
-//
-//    if (minStr != null && !minStr.isBlank()) {
-//      BigDecimal min = new BigDecimal(minStr);
-//      if (decimalValue.compareTo(min) < 0) {
-//        return ValidateResult.fail("import.validate.range",
-//          context.headerText() + "必须在" + minStr + "到" + maxStr + "之间",
-//          context.headerText(), minStr, maxStr);
-//      }
-//    }
-//
-//    if (maxStr != null && !maxStr.isBlank()) {
-//      BigDecimal max = new BigDecimal(maxStr);
-//      if (decimalValue.compareTo(max) > 0) {
-//        return ValidateResult.fail("import.validate.range",
-//          context.headerText() + "必须在" + minStr + "到" + maxStr + "之间",
-//          context.headerText(), minStr, maxStr);
-//      }
-//    }
-//
-//    return ValidateResult.ok();
-//  }
-
-//  private ValidateResult validateComparableRange(Comparable<Object> value, String minStr, String maxStr, ValidateContext context) {
-//    if (minStr != null && !minStr.isBlank()) {
-//      if (value.compareTo((Object) minStr) < 0) {
-//        return ValidateResult.fail("import.validate.range",
-//          context.headerText() + "必须在" + minStr + "到" + maxStr + "之间",
-//          context.headerText(), minStr, maxStr);
-//      }
-//    }
-//
-//    if (maxStr != null && !maxStr.isBlank()) {
-//      if (value.compareTo((Object) maxStr) > 0) {
-//        return ValidateResult.fail("import.validate.range",
-//          context.headerText() + "必须在" + minStr + "到" + maxStr + "之间",
-//          context.headerText(), minStr, maxStr);
-//      }
-//    }
-//
-//    return ValidateResult.ok();
-//  }
-
-//  private BigDecimal toBigDecimal(Number value) {
-//    if (value instanceof BigDecimal bd) return bd;
-//    return new BigDecimal(value.toString());
-//  }
 }

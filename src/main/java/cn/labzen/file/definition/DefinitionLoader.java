@@ -3,14 +3,10 @@ package cn.labzen.file.definition;
 import cn.labzen.file.converter.executor.ConverterInstanceSupplier;
 import cn.labzen.file.definition.bean.DataDefinition;
 import cn.labzen.file.definition.bean.GlobalDefinition;
-import cn.labzen.file.definition.bean.column.Column;
-import cn.labzen.file.definition.bean.column.Exporting;
-import cn.labzen.file.definition.bean.column.Importing;
-import cn.labzen.file.definition.bean.column.GlobalExporting;
-import cn.labzen.file.definition.bean.column.GlobalImporting;
+import cn.labzen.file.definition.bean.column.*;
+import cn.labzen.file.definition.bean.head.HeaderBuilder;
 import cn.labzen.file.definition.bean.style.Font;
 import cn.labzen.file.definition.bean.style.Style;
-import cn.labzen.file.definition.bean.head.HeaderBuilder;
 import cn.labzen.file.definition.resource.Resource;
 import cn.labzen.file.definition.resource.ResourcePatternResolver;
 import cn.labzen.file.exception.DefinitionLoaderException;
@@ -122,9 +118,6 @@ public class DefinitionLoader {
     dataDefinitionMap.forEach((key, value) -> {
       // 合并全局配置
       DataDefinition definition = mergeDefinition(globalDefinition, value);
-
-      // 将每列的属性名，放入 Column 实例中
-//      definition.getColumns().forEach((cfn, column) -> column.setColumnFieldName(cfn));
 
       // 注册配置
       DefinitionRegistry.register(key, definition);
@@ -322,10 +315,7 @@ public class DefinitionLoader {
     // 合并文件作用域表头样式 -> 列作用域样式
     Map<String, Column> columns = dataDefinition.getColumns();
     if (columns != null) {
-//      GlobalExporting fileScopedExporting = dataDefinition.getExporting();
-//      GlobalImporting fileScopedImporting = dataDefinition.getImporting();
       for (Column column : columns.values()) {
-//        mergeColumnDefinition(globalColumn, fileScopedColumnStyle, fileScopedExporting, fileScopedImporting, column);
         mergeColumnDefinition(dataDefinition, column);
       }
     }
@@ -395,47 +385,6 @@ public class DefinitionLoader {
     }
   }
 
-//  /**
-//   * 合并列定义
-//   * <p>
-//   * 合并优先级（从低到高）：全局列默认 → 文件作用域导出/导入默认 → 列定义配置
-//   */
-//  private void mergeColumnDefinition(GlobalColumn globalColumn, Style fileScopedColumnStyle,
-//                                     GlobalExporting fileScopedExporting, GlobalImporting fileScopedImporting,
-//                                     Column column) {
-//    // 列宽
-//    if (column.getExporting().getWidth() == null) {
-//      column.setWidth(globalcolumn.getExporting().getWidth());
-//    }
-
-//    // 列样式覆盖
-//    if (column.getExporting().getStyle() == null) {
-//      column.setStyle(cloneStyle(fileScopedColumnStyle));
-//    } else {
-//      mergeStyle(fileScopedColumnStyle, column.getExporting().getStyle());
-//    }
-
-  // 合并导出配置：文件作用域 exporting → 列级 exporting
-//    Exporting columnExporting = column.getExporting();
-//    if (fileScopedExporting != null) {
-//      if (columnExporting == null) {
-//        columnExporting = new Exporting();
-//        column.setExporting(columnExporting);
-//      }
-//      mergeExporting(fileScopedExporting, columnExporting);
-//    }
-
-//    // 合并导入配置：文件作用域 importing → 列级 importing
-//    Importing columnImporting = column.getImporting();
-//    if (fileScopedImporting != null) {
-//      if (columnImporting == null) {
-//        columnImporting = new Importing();
-//        column.setImporting(columnImporting);
-//      }
-//      mergeImporting(fileScopedImporting, columnImporting);
-//    }
-//  }
-
   /**
    * 深度拷贝全局导出
    */
@@ -495,49 +444,6 @@ public class DefinitionLoader {
       target.setCleansing(source.getCleansing());
     }
   }
-
-//  /**
-//   * 从全局深度拷贝导出配置
-//   */
-//  private Exporting cloneExporting(GlobalExporting source) {
-//    if (source == null) {
-//      return new Exporting();
-//    }
-//
-//    Exporting clone = new Exporting();
-//    clone.setWidth(source.getWidth());
-//    clone.setWhenNull(source.getWhenNull());
-//    clone.setWhenBlank(source.getWhenBlank());
-//    return clone;
-//  }
-
-//  /**
-//   * 合并文件作用域导出配置到列级导出配置
-//   */
-//  private void mergeExporting(GlobalExporting source, Exporting target) {
-//    mergeGlobalExporting(source, target);
-//  }
-
-//  /**
-//   * 合并文件作用域导入配置到列级导入配置
-//   * <p>
-//   * 列级配置优先级高于文件作用域配置。
-//   * 仅合并 TableImporting 中存在的共享属性（required、cleansing），
-//   * minLength/maxLength/unique/dependsOn/min/max/mapping/enumerable/converter 属于列级专属，不由文件作用域共享
-//   */
-//  private void mergeImporting(GlobalImporting source, Importing target) {
-//    if (source == null || target == null) {
-//      return;
-//    }
-//
-//    // required: 两者均默认为true，当文件作用域显式设为false时，作为列级默认值
-//    if (!source.isRequired() && target.isRequired()) {
-//      target.setRequired(false);
-//    }
-//    if (target.getCleansing() == null && source.getCleansing() != null) {
-//      target.setCleansing(new ArrayList<>(source.getCleansing()));
-//    }
-//  }
 
   /**
    * 合并样式
@@ -657,29 +563,4 @@ public class DefinitionLoader {
   private void validateGlobalDefinition(GlobalDefinition config) {
     // 全局配置校验相对宽松，仅校验基本格式
   }
-//
-//  /**
-//   * 将 kebab-case 转换为 camelCase
-//   */
-//  private String convertKebabToCamel(String kebab) {
-//    if (kebab == null || !kebab.contains("-")) {
-//      return kebab;
-//    }
-//
-//    StringBuilder result = new StringBuilder();
-//    boolean capitalizeNext = false;
-//
-//    for (char c : kebab.toCharArray()) {
-//      if (c == '-') {
-//        capitalizeNext = true;
-//      } else if (capitalizeNext) {
-//        result.append(Character.toUpperCase(c));
-//        capitalizeNext = false;
-//      } else {
-//        result.append(c);
-//      }
-//    }
-//
-//    return result.toString();
-//  }
 }

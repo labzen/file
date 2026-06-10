@@ -39,25 +39,20 @@ public final class ImportProcessor<T> {
 
   private final DataDefinition definition;
   private final Class<T> type;
-  private final Locale locale;
   private final FormattableResourceBundle resourceBundle;
 
   private final Map<String, ChainableCleanserExecutor> cleansers = Maps.newHashMap();
   private final Map<String, ChainableValidatorExecutor> validators = Maps.newHashMap();
   private final Map<String, ChainableImportConverterExecutor> converters = Maps.newHashMap();
 
-  //  private List<Map<String, Object>> proceedData = Lists.newArrayList();
-  private List<ProceedRow<T>> proceedRows = Lists.newArrayList();
-//  private List<FieldError> errors;
+  private final List<ProceedRow<T>> proceedRows = Lists.newArrayList();
 
-  //  private final Class<T> beanType;
-//  private final String locale;
   public ImportProcessor(DataDefinition definition) {
     // todo 针对语言+定义，进行缓存
     this.definition = definition;
     //noinspection unchecked
     this.type = (Class<T>) definition.getDomainClass();
-    this.locale = definition.getLocale();
+    Locale locale = definition.getLocale();
     this.resourceBundle = FileResourceBundleLoader.load(locale);
 
     buildCleansers();
@@ -159,12 +154,10 @@ public final class ImportProcessor<T> {
       }
 
       proceedRowData.put(fieldName, convertedValue);
-//      proceedData.add(Maps.newHashMap(fieldName, convertedValue)
     }
 
     ProceedRow<T> row = new ProceedRow<>(sequence, errors.isEmpty(), proceedRowData, errors, definition);
     proceedRows.add(row);
-//    proceedData.add(proceedRowData);
   }
 
   private Object defaultTypeConvert(String value, Class<?> targetType) {
@@ -286,15 +279,6 @@ public final class ImportProcessor<T> {
   }
 
   // ── 辅助方法 ──
-
-//  @SuppressWarnings("unchecked")
-//  public Class<T> getBeanType(String name) {
-//    try {
-//      return (Class<T>) Class.forName(name);
-//    } catch (ClassNotFoundException e) {
-//      throw new IllegalStateException();
-//    }
-//  }
 
   private Class<?> getFieldType(String fieldName) {
     try {

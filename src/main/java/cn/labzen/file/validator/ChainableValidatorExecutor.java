@@ -70,16 +70,8 @@ public class ChainableValidatorExecutor {
    *
    * @return 所有校验失败的结果，空列表表示全部通过
    */
-  public List<ValidateResult> executeImmediate(ValidateContext context) {
+  public List<ValidateResult> executeImmediate(ValidateContext<?> context) {
     return execute(immediateValidators, context);
-//    List<ValidateResult> failures = new ArrayList<>();
-//    for (ConfiguredValidator cv : immediateValidators) {
-//      ValidateResult result = cv.validator().validate(input, cv.arguments(), context);
-//      if (result != null) {
-//        failures.add(result);
-//      }
-//    }
-//    return failures;
   }
 
   /**
@@ -87,19 +79,11 @@ public class ChainableValidatorExecutor {
    *
    * @return 所有校验失败的结果，空列表表示全部通过
    */
-  public List<ValidateResult> executeDeferred(ValidateContext context) {
+  public List<ValidateResult> executeDeferred(ValidateContext<?> context) {
     return execute(deferredValidators, context);
-//    List<ValidateResult> failures = new ArrayList<>();
-//    for (ConfiguredValidator cv : deferredValidators) {
-//      ValidateResult result = cv.validator().validate(input, cv.arguments(), context);
-//      if (result != null) {
-//        failures.add(result);
-//      }
-//    }
-//    return failures;
   }
 
-  private List<ValidateResult> execute(List<ConfiguredValidator> validators, ValidateContext context) {
+  private List<ValidateResult> execute(List<ConfiguredValidator> validators, ValidateContext<?> context) {
     List<ValidateResult> failures = new ArrayList<>();
     for (ConfiguredValidator cv : validators) {
       ValidateResult result = cv.validator().validate(context, cv.arguments());
@@ -109,14 +93,6 @@ public class ChainableValidatorExecutor {
     }
     return failures;
   }
-
-//  public boolean hasDeferredValidators() {
-//    return !deferredValidators.isEmpty();
-//  }
-//
-//  public static Set<String> availableValidatorNames() {
-//    return VALIDATOR_INSTANCES.keySet();
-//  }
 
   record ValidatorInstance(String name, int priority, DataValidator.Execution execution, Validator validator) {
   }

@@ -44,14 +44,10 @@ public class RangeLengthValidator implements Validator {
 
     int len = input.length();
     if (min != null && len < min) {
-      return ValidateResult.fail(IMPORT_VALIDATE_LENGTH_MIN,
-//        context.headerText() + "长度不能少于" + minLength + "个字符", context.headerText(),
-        min);
+      return ValidateResult.fail(IMPORT_VALIDATE_LENGTH_MIN, min);
     }
     if (max != null && len > max) {
-      return ValidateResult.fail(IMPORT_VALIDATE_LENGTH_MAX,
-//        context.headerText() + "长度不能超过" + maxLength + "个字符", context.headerText(),
-        max);
+      return ValidateResult.fail(IMPORT_VALIDATE_LENGTH_MAX, max);
     }
 
     return ValidateResult.ok();

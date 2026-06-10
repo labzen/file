@@ -52,9 +52,7 @@ public class DependsOnValidator implements Validator {
     // 依赖字段有值，检查当前字段是否有值
     String input = Strings.value(context.value(), "");
     if (Strings.isBlank(input)) {
-      return ValidateResult.fail(IMPORT_VALIDATE_DEPENDS_ON,
-//        "当" + String.join(",", arguments.stream().map(Object::toString).toList()) + "有值时，" + context.headerText() + "不能为空", context.headerText(),
-        arguments.stream().map(Object::toString).toList());
+      return ValidateResult.fail(IMPORT_VALIDATE_DEPENDS_ON, arguments.stream().map(Object::toString).toList());
     }
 
     return ValidateResult.ok();

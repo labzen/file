@@ -11,15 +11,14 @@ import cn.labzen.file.definition.bean.scoped.GlobalImporting;
 import cn.labzen.file.definition.bean.style.Font;
 import cn.labzen.file.definition.bean.style.Style;
 import cn.labzen.file.definition.bean.table.HeaderBuilder;
+import cn.labzen.file.definition.resource.Resource;
+import cn.labzen.file.definition.resource.ResourcePatternResolver;
 import cn.labzen.file.exception.DefinitionLoaderException;
 import cn.labzen.tool.util.Strings;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationContext;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
@@ -62,8 +61,7 @@ public class DefinitionLoader {
 
   private final Yaml globalYaml;
   private final Yaml dataYaml;
-  private final PathMatchingResourcePatternResolver resourcePatternResolver =
-    new PathMatchingResourcePatternResolver(ApplicationContext.class.getClassLoader());
+  private final ResourcePatternResolver resourcePatternResolver = new ResourcePatternResolver();
 
   private String globalDefinitionUrl;
 

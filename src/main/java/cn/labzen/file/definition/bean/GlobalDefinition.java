@@ -15,28 +15,27 @@ import lombok.NoArgsConstructor;
  *
  * <p>配置示例：
  * <pre>
- * header:
+ * width: 15
+ * exporting-header-style:
  *   align: CENTER
- *   background: "#000000"
  *   font:
  *     family: "Arial"
  *     size: 11
- *     color: "#ffffff"
  *     bold: true
  *     italic: true
- *   border:
- *     color: "#ffffff"
- *     width: MEDIUM
  *   wrapped: false
- * column:
- *   width: 100
- *   when-null: "-"
+ * exporting-column-style:
+ *   align: LEFT
+ *   font:
+ *     size: 12
+ *     bold: false
+ *     italic: false
+ *     wrapped: true
+ * importing:
+ *   cleansing: [ 'trim', 'strip-html', 'strip-invisible' ]
+ * exporting:
+ *   when-null: ""
  *   when-blank: "-"
- *   prefix: ""
- *   suffix: ""
- *   style:
- *     align: CENTER
- *     background: "#F0F0F0"
  * </pre>
  *
  * @author labzen

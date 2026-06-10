@@ -13,6 +13,11 @@
       "$ref": "#/definitions/Style",
       "description": "全局单元格样式定义"
     },
+    "width": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "全局默认列宽"
+    },
     "exporting": {
       "$ref": "#/definitions/Exporting",
       "description": "导出方向全局定义"
@@ -83,15 +88,7 @@
     },
     "Exporting": {
       "type": "object",
-      "required": [
-        "width"
-      ],
       "properties": {
-        "width": {
-          "type": "integer",
-          "minimum": 1,
-          "description": "全局默认列宽"
-        },
         "when-null": {
           "type": "string",
           "description": "当数据为 null 时使用的默认值。支持国际化：使用 ${key} 占位符"

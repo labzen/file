@@ -29,6 +29,11 @@
       "$ref": "#/definitions/Style",
       "description": "单表数据的通用单元格样式定义"
     },
+    "width": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "全局列宽"
+    },
     "columns": {
       "type": "object",
       "description": "列定义，key 为表字段名映射的类属性名，例如：表字段名为parent_code，映射的属性名为parentCode，使用parentCode",
@@ -40,11 +45,6 @@
       "type": "object",
       "description": "列导出方向全局配置",
       "properties": {
-        "width": {
-          "type": "integer",
-          "minimum": 1,
-          "description": "列宽"
-        },
         "when-null": {
           "type": "string",
           "description": "当数据为 null 时使用的默认值。支持国际化：使用 ${key} 占位符"
@@ -79,11 +79,6 @@
       "type": "object",
       "description": "导出列默认配置",
       "properties": {
-        "width": {
-          "type": "integer",
-          "minimum": 1,
-          "description": "列宽"
-        },
         "when-null": {
           "type": "string",
           "description": "当数据为 null 时使用的默认值。支持国际化：使用 ${key} 占位符"
@@ -252,6 +247,11 @@
         "header": {
           "type": "string",
           "description": "表头标题，可支持二级表头，使用':-:'分隔，例如：'成绩:-:语文'；只在 Markdown, Excel, PDF, HTML 格式文件导出时生效，其余格式只包含最后一级表头的输出。支持国际化：使用 ${key} 占位符，导出时根据locale替换为对应文本"
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "列宽"
         },
         "mapping": {
           "type": "object",

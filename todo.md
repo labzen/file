@@ -21,3 +21,8 @@
 - [x] 导入功能
 - [x] I18nStoreProvider 接口命名过于中性，重构名称
 - [ ] json schema 文件中，对于filename和title，应该归入导出的配置中；相应的Bean中，应该处于 文件scope 的exporting中
+- [ ] 导出带上（签名、日期）
+- [ ] 导入的成功数据集合(ImportResult.getData())，带上序号信息
+- [ ] 在导入的配置里，加上非空开关，遇到null值，给一个默认值
+- [ ] 如果存在mapping，那么mock.json中对应的列的样例数据应该是mapping转换前的还是之后的??因为是导入模板，应该是转换后的。file应该不需要去处理
+- [ ] 导入模板Excel中显示的mock.json数据应该也进行i18n文案转换

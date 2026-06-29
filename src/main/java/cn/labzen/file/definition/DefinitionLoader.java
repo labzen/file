@@ -31,12 +31,12 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
- * 数据导出定义配置加载器
+ * 数据导入/出定义配置加载器
  * <p>
- * 加载并注册所有数据导出配置文件：
+ * 加载并注册所有数据导入/出配置文件：
  * <ol>
  *   <li>先加载全局配置（通过构造函数传入的全局配置文件路径），作为样式默认值</li>
- *   <li>加载所有其他的表数据导出定义yml文件（通过构造函数传入的配置目录）</li>
+ *   <li>加载所有其他的表数据导入/出定义yml文件（通过构造函数传入的配置目录）</li>
  *   <li>将全局配置与单独配置合并（单独配置中的值会覆盖全局配置）</li>
  *   <li>校验配置有效性</li>
  *   <li>注册到 DefinitionRegistry 中</li>
@@ -64,7 +64,7 @@ public class DefinitionLoader {
   /**
    * 创建配置加载器
    *
-   * @param dataLocationPattern 数据导出配置文件存放目录路径Pattern
+   * @param dataLocationPattern 数据导入/出配置文件存放目录路径Pattern
    * @param globalLocation      全局配置文件位置
    */
   public DefinitionLoader(String dataLocationPattern, String globalLocation) {
@@ -101,14 +101,14 @@ public class DefinitionLoader {
    * 加载所有配置并注册到 Registry
    */
   public void load() {
-    logger.info("开始加载[数据导出schema定义文件]...");
+    logger.info("开始加载[数据导入/出schema定义文件]...");
 
     ConverterInstanceSupplier.init();
 
     // 1. 加载全局配置
     GlobalDefinition globalDefinition = loadGlobalDefinition();
 
-    // 2. 加载所有表数据导出配置
+    // 2. 加载所有表数据导入/出配置
     Map<String, DataDefinition> dataDefinitionMap = loadDataDefinitions();
     if (dataDefinitionMap == null) {
       return;
@@ -123,7 +123,7 @@ public class DefinitionLoader {
       DefinitionRegistry.register(key, definition);
     });
 
-    logger.info("[数据导出schema定义文件]加载完成，共加载{}个配置文件", DefinitionRegistry.size());
+    logger.info("[数据导入/出schema定义文件]加载完成，共加载{}个配置文件", DefinitionRegistry.size());
   }
 
   /**
@@ -135,12 +135,12 @@ public class DefinitionLoader {
       Resource[] resources = resourcePatternResolver.getResources(globalLocation);
       if (resources.length > 1) {
         globalResource = resources[0];
-        logger.warn("存在多个全局数据导出配置，默认将使用：{}", globalResource.getURI());
+        logger.warn("存在多个全局数据导入/出配置，默认将使用：{}", globalResource.getURI());
       } else if (resources.length == 1) {
         globalResource = resources[0];
-        logger.info("加载全局[数据导出schema定义文件]:{}", globalResource.getURI());
+        logger.debug("加载全局[数据导入/出schema定义文件]:{}", globalResource.getURI());
       } else {
-        throw new DefinitionLoaderException("找不到全局数据导出配置文件，请检查路径 labzen.yml 中的 global-definition-name 配置");
+        throw new DefinitionLoaderException("找不到全局数据导入/出配置文件，请检查路径 labzen.yml 中的 global-definition-name 配置");
       }
 
       InputStream inputStream = globalResource.getInputStream();
@@ -151,7 +151,7 @@ public class DefinitionLoader {
 
       return definition;
     } catch (Exception e) {
-      logger.atWarn().setCause(e).log("数据导出的全局配置加载失败，将使用默认配置，from: {}", globalLocation);
+      logger.atWarn().setCause(e).log("数据导入/出的全局配置加载失败，将使用默认配置，from: {}", globalLocation);
       return new GlobalDefinition();
     }
   }
@@ -159,6 +159,7 @@ public class DefinitionLoader {
   private DataDefinition loadDataDefinition(@Nonnull Resource resource) {
     String filename = resource.getFilename();
     try {
+      logger.debug("加载[数据导入/出schema定义文件]:{}", resource.getURI());
       InputStream inputStream = resource.getInputStream();
 
       DataDefinition definition = dataYaml.load(inputStream);
@@ -178,7 +179,7 @@ public class DefinitionLoader {
 
       return definition;
     } catch (Exception e) {
-      logger.atWarn().setCause(e).log("数据导出配置加载失败，from: {}", filename);
+      logger.atWarn().setCause(e).log("数据导入/出配置加载失败，from: {}", filename);
       return null;
     }
   }
@@ -202,7 +203,7 @@ public class DefinitionLoader {
         column.setFieldType(type);
         column.setValidated(true);
       } catch (Exception e) {
-        throw new DefinitionLoaderException("配置文件中定义的字段 [{}] 在 [] 中不存在，该字段将被忽略，无法在导入/导出时使用", fieldName, domainClass);
+        throw new DefinitionLoaderException("配置文件中定义的字段 [{}] 在 [] 中不存在，该字段将被忽略，无法在导入/导入/出时使用", fieldName, domainClass);
       }
     });
   }
@@ -236,7 +237,7 @@ public class DefinitionLoader {
   }
 
   /**
-   * 加载所有表数据导出配置
+   * 加载所有表数据导入/出配置
    */
   private Map<String, DataDefinition> loadDataDefinitions() {
     try {
@@ -255,7 +256,7 @@ public class DefinitionLoader {
         .filter(Objects::nonNull)
         .collect(Collectors.toMap(DataDefinition::getName, definition -> definition));
     } catch (IOException e) {
-      logger.atWarn().setCause(e).log("数据导出文件配置的目录扫描加载失败，from: {}", dataLocationPattern);
+      logger.atWarn().setCause(e).log("数据导入/出文件配置的目录扫描加载失败，from: {}", dataLocationPattern);
       return null;
     }
   }
@@ -290,7 +291,7 @@ public class DefinitionLoader {
       }
     }
 
-    // 合并全局导出配置 -> 文件作用域导出配置
+    // 合并全局导入/出配置 -> 文件作用域导入/出配置
     if (globalDefinition.getExporting() != null) {
       if (dataDefinition.getExporting() == null) {
         dataDefinition.setExporting(cloneGlobalExporting(globalDefinition.getExporting()));
@@ -326,7 +327,7 @@ public class DefinitionLoader {
   /**
    * 合并列定义
    * <p>
-   * 合并优先级（从低到高）：全局列默认 → 文件作用域导出/导入默认 → 列定义配置
+   * 合并优先级（从低到高）：全局列默认 → 文件作用域导入/出/导入默认 → 列定义配置
    */
   private void mergeColumnDefinition(DataDefinition dataDefinition, Column column) {
     // 列宽：文件作用域默认列宽 → Column.width（列级别显式配置覆盖文件级别默认）
@@ -334,7 +335,7 @@ public class DefinitionLoader {
       column.setWidth(dataDefinition.getWidth());
     }
 
-    // 导出配置覆盖
+    // 导入/出配置覆盖
     if (dataDefinition.getExporting() != null) {
       if (column.getExporting() == null) {
         column.setExporting(new Exporting());
@@ -386,7 +387,7 @@ public class DefinitionLoader {
   }
 
   /**
-   * 深度拷贝全局导出
+   * 深度拷贝全局导入/出
    */
   private GlobalExporting cloneGlobalExporting(GlobalExporting source) {
     if (source == null) {
@@ -400,7 +401,7 @@ public class DefinitionLoader {
   }
 
   /**
-   * 合并全局导出
+   * 合并全局导入/出
    */
   private void mergeGlobalExporting(GlobalExporting source, GlobalExporting target) {
     if (source == null || target == null) {

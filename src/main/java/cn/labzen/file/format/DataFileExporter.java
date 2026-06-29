@@ -115,7 +115,7 @@ public final class DataFileExporter<T> {
    */
   public DataFileExporter<T> name() {
     String originalFilename = DefinitionRegistry.getDefinitionFilename(name).orElse("unknown");
-    this.filename = originalFilename + "_" + DATE_TIME_FORMATTER.format(LocalDateTime.now()) + "." + format.getExtension();
+    this.filename = originalFilename + "_" + DATE_TIME_FORMATTER.format(LocalDateTime.now()) + format.getExtension();
 
     if (file != null) {
       // 重新设置文件路径

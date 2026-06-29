@@ -71,6 +71,22 @@
         <groupId>org.apache.fesod</groupId>
         <artifactId>fesod-sheet</artifactId>
         <version>${fesod.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <!-- TODO 引入新版本 bom 后移除；com.itextpdf 也类似处理  -->
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-to-slf4j</artifactId>
+        <version>2.26.0</version>
       </dependency>
 
       <!-- PDF -->
@@ -136,6 +152,10 @@
     <dependency>
       <groupId>org.apache.fesod</groupId>
       <artifactId>fesod-sheet</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-to-slf4j</artifactId>
     </dependency>
 
     <!-- PDF -->

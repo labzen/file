@@ -376,14 +376,6 @@ public class DefinitionLoader {
     if (column.getImporting().getMapping() == null) {
       column.getImporting().setMapping(column.getMapping());
     }
-
-    // enumerable枚举覆盖
-    if (column.getExporting().getEnumerable() == null) {
-      column.getExporting().setEnumerable(column.getEnumerable());
-    }
-    if (column.getImporting().getEnumerable() == null) {
-      column.getImporting().setEnumerable(column.getEnumerable());
-    }
   }
 
   /**

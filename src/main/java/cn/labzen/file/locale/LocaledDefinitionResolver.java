@@ -5,7 +5,6 @@ import cn.labzen.file.definition.bean.column.Column;
 import cn.labzen.file.definition.bean.column.Exporting;
 import cn.labzen.file.definition.bean.column.Importing;
 import cn.labzen.file.util.LocaledTextWithPlaceholder;
-import cn.labzen.tool.util.Strings;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
@@ -52,10 +51,6 @@ public final class LocaledDefinitionResolver {
     // pattern - number
     column.setPatternNumber(resolveText(column.getPatternNumber()));
 
-    // 共享 enumerable（不包含 ${key}，但保持一致性仍解析）
-    if (Strings.isNotBlank(column.getEnumerable())) {
-      column.setEnumerable(resolveText(column.getEnumerable()));
-    }
     // 共享 mapping 中的 ${key}（只替换 value）
     resolveMapping(column.getMapping());
 

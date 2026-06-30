@@ -47,13 +47,6 @@ public class Column {
   private Map<String, String> mapping;
 
   /**
-   * 共享枚举（导入导出均可使用）
-   * <p>
-   * 格式为 枚举类全限定名#方法名，如 com.example.StatusEnum#getLabel
-   */
-  private String enumerable;
-
-  /**
    * 导出列默认配置
    */
   private Exporting exporting;

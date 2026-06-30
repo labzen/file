@@ -105,7 +105,7 @@
         "enumerable": {
           "type": "string",
           "pattern": ".+#.+",
-          "description": "将值转换为枚举类的特定属性值，无法转换的值将为'unknown'，格式为：枚举类全限定名#方法名，如 com.example.SomeEnum#getLabel，转换为枚举项的label属性值"
+          "description": "导出时，将枚举名称字符串转换为枚举属性的值，格式：枚举类全限定名#方法名，如 com.example.StatusEnum#getLabel，将数据库中的枚举名转换为对应 label 值输出"
         },
         "converter": {
           "type": "string",
@@ -171,7 +171,7 @@
         "enumerable": {
           "type": "string",
           "pattern": ".+#.+",
-          "description": "将值转换为枚举类的特定属性值，无法转换的值将为'unknown'，格式为：枚举类全限定名#方法名，如 com.example.SomeEnum#getLabel，转换为枚举项的label属性值"
+          "description": "导入专属：通过指定类的静态方法将输入值转换为枚举实例。格式：类全限定名#静态方法名，自动检测方法签名（优先 Class+String 工具类模式，其次 String 枚举自身模式），支持返回 java.util.Optional 自动解包。如 com.example.StatusEnum#fromCode 或 com.example.StatusUtil#parse。留空或不配置时默认使用目标枚举的 valueOf()（忽略大小写匹配）。如需自定义转换逻辑可参考 util.EnumResolver 工具类"
         },
         "converter": {
           "type": "string",
@@ -259,11 +259,6 @@
             "type": "string"
           },
           "description": "值映射表，格式为 原值:展示/录入的值，如 1:男,2:女。支持国际化：映射值中使用 ${key} 占位符"
-        },
-        "enumerable": {
-          "type": "string",
-          "pattern": ".+#.+",
-          "description": "将值转换为枚举类的特定属性值，无法转换的值将为'unknown'，格式为：枚举类全限定名#方法名，如 com.example.SomeEnum#getLabel，转换为枚举项的label属性值"
         },
         "pattern-date": {
           "type": "string",

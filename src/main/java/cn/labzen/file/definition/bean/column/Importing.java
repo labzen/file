@@ -58,7 +58,14 @@ public class Importing extends GlobalImporting {
   private Map<String, String> mapping;
 
   /**
-   * 导入专属枚举（覆盖共享层enumerable）
+   * 导入专属枚举转换
+   * <p>
+   * 格式：<b>类FQCN#静态方法名</b>，如 {@code com.example.StatusEnum#fromCode} 或 {@code com.example.StatusUtil#parse}
+   * <p>
+   * 类可以是枚举自身（调用其静态 fromCode 等方法），也可以是独立的工具类。
+   * 方法必须为 public static，接收一个 String 参数，返回目标枚举实例。
+   * <p>
+   * 留空或不配置时，默认使用目标枚举的 valueOf()（忽略大小写匹配）
    */
   private String enumerable;
 

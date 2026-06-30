@@ -79,9 +79,11 @@ public final class ImportProcessor<T> {
 
     int size = rowsData.size();
     int successCount = (int) proceedRows.stream().filter(ProceedRow::success).count();
-    List<T> proceedBeans = proceedRows.stream().map(ProceedRow::instance).toList();
+    List<PositionedData<T>> positionedData = proceedRows.stream()
+      .map(row -> new PositionedData<>(row.sequence(), row.instance()))
+      .toList();
     List<ImportFailure> failures = proceedRows.stream().map(ProceedRow::toFailure).filter(Objects::nonNull).toList();
-    return new ImportResult<>(type, size, successCount, size - successCount, proceedBeans, failures);
+    return new ImportResult<>(type, size, successCount, size - successCount, positionedData, failures);
   }
 
   private void processRow(String sequence, Map<String, String> rawRowData) {

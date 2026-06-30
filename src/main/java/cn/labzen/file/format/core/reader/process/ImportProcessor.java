@@ -17,13 +17,14 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.extern.slf4j.Slf4j;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.util.*;
 
 import static cn.labzen.file.format.core.reader.DataFileReader.SEQUENCE_KEY;
-import static cn.labzen.file.locale.LocaleKeys.IMPORT_CLEANSING_ERROR_MESSAGE;
-import static cn.labzen.file.locale.LocaleKeys.IMPORT_CONVERTER_ERROR_MESSAGE;
+import static cn.labzen.file.locale.LocaleKeys.*;
 import static cn.labzen.file.validator.Validator.*;
 
 /**
@@ -46,6 +47,9 @@ public final class ImportProcessor<T> {
   private final Map<String, ChainableImportConverterExecutor> converters = Maps.newHashMap();
 
   private final List<ProceedRow<T>> proceedRows = Lists.newArrayList();
+
+  private static final Map<Class<?>, Constructor<?>> CONSTRUCTOR_CACHE = Maps.newConcurrentMap();
+  private static final Map<String, Field> FIELD_CACHE = Maps.newConcurrentMap();
 
   public ImportProcessor(DataDefinition definition) {
     // todo 针对语言+定义，进行缓存
@@ -74,8 +78,8 @@ public final class ImportProcessor<T> {
     }
 
     int size = rowsData.size();
-    int successCount = (int) proceedRows.stream().filter(ProceedRow::isSuccess).count();
-    List<T> proceedBeans = proceedRows.stream().map(ProceedRow::getInstance).toList();
+    int successCount = (int) proceedRows.stream().filter(ProceedRow::success).count();
+    List<T> proceedBeans = proceedRows.stream().map(ProceedRow::instance).toList();
     List<ImportFailure> failures = proceedRows.stream().map(ProceedRow::toFailure).filter(Objects::nonNull).toList();
     return new ImportResult<>(type, size, successCount, size - successCount, proceedBeans, failures);
   }
@@ -156,8 +160,62 @@ public final class ImportProcessor<T> {
       proceedRowData.put(fieldName, convertedValue);
     }
 
-    ProceedRow<T> row = new ProceedRow<>(sequence, errors.isEmpty(), proceedRowData, errors, definition);
+    // ── 5. Bean 构建 —— 将清洗、转换后的数据封装为目标 Bean ──
+    T instance = null;
+    if (errors.isEmpty()) {
+      try {
+        instance = structureInstance(proceedRowData);
+      } catch (Exception e) {
+        errors.add(new FieldError("", "", null, ImportPhase.CONSTRUCT, resolveConstructError(e)));
+      }
+    }
+
+    ProceedRow<T> row = new ProceedRow<>(sequence, proceedRowData, errors, instance);
     proceedRows.add(row);
+  }
+
+  /**
+   * 将已处理的数据 Map 反射构建为 domain Bean 实例
+   */
+  private T structureInstance(Map<String, Object> data) {
+    Constructor<?> constructor = CONSTRUCTOR_CACHE.computeIfAbsent(type, t -> {
+      try {
+        Constructor<?> declaredConstructor = t.getDeclaredConstructor();
+        declaredConstructor.setAccessible(true);
+        return declaredConstructor;
+      } catch (NoSuchMethodException e) {
+        throw new IllegalStateException("Bean[" + type.getSimpleName() + "]缺少无参构造函数", e);
+      }
+    });
+
+    T instance;
+    try {
+      //noinspection unchecked
+      instance = (T) constructor.newInstance();
+    } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+      throw new RuntimeException(e);
+    }
+
+    for (String key : data.keySet()) {
+      Field field = FIELD_CACHE.computeIfAbsent(key, k -> {
+        try {
+          Field declaredField = type.getDeclaredField(k);
+          declaredField.setAccessible(true);
+          return declaredField;
+        } catch (NoSuchFieldException e) {
+          throw new IllegalStateException("字段[" + k + "]在Bean[" + type.getSimpleName() + "]中不存在", e);
+        }
+      });
+
+      try {
+        Object value = data.get(key);
+        field.set(instance, value);
+      } catch (IllegalAccessException e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+    return instance;
   }
 
   private Object defaultTypeConvert(String value, Class<?> targetType) {
@@ -210,6 +268,11 @@ public final class ImportProcessor<T> {
 
   private String resolveConvertError(Exception e) {
     String text = resourceBundle.getString(IMPORT_CONVERTER_ERROR_MESSAGE, e.getMessage());
+    return Strings.value(text, "");
+  }
+
+  private String resolveConstructError(Exception e) {
+    String text = resourceBundle.getString(IMPORT_CONSTRUCT_ERROR_MESSAGE, e.getMessage());
     return Strings.value(text, "");
   }
 

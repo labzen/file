@@ -38,7 +38,7 @@ public class UniqueValidator implements Validator {
     String fieldName = context.fieldName();
     boolean found = false;
     for (ProceedRow<?> row : context.proceedRows()) {
-      if (Objects.equals(input, row.getData().get(fieldName))) {
+      if (Objects.equals(input, row.data().get(fieldName))) {
         found = true;
         break;
       }

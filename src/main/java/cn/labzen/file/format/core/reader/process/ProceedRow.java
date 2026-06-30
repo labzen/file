@@ -1,99 +1,25 @@
 package cn.labzen.file.format.core.reader.process;
 
-import cn.labzen.file.definition.bean.DataDefinition;
-import cn.labzen.file.locale.FileResourceBundleLoader;
-import cn.labzen.file.locale.FormattableResourceBundle;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import lombok.Getter;
-
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
 
-import static cn.labzen.file.locale.LocaleKeys.IMPORT_CONSTRUCT_ERROR_MESSAGE;
+/**
+ * 处理过的行数据
+ * <p>
+ * 表示一行数据在经过 清理→校验→转换→校验→Bean构建 全流程处理后的最终结果。
+ * 本类不包含任何处理逻辑，所有加工过程由 {@link ImportProcessor} 负责。
+ *
+ * @param <T> domain bean 类型
+ */
+public record ProceedRow<T>(String sequence, Map<String, Object> data, List<FieldError> errors,
+                            T instance) {
 
-@Getter
-public class ProceedRow<T> {
-
-  private final String sequence;
-  private final boolean success;
-  private final Map<String, Object> data;
-  private final List<FieldError> errors;
-  private final T instance;
-
-  private static final Map<Class<?>, Constructor<?>> CONSTRUCTOR_CACHE = Maps.newConcurrentMap();
-  private static final Map<String, Field> FIELD_CACHE = Maps.newConcurrentMap();
-
-  public ProceedRow(String sequence, boolean success, Map<String, Object> data, List<FieldError> errors, DataDefinition definition) {
-    this.sequence = sequence;
-    this.success = success;
-    this.data = data;
-    this.errors = errors;
-
-    T instance = null;
-    if (success) {
-      try {
-        //noinspection unchecked
-        instance = structure((Class<T>) definition.getDomainClass());
-      } catch (Exception e) {
-        if (errors == null) {
-          errors = Lists.newArrayList();
-        }
-
-        FormattableResourceBundle resourceBundle = FileResourceBundleLoader.load(definition.getLocale());
-        String message = resourceBundle.getString(IMPORT_CONSTRUCT_ERROR_MESSAGE);
-        errors.add(new FieldError("", "", null, ImportPhase.CONSTRUCT, message));
-      }
-    }
-    this.instance = instance;
-  }
-
-  private T structure(Class<T> type) {
-    Constructor<?> constructor = CONSTRUCTOR_CACHE.computeIfAbsent(type, t -> {
-      try {
-        Constructor<?> declaredConstructor = t.getDeclaredConstructor();
-        declaredConstructor.setAccessible(true);
-        return declaredConstructor;
-      } catch (NoSuchMethodException e) {
-        throw new IllegalStateException("Bean[" + type.getSimpleName() + "]缺少无参构造函数", e);
-      }
-    });
-
-    T instance;
-    try {
-      //noinspection unchecked
-      instance = (T) constructor.newInstance();
-    } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-      throw new RuntimeException(e);
-    }
-
-    for (String key : data.keySet()) {
-      Field field = FIELD_CACHE.computeIfAbsent(key, k -> {
-        try {
-          Field declaredField = type.getDeclaredField(k);
-          declaredField.setAccessible(true);
-          return declaredField;
-        } catch (NoSuchFieldException e) {
-          throw new IllegalStateException("字段[" + k + "]在Bean[" + type.getSimpleName() + "]中不存在", e);
-        }
-      });
-
-      try {
-        Object value = data.get(key);
-        field.set(instance, value);
-      } catch (IllegalAccessException e) {
-        throw new RuntimeException(e);
-      }
-    }
-
-    return instance;
+  public boolean success() {
+    return errors.isEmpty();
   }
 
   public ImportFailure toFailure() {
-    if (success) {
+    if (success()) {
       return null;
     }
 

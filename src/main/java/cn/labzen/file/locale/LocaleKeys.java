@@ -15,7 +15,7 @@ public final class LocaleKeys {
   public static final String TEMPLATE_CONSTRAINT_BOX_TITLE = "template.excel.constraint-box.title";
   public static final String TEMPLATE_CONSTRAINT_BOX_MESSAGE = "template.excel.constraint-box.message";
 
-  public static final String IMPORT_CONSTRUCT_ERROR_MESSAGE = "import.cleansing.failure-message";
+  public static final String IMPORT_CONSTRUCT_ERROR_MESSAGE = "import.construct.failure-message";
   public static final String IMPORT_CLEANSING_ERROR_MESSAGE = "import.cleansing.failure-message";
   public static final String IMPORT_CONVERTER_ERROR_MESSAGE = "import.converter.failure-message";
 

@@ -972,3 +972,4 @@ project/plugins/project/
 .lib/
 
 !/labzen.web.config
+.codebuddy

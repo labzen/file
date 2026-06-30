@@ -101,9 +101,9 @@ public final class DataFileImporter<T> {
    */
   public ImportResult<T> from(InputStream inputStream) {
     DataDefinition definition = DefinitionRegistry.get(name, locale)
-      .orElseThrow(() -> new DataWriteException("不支持的数据类型导出定义，请确认文件 {}.yml 确实存在并有效", name));
+      .orElseThrow(() -> new DataWriteException("不支持的数据类型导入定义，请确认文件 {}.yml 确实存在并有效", name));
     if (!Objects.equals(type, definition.getDomainClass())) {
-      throw new DataWriteException("数据定义文件 {}.yml 的 domain - [{}] 与导出数据类型 [{}] 不一致", name, definition.getDomain(), type.getName());
+      throw new DataWriteException("数据定义文件 {}.yml 的 domain - [{}] 与导入数据类型 [{}] 不一致", name, definition.getDomain(), type.getName());
     }
 
     // 读取文件，获取行迭代器

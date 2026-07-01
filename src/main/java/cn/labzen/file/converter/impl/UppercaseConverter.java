@@ -13,7 +13,8 @@ import java.util.List;
  *
  * @author labzen
  */
-@DataConverter(name = Converter.UPPERCASE_NAME, priority = Converter.UPPERCASE_PRIORITY)
+@DataConverter(name = Converter.UPPERCASE_NAME,
+  exportPriority = Converter.UNUSED_PRIORITY, importPriority = Converter.UPPERCASE_IMPORT_PRIORITY)
 public class UppercaseConverter implements ImportableConverter {
 
   @Override

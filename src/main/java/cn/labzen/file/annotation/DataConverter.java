@@ -9,7 +9,16 @@ import java.lang.annotation.Target;
 /**
  * 转换器注解
  * <p>
- * 用于标识一个转换器类，并定义转换器的名称和执行优先级
+ * 标识一个转换器类，定义转换器的名称和导入/导出两个方向的执行优先级。
+ * 数字越小优先级越高，在转换链中越先执行。
+ *
+ * <pre>{@code
+ * // 简单场景：导入导出优先级一致
+ * @DataConverter(name = "bool", exportPriority = 400, importPriority = 400)
+ *
+ * // 方向差异场景：mapping 在导入时优先于 enum，导出时反之
+ * @DataConverter(name = "innate#mapping", exportPriority = 320, importPriority = 300)
+ * }</pre>
  *
  * @author labzen
  */
@@ -23,7 +32,12 @@ public @interface DataConverter {
   String name();
 
   /**
-   * 转换器执行优先级，数字越小优先级越高
+   * 导出方向的执行优先级，数字越小优先级越高（越先执行）
    */
-  int priority();
+  int exportPriority();
+
+  /**
+   * 导入方向的执行优先级，数字越小优先级越高（越先执行）
+   */
+  int importPriority();
 }

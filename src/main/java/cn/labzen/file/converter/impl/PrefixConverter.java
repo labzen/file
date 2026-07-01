@@ -12,7 +12,8 @@ import java.util.List;
  *
  * @author labzen
  */
-@DataConverter(name = Converter.PREFIX_NAME, priority = Converter.PREFIX_PRIORITY)
+@DataConverter(name = Converter.PREFIX_NAME,
+  exportPriority = Converter.PREFIX_EXPORT_PRIORITY, importPriority = Converter.UNUSED_PRIORITY)
 public class PrefixConverter implements ExportableConverter<String> {
 
   @Override

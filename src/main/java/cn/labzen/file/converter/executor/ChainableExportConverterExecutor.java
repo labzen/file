@@ -42,7 +42,7 @@ public class ChainableExportConverterExecutor extends ChainableExecutor<Exportab
 
   ChainableExportConverterExecutor(Column column) {
     configExportConverter(column);
-    sortConverter();
+    sortByExportPriority();
   }
 
   private void configExportConverter(Column column) {

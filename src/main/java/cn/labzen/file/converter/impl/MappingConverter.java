@@ -20,7 +20,8 @@ import java.util.Map;
  *
  * @author labzen
  */
-@DataConverter(name = Converter.MAPPING_NAME, priority = Converter.MAPPING_PRIORITY)
+@DataConverter(name = Converter.MAPPING_NAME,
+  exportPriority = Converter.MAPPING_EXPORT_PRIORITY, importPriority = Converter.MAPPING_IMPORT_PRIORITY)
 public class MappingConverter implements ExportableConverter<String>, ImportableConverter {
 
   // ── 导出：key → value ──

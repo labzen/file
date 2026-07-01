@@ -22,7 +22,8 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author labzen
  */
-@DataConverter(name = Converter.NUMBER_NAME, priority = Converter.NUMBER_PRIORITY)
+@DataConverter(name = Converter.NUMBER_NAME,
+  exportPriority = Converter.NUMBER_EXPORT_PRIORITY, importPriority = Converter.NUMBER_IMPORT_PRIORITY)
 public class NumberConverter implements ExportableConverter<String>, ImportableConverter {
 
   private static final Map<String, DecimalFormat> FORMAT_CACHE = new ConcurrentHashMap<>();

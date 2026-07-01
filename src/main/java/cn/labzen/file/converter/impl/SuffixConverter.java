@@ -12,7 +12,8 @@ import java.util.List;
  *
  * @author labzen
  */
-@DataConverter(name = Converter.SUFFIX_NAME, priority = Converter.SUFFIX_PRIORITY)
+@DataConverter(name = Converter.SUFFIX_NAME,
+  exportPriority = Converter.SUFFIX_EXPORT_PRIORITY, importPriority = Converter.UNUSED_PRIORITY)
 public class SuffixConverter implements ExportableConverter<String> {
 
   @Override

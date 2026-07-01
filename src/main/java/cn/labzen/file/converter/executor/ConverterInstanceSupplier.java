@@ -11,9 +11,6 @@ import java.util.ServiceLoader;
 @Slf4j
 public final class ConverterInstanceSupplier {
 
-  /**
-   * 所有转换器实例，key: 转换器名称，value: 转换器实例
-   */
   private static final Map<String, ConverterInstance<Converter>> CONVERTER_INSTANCES = Maps.newHashMap();
 
   public static synchronized void init() {
@@ -25,19 +22,19 @@ public final class ConverterInstanceSupplier {
         return;
       }
       DataConverter annotation = type.getAnnotation(DataConverter.class);
-      int priority = annotation.priority();
 
-      ConverterInstance<Converter> instance = new ConverterInstance<>(converter, priority);
+      ConverterInstance<Converter> instance =
+        new ConverterInstance<>(converter, annotation.exportPriority(), annotation.importPriority());
 
       CONVERTER_INSTANCES.put(annotation.name(), instance);
     });
   }
 
+  @SuppressWarnings("unchecked")
   static <T extends Converter> ConverterInstance<T> get(String name) {
-    //noinspection unchecked
     ConverterInstance<T> instance = (ConverterInstance<T>) CONVERTER_INSTANCES.get(name);
     if (instance == null) {
-      logger.error("不存在的导入转换器: {}", name);
+      logger.error("不存在的转换器: {}", name);
     }
     return instance;
   }

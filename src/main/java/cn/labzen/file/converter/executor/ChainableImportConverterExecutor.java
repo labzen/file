@@ -40,7 +40,7 @@ public class ChainableImportConverterExecutor extends ChainableExecutor<Importab
 
   ChainableImportConverterExecutor(Column column) {
     configImportConverter(column);
-    sortConverter();
+    sortByImportPriority();
   }
 
   private void configImportConverter(Column column) {

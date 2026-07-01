@@ -43,7 +43,8 @@ import java.util.regex.Pattern;
  * @author labzen
  */
 @Slf4j
-@DataConverter(name = Converter.ENUM_NAME, priority = Converter.ENUM_PRIORITY)
+@DataConverter(name = Converter.ENUM_NAME,
+  exportPriority = Converter.ENUM_EXPORT_PRIORITY, importPriority = Converter.ENUM_IMPORT_PRIORITY)
 public class EnumConverter implements ExportableConverter<String>, ImportableConverter {
 
   private static final Pattern FQCN_METHOD_PATTERN = Pattern.compile(

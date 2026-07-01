@@ -16,8 +16,18 @@ public abstract class ChainableExecutor<C extends Converter> {
     return definition.getName() + "#" + definition.getLocale() + "@@" + columnName;
   }
 
-  protected void sortConverter() {
-    converters.sort(Comparator.comparingInt(value -> value.instance().priority()));
+  /**
+   * 按导出方向优先级排序
+   */
+  protected void sortByExportPriority() {
+    converters.sort(Comparator.comparingInt(v -> v.instance().exportPriority()));
+  }
+
+  /**
+   * 按导入方向优先级排序
+   */
+  protected void sortByImportPriority() {
+    converters.sort(Comparator.comparingInt(v -> v.instance().importPriority()));
   }
 
   @SuppressWarnings("unchecked")

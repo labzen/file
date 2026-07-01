@@ -26,7 +26,8 @@ import java.util.List;
  *
  * @author labzen
  */
-@DataConverter(name = Converter.DATE_NAME, priority = Converter.DATE_PRIORITY)
+@DataConverter(name = Converter.DATE_NAME,
+  exportPriority = Converter.DATE_EXPORT_PRIORITY, importPriority = Converter.DATE_IMPORT_PRIORITY)
 public class DateConverter implements ExportableConverter<String>, ImportableConverter {
 
   protected static final String DEFAULT_DATE_PATTERN = "yyyy-MM-dd HH:mm:ss";

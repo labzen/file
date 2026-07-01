@@ -16,7 +16,8 @@ import java.util.regex.Pattern;
  *
  * @author labzen
  */
-@DataConverter(name = Converter.DESENSITIZE_NAME, priority = Converter.DESENSITIZE_PRIORITY)
+@DataConverter(name = Converter.DESENSITIZE_NAME,
+  exportPriority = Converter.DESENSITIZE_EXPORT_PRIORITY, importPriority = Converter.UNUSED_PRIORITY)
 public class DesensitizeConverter implements ExportableConverter<String> {
 
   private static final Map<String, Pattern> PATTERN_CACHE = new ConcurrentHashMap<>();

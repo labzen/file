@@ -18,7 +18,8 @@ import java.util.Objects;
  *
  * @author labzen
  */
-@DataConverter(name = Converter.BOOL_NAME, priority = Converter.BOOL_PRIORITY)
+@DataConverter(name = Converter.BOOL_NAME,
+  exportPriority = Converter.BOOL_EXPORT_PRIORITY, importPriority = Converter.BOOL_IMPORT_PRIORITY)
 public class BoolConverter implements ExportableConverter<String>, ImportableConverter {
 
   // ── 导出 ──

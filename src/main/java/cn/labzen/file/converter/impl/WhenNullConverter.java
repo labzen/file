@@ -12,7 +12,8 @@ import java.util.List;
  *
  * @author labzen
  */
-@DataConverter(name = Converter.WHEN_NULL_NAME, priority = Converter.WHEN_NULL_PRIORITY)
+@DataConverter(name = Converter.WHEN_NULL_NAME,
+  exportPriority = Converter.WHEN_NULL_EXPORT_PRIORITY, importPriority = Converter.UNUSED_PRIORITY)
 public class WhenNullConverter implements ExportableConverter<String> {
 
   @Override

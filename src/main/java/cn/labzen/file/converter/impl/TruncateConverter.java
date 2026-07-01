@@ -13,7 +13,8 @@ import java.util.List;
  *
  * @author labzen
  */
-@DataConverter(name = Converter.TRUNCATE_NAME, priority = Converter.TRUNCATE_PRIORITY)
+@DataConverter(name = Converter.TRUNCATE_NAME,
+  exportPriority = Converter.TRUNCATE_EXPORT_PRIORITY, importPriority = Converter.UNUSED_PRIORITY)
 public class TruncateConverter implements ExportableConverter<String> {
 
   private static final String DEFAULT_ELLIPSIS = "...";
